@@ -1,1 +1,165 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --background: #f7f7f8;
+    --foreground: #09090b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --popover: #ffffff;
+    --popover-foreground: #09090b;
+    --primary: #09090b;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f4f6;
+    --secondary-foreground: #18181b;
+    --muted: #f4f4f6;
+    --muted-foreground: #71717a;
+    --accent: #0071e3;
+    --accent-foreground: #ffffff;
+    --destructive: #e0342b;
+    --destructive-foreground: #ffffff;
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #0071e3;
+    --radius: 0.75rem;
+
+    /* Motion tokens */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .dark {
+    --background: #08080a;
+    --foreground: #f4f4f5;
+    --card: #121215;
+    --card-foreground: #f4f4f5;
+    --popover: #121215;
+    --popover-foreground: #f4f4f5;
+    --primary: #ffffff;
+    --primary-foreground: #08080a;
+    --secondary: #1a1a20;
+    --secondary-foreground: #f4f4f5;
+    --muted: #1a1a20;
+    --muted-foreground: #a1a1aa;
+    --accent: #0071e3;
+    --accent-foreground: #ffffff;
+    --destructive: #e0342b;
+    --destructive-foreground: #ffffff;
+    --border: #222227;
+    --input: #222227;
+    --ring: #0071e3;
+  }
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Micro-interaction polish: Apple responsive button press */
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.98);
+  transition: transform 120ms var(--ease-out);
+}
+
+/* Custom refined scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Citation Target Locator in Document Viewer */
+@keyframes citationPulseDark {
+  0% {
+    background-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    background-color: rgba(245, 158, 11, 0.18);
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.15);
+  }
+  100% {
+    background-color: rgba(245, 158, 11, 0.28);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+  }
+}
+
+@keyframes citationPulseLight {
+  0% {
+    background-color: rgba(254, 243, 199, 0.9);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    background-color: rgba(254, 243, 199, 0.5);
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.15);
+  }
+  100% {
+    background-color: rgba(254, 243, 199, 0.8);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+  }
+}
+
+.citation-target-active {
+  animation: citationPulseLight 2s var(--ease-out) infinite alternate;
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+}
+
+.dark .citation-target-active {
+  animation: citationPulseDark 2s var(--ease-out) infinite alternate;
+  border-left: 3px solid #f59e0b;
+}
+
+/* Subtle Shimmer for Pipeline & Analysis States */
+@keyframes shimmerWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-active {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: shimmerWave 2s infinite linear;
+}
