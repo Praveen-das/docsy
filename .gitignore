@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+docsy-ai-prd.md
+IMPLEMENTATION_CHECKLIST.md
+
 # dependencies
 /node_modules
 /.pnp
