@@ -3,7 +3,7 @@ import { documents } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { deletePdf } from "@/lib/storage";
 import { deleteDocumentVectors } from "@/lib/pinecone";
-import { publishProcessingJob } from "@/lib/qstash";
+import { triggerProcessingWorkflow } from "@/lib/qstash";
 import { logger } from "@/lib/logger";
 
 import type { DocumentRecord, NewDocument } from "@/db/schema";
@@ -167,7 +167,7 @@ export async function reprocessDocument(
 
   // Reset status and dispatch new processing job
   await updateDocumentStatus(documentId, "UPLOADING", { error: null });
-  await publishProcessingJob(documentId);
+  await triggerProcessingWorkflow(documentId);
 
   logger.info("document.reprocess_triggered", { documentId, userId });
   return true;

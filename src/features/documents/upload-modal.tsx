@@ -30,15 +30,7 @@ export interface UploadModalProps {
   onUploadSuccess?: (filename: string) => void;
 }
 
-type UploadStep =
-  | "idle"
-  | "uploading"
-  | "extracting"
-  | "chunking"
-  | "embedding"
-  | "indexing"
-  | "ready"
-  | "failed";
+type UploadStep = "idle" | "uploading" | "extracting" | "chunking" | "embedding" | "indexing" | "ready" | "failed";
 
 const STAGES = [
   { id: "uploading", label: "Upload", min: 15 },
@@ -48,11 +40,7 @@ const STAGES = [
   { id: "ready", label: "Ready", min: 100 },
 ] as const;
 
-export function UploadModal({
-  isOpen,
-  onClose,
-  onUploadSuccess,
-}: UploadModalProps) {
+export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps) {
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -96,12 +84,7 @@ export function UploadModal({
     // Validate size (10 MB limit)
     const MAX_SIZE_BYTES = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE_BYTES) {
-      setErrorMessage(
-        `File exceeds the 10 MB maximum limit (${(
-          file.size /
-          (1024 * 1024)
-        ).toFixed(1)} MB).`
-      );
+      setErrorMessage(`File exceeds the 10 MB maximum limit (${(file.size / (1024 * 1024)).toFixed(1)} MB).`);
       return;
     }
 
@@ -126,22 +109,24 @@ export function UploadModal({
     if (!selectedFile) return;
 
     setStep("uploading");
-    setProgress(20);
+    setProgress(0);
     setErrorMessage(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      const res = await fetch("/api/documents", {
+      // Step 1: Get signed upload URL from server (lightweight JSON, no file bytes)
+      const urlRes = await fetch("/api/documents/upload-url", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          fileSize: selectedFile.size,
+        }),
       });
 
-      if (!res.ok) {
-        let errDetail = "Failed to upload document";
+      if (!urlRes.ok) {
+        let errDetail = "Failed to prepare upload";
         try {
-          const errData = await res.json();
+          const errData = await urlRes.json();
           if (errData.error) errDetail = errData.error;
         } catch {}
         setErrorMessage(errDetail);
@@ -149,12 +134,64 @@ export function UploadModal({
         return;
       }
 
-      const data = await res.json();
-      const docId = data.documentId;
+      const { documentId: docId, signedUrl } = await urlRes.json();
+
+      // Step 2: Upload file directly to Supabase Storage via signed URL
+      // Uses XMLHttpRequest for real byte-level progress tracking
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            // Map upload progress to 0–30% of total progress
+            const uploadPercent = Math.round((e.loaded / e.total) * 30);
+            setProgress(uploadPercent);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Storage upload failed (${xhr.status})`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error during upload"));
+        xhr.ontimeout = () => reject(new Error("Upload timed out"));
+
+        xhr.open("PUT", signedUrl);
+        xhr.setRequestHeader("Content-Type", "application/pdf");
+        xhr.send(selectedFile);
+      });
+
+      setProgress(35);
+
+      // Step 3: Confirm upload — server verifies file landed and triggers workflow
+      const confirmRes = await fetch("/api/documents/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: docId }),
+      });
+
+      if (!confirmRes.ok) {
+        let errDetail = "Failed to confirm upload";
+        try {
+          const errData = await confirmRes.json();
+          console.log("file uploaded failed");
+          if (errData.error) errDetail = errData.error;
+        } catch {}
+        setErrorMessage(errDetail);
+        setStep("failed");
+        return;
+      }
+
+      console.log("file uploaded successfully");
+
       setStep("extracting");
       setProgress(40);
 
-      // Start polling document status
+      // Start polling document status (existing logic)
       if (pollingRef.current) clearInterval(pollingRef.current);
       pollingRef.current = setInterval(async () => {
         try {
@@ -198,9 +235,7 @@ export function UploadModal({
         }
       }, 1500);
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Network error during upload"
-      );
+      setErrorMessage(err instanceof Error ? err.message : "Network error during upload");
       setStep("failed");
     }
   };
@@ -214,10 +249,7 @@ export function UploadModal({
     }
   };
 
-  const stepDetails: Record<
-    UploadStep,
-    { title: string; subtitle: string; icon: React.ReactNode }
-  > = {
+  const stepDetails: Record<UploadStep, { title: string; subtitle: string; icon: React.ReactNode }> = {
     idle: {
       title: "Upload Document",
       subtitle: "Select a PDF document to begin",
@@ -274,9 +306,7 @@ export function UploadModal({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-base tracking-tight">
-                Upload Document
-              </h3>
+              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-base tracking-tight">Upload Document</h3>
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold text-zinc-600 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-400 dark:border-white/10">
                 PDF up to 10 MB
               </span>
@@ -305,7 +335,7 @@ export function UploadModal({
                   "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer group select-none",
                   isDragging
                     ? "border-zinc-900 bg-zinc-100/80 dark:border-white/40 dark:bg-white/5 scale-[0.99] shadow-sm"
-                    : "border-zinc-300 bg-zinc-50/50 hover:border-zinc-400 hover:bg-zinc-100/60 dark:border-zinc-700 dark:bg-[#16161b] dark:hover:border-zinc-600 dark:hover:bg-[#1a1a22]"
+                    : "border-zinc-300 bg-zinc-50/50 hover:border-zinc-400 hover:bg-zinc-100/60 dark:border-zinc-700 dark:bg-[#16161b] dark:hover:border-zinc-600 dark:hover:bg-[#1a1a22]",
                 )}
               >
                 <input
@@ -328,9 +358,7 @@ export function UploadModal({
                       browse files
                     </span>
                   </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Searchable PDF documents up to 10 MB
-                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Searchable PDF documents up to 10 MB</p>
                 </div>
 
                 {/* Feature Tags */}
@@ -369,9 +397,7 @@ export function UploadModal({
                       {selectedFile.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>
-                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                      </span>
+                      <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
                       <span>•</span>
                       <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                         <Check className="h-3 w-3" />
@@ -411,12 +437,7 @@ export function UploadModal({
               <Button variant="outline" size="sm" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
-                variant="accent"
-                size="sm"
-                disabled={!selectedFile}
-                onClick={handleStartUpload}
-              >
+              <Button variant="accent" size="sm" disabled={!selectedFile} onClick={handleStartUpload}>
                 <span>Analyze Document</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
@@ -430,9 +451,7 @@ export function UploadModal({
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Document Ready for Conversation!
-              </h4>
+              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Document Ready for Conversation!</h4>
               <p className="max-w-sm mx-auto text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed truncate px-4">
                 &ldquo;{selectedFile?.name}&rdquo; is ready for verified questioning.
               </p>
@@ -448,12 +467,7 @@ export function UploadModal({
               <Button variant="outline" size="sm" onClick={handleClose} className="w-full sm:w-auto">
                 Done & View List
               </Button>
-              <Button
-                variant="accent"
-                size="sm"
-                onClick={handleStartConversation}
-                className="w-full sm:w-auto"
-              >
+              <Button variant="accent" size="sm" onClick={handleStartConversation} className="w-full sm:w-auto">
                 <span>Start Conversation Now</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
@@ -467,9 +481,7 @@ export function UploadModal({
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Analysis Incomplete
-              </h4>
+              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Analysis Incomplete</h4>
               <p className="max-w-sm mx-auto text-xs text-rose-600 dark:text-rose-400 leading-relaxed px-4">
                 {errorMessage || "Unable to process this document. Please check the file and try again."}
               </p>
@@ -525,8 +537,7 @@ export function UploadModal({
 
                 {STAGES.map((stage, idx) => {
                   const isPassed = progress >= stage.min;
-                  const isCurrent =
-                    progress >= stage.min - 25 && progress < stage.min;
+                  const isCurrent = progress >= stage.min - 25 && progress < stage.min;
 
                   return (
                     <div
@@ -539,15 +550,11 @@ export function UploadModal({
                           isPassed
                             ? "bg-emerald-600 text-white"
                             : isCurrent
-                            ? "bg-blue-600 text-white ring-4 ring-blue-500/20 animate-pulse"
-                            : "bg-zinc-100 text-zinc-400 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-500 dark:border-white/10"
+                              ? "bg-blue-600 text-white ring-4 ring-blue-500/20 animate-pulse"
+                              : "bg-zinc-100 text-zinc-400 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-500 dark:border-white/10",
                         )}
                       >
-                        {isPassed ? (
-                          <Check className="h-3 w-3 stroke-[2.5]" />
-                        ) : (
-                          <span>{idx + 1}</span>
-                        )}
+                        {isPassed ? <Check className="h-3 w-3 stroke-[2.5]" /> : <span>{idx + 1}</span>}
                       </div>
                       <span
                         className={cn(
@@ -555,8 +562,8 @@ export function UploadModal({
                           isPassed
                             ? "text-emerald-600 dark:text-emerald-400 font-semibold"
                             : isCurrent
-                            ? "text-blue-600 dark:text-blue-400 font-bold"
-                            : "text-zinc-400 dark:text-zinc-500"
+                              ? "text-blue-600 dark:text-blue-400 font-bold"
+                              : "text-zinc-400 dark:text-zinc-500",
                         )}
                       >
                         {stage.label}

@@ -58,6 +58,64 @@ export async function uploadPdf(
 }
 
 /**
+ * Create a signed upload URL for direct browser-to-storage uploads.
+ * The URL is valid for 2 hours (Supabase default).
+ */
+export async function createSignedUploadUrl(
+  userId: string,
+  originalName: string
+): Promise<{ filePath: string; signedUrl: string; token: string }> {
+  const client = getStorageClient();
+  const bucket = getBucket();
+  const fileId = crypto.randomUUID();
+  const filePath = `${userId}/${fileId}.pdf`;
+
+  const { data, error } = await client.storage
+    .from(bucket)
+    .createSignedUploadUrl(filePath);
+
+  if (error || !data) {
+    throw new Error(`Failed to create signed upload URL: ${error?.message}`);
+  }
+
+  return {
+    filePath,
+    signedUrl: data.signedUrl,
+    token: data.token,
+  };
+}
+
+/**
+ * Verify that a file exists in storage (used to confirm client-side upload succeeded).
+ */
+export async function verifyFileExists(filePath: string): Promise<boolean> {
+  const client = getStorageClient();
+  const bucket = getBucket();
+
+  // List with exact prefix — if the file exists, we get exactly one result
+  const { data, error } = await client.storage
+    .from(bucket)
+    .list(filePath.substring(0, filePath.lastIndexOf("/")), {
+      search: filePath.substring(filePath.lastIndexOf("/") + 1),
+      limit: 1,
+    });
+
+  if (error) return false;
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * Build the public URL for a given storage path.
+ */
+export function getPublicUrl(filePath: string): string {
+  const client = getStorageClient();
+  const bucket = getBucket();
+
+  const { data } = client.storage.from(bucket).getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+/**
  * Get a signed URL for secure, time-limited access to a stored PDF.
  */
 export async function getSignedPdfUrl(

@@ -1,31 +1,23 @@
-import { Client } from "@upstash/qstash";
-
-let _client: Client | null = null;
-
-function getQStashClient(): Client {
-  if (_client) return _client;
-
-  const token = process.env.QSTASH_TOKEN;
-  if (!token) {
-    throw new Error("Missing QSTASH_TOKEN environment variable");
-  }
-
-  _client = new Client({ token });
-  return _client;
-}
+import { Client } from "@upstash/workflow";
+import { logger } from "@/lib/logger";
 
 /**
- * Dispatch a document processing job to the background workflow endpoint.
- * QStash will POST to `/api/workflows/process-document` with the documentId.
+ * Trigger the document-processing workflow directly.
+ *
+ * `@upstash/workflow`'s Client.trigger() sends the initial request
+ * to the workflow endpoint, and `serve()` takes over from there —
+ * handling QStash delivery, retries, and step checkpointing internally.
  */
-export async function publishProcessingJob(documentId: string): Promise<void> {
-  const client = getQStashClient();
+export async function triggerProcessingWorkflow(
+  documentId: string
+): Promise<void> {
+  const client = new Client({ token: process.env.QSTASH_TOKEN! });
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const targetUrl = `${appUrl}/api/workflows/process-document`;
 
-  await client.publishJSON({
-    url: targetUrl,
+  const { workflowRunId } = await client.trigger({
+    url: `${appUrl}/api/workflows/process-document`,
     body: { documentId },
-    retries: 3,
   });
+
+  logger.info("workflow.triggered", { documentId, workflowRunId });
 }
