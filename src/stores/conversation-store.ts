@@ -13,6 +13,7 @@ interface ConversationState {
   drafts: Record<string, string>;
   activeConversationId: string | null;
   isLoadingAi: boolean;
+  isAiTyping: boolean;
   isLoadingConversations: boolean;
   isLoadingMessages: boolean;
   error: string | null;
@@ -42,7 +43,7 @@ export function createMessage(
   conversationId: string,
   role: "user" | "assistant" | "system",
   content = "",
-  options?: { id?: string; createdAt?: string }
+  options?: { id?: string; createdAt?: string },
 ): Message {
   const prefix = role === "user" ? "user" : role === "assistant" ? "ai" : "sys";
   return {
@@ -67,11 +68,10 @@ export function createClientConversation(
     createdAt?: string;
     updatedAt?: string;
     streamToken?: string;
-  }
+  },
 ): Conversation {
   const id =
-    options?.id ||
-    (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `conv-${Date.now()}`);
+    options?.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `conv-${Date.now()}`);
   const now = options?.createdAt || new Date().toISOString();
 
   return {
@@ -98,6 +98,7 @@ export const useConversationStore = create<ConversationState>()(
       drafts: {},
       activeConversationId: null,
       isLoadingAi: false,
+      isAiTyping: false,
       isLoadingConversations: false,
       isLoadingMessages: false,
       error: null,
@@ -196,9 +197,7 @@ export const useConversationStore = create<ConversationState>()(
           const streamToken = res.data?.streamToken;
           if (streamToken) {
             set((s) => ({
-              conversations: s.conversations.map((c) =>
-                c.id === newConvId ? { ...c, streamToken } : c,
-              ),
+              conversations: s.conversations.map((c) => (c.id === newConvId ? { ...c, streamToken } : c)),
             }));
           }
         } catch (err) {
@@ -341,9 +340,7 @@ export const useConversationStore = create<ConversationState>()(
 
             if (serverTitle && serverTitle !== initialTitle && !isDefaultTitle(serverTitle)) {
               set((state) => ({
-                conversations: state.conversations.map((c) =>
-                  c.id === convId ? { ...c, title: serverTitle } : c
-                ),
+                conversations: state.conversations.map((c) => (c.id === convId ? { ...c, title: serverTitle } : c)),
               }));
 
               clearInterval(timer);
@@ -388,16 +385,9 @@ export const useConversationStore = create<ConversationState>()(
           isLoadingAi: true,
         });
 
-        // Placeholder for streaming assistant message
+        // Pre-create assistant message reference (appended to messages once first text chunk arrives)
         const placeholderAiMsg = createMessage(convId, "assistant");
         const assistantMessageId = placeholderAiMsg.id;
-
-        set((s) => ({
-          messages: {
-            ...s.messages,
-            [convId]: [...s.messages[convId], placeholderAiMsg],
-          },
-        }));
 
         // Prepare prior conversation history for multi-turn context (last 10 turns)
         const conversationHistory = existingMessages
@@ -419,26 +409,23 @@ export const useConversationStore = create<ConversationState>()(
               {
                 responseType: "stream",
                 adapter: "fetch",
-              }
+              },
             ),
-            api.post(
-              `/api/conversations/${convId}/messages/stream`,
-              {
-                messageId: assistantMessageId,
-                conversationId: convId,
-                content,
-                conversationHistory,
-                conversationToken,
-              }
-            ),
+            api.post(`/api/conversations/${convId}/messages/stream`, {
+              messageId: assistantMessageId,
+              conversationId: convId,
+              content,
+              conversationHistory,
+              conversationToken,
+            }),
           ]);
 
           const stream = res.data;
-          const reader = stream?.getReader?.() || (stream as unknown as { body?: ReadableStream<Uint8Array> })?.body?.getReader?.();
+          const reader =
+            stream?.getReader?.() || (stream as unknown as { body?: ReadableStream<Uint8Array> })?.body?.getReader?.();
           if (!reader) {
             throw new Error("No readable stream response from server");
           }
-
 
           const decoder = new TextDecoder();
           let fullText = "";
@@ -446,22 +433,39 @@ export const useConversationStore = create<ConversationState>()(
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
+            const rawChunk = decoder.decode(value, { stream: true });
+            // Detect server typing signal (null byte marker)
+            console.log('rawChunk.includes("\0"):', rawChunk.includes("\0"));
+            if (rawChunk.includes("\0")) {
+              set({ isAiTyping: true });
+            }
+
+            // Strip control markers and heartbeat-only chunks
+            const chunk = rawChunk.replace(/\0/g, "");
+            if (!chunk || !chunk.trim()) continue;
+
             fullText += chunk;
 
-            set((s) => ({
-              messages: {
-                ...s.messages,
-                [convId]: s.messages[convId].map((m) =>
-                  m.id === assistantMessageId
-                    ? {
-                        ...m,
-                        content: fullText,
-                      }
-                    : m,
-                ),
-              },
-            }));
+            set((s) => {
+              const currentList = s.messages[convId] || [];
+              const exists = currentList.some((m) => m.id === assistantMessageId);
+              return {
+                isAiTyping: false,
+                messages: {
+                  ...s.messages,
+                  [convId]: exists
+                    ? currentList.map((m) =>
+                        m.id === assistantMessageId
+                          ? {
+                              ...m,
+                              content: fullText,
+                            }
+                          : m,
+                      )
+                    : [...currentList, { ...placeholderAiMsg, content: fullText }],
+                },
+              };
+            });
           }
 
           // Final update on completion
@@ -482,28 +486,38 @@ export const useConversationStore = create<ConversationState>()(
           console.error("Stream error:", err);
           let errorDetail = "Failed to generate response";
           if (axios.isAxiosError(err)) {
-            errorDetail =
-              (err.response?.data as { error?: string })?.error ||
-              err.message ||
-              errorDetail;
+            errorDetail = (err.response?.data as { error?: string })?.error || err.message || errorDetail;
           } else if (err instanceof Error) {
             errorDetail = err.message;
           }
 
-          set((s) => ({
-            messages: {
-              ...s.messages,
-              [convId]: s.messages[convId].map((m) =>
-                m.id === assistantMessageId
-                  ? {
-                      ...m,
-                      content: `⚠️ **Request Notice**: ${errorDetail}`,
-                    }
-                  : m,
-              ),
-            },
-            isLoadingAi: false,
-          }));
+          set((s) => {
+            const currentList = s.messages[convId] || [];
+            const exists = currentList.some((m) => m.id === assistantMessageId);
+            return {
+              messages: {
+                ...s.messages,
+                [convId]: exists
+                  ? currentList.map((m) =>
+                      m.id === assistantMessageId
+                        ? {
+                            ...m,
+                            content: `⚠️ **Request Notice**: ${errorDetail}`,
+                          }
+                        : m,
+                    )
+                  : [
+                      ...currentList,
+                      {
+                        ...placeholderAiMsg,
+                        content: `⚠️ **Request Notice**: ${errorDetail}`,
+                      },
+                    ],
+              },
+              isLoadingAi: false,
+              isAiTyping: false,
+            };
+          });
         }
       },
 
@@ -516,6 +530,7 @@ export const useConversationStore = create<ConversationState>()(
           drafts: {},
           activeConversationId: null,
           isLoadingAi: false,
+          isAiTyping: false,
           error: null,
         });
       },
@@ -532,10 +547,8 @@ export const useConversationStore = create<ConversationState>()(
 
 // Register token handlers so Axios interceptor seamlessly coordinates with Zustand state
 registerTokenHandlers({
-  getToken: (convId) =>
-    useConversationStore.getState().conversations.find((c) => c.id === convId)?.streamToken,
+  getToken: (convId) => useConversationStore.getState().conversations.find((c) => c.id === convId)?.streamToken,
   setToken: (convId, token) => {
     useConversationStore.getState().setStreamToken(convId, token);
   },
 });
-

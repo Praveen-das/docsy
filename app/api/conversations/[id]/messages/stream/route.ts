@@ -91,25 +91,46 @@ export const GET = async (req: Request) => {
 
       const encoder = new TextEncoder();
 
+      // Heartbeat: send a space byte every 15s to prevent undici body timeout
+      // during the idle gap between stream open and first AI token
+      const heartbeat = setInterval(() => {
+        if (isClosed) {
+          clearInterval(heartbeat);
+          return;
+        }
+        if (isSSE) {
+          safeEnqueue(": keepalive\n\n");
+        } else {
+          safeEnqueue(encoder.encode(" "));
+        }
+      }, 15_000);
+
       try {
         await channel.history().on("ai.chunk", (chunk: any) => {
           if (isSSE) {
             safeEnqueue(`data: ${JSON.stringify(chunk)}\n\n`);
             if (chunk.type === "finish" || chunk.type === "error") {
+              clearInterval(heartbeat);
               safeClose();
             }
             return;
           }
 
-          if (chunk.type === "text-delta" && typeof chunk.text === "string") {
+          if (chunk.type === "typing") {
+            // Null byte as a control marker for typing signal
+            safeEnqueue(encoder.encode("\0"));
+          } else if (chunk.type === "text-delta" && typeof chunk.text === "string") {
             safeEnqueue(encoder.encode(chunk.text));
           } else if (chunk.type === "finish") {
+            clearInterval(heartbeat);
             safeClose();
           } else if (chunk.type === "error") {
+            clearInterval(heartbeat);
             safeError(new Error(chunk.error || "Stream failed"));
           }
         });
       } catch (err) {
+        clearInterval(heartbeat);
         safeError(err);
       }
     },
@@ -157,6 +178,8 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
         conversationHistory,
       });
 
+      // Signal to client that AI generation is about to start
+      await channel.emit("ai.chunk", { type: "typing" });
       // Stream LLM text deltas to the Upstash Realtime channel
       const result = streamText({
         model: getChatModel(),
@@ -323,7 +346,7 @@ export const POST = async (request: Request, { params }: RouteParams) => {
   const workflowClient = getWorkflowClient();
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   const proto = request.headers.get("x-forwarded-proto") || "http";
-  const origin = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000");
+  const origin = host ? `${proto}://${host}` : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const workflowUrl = `${origin}/api/conversations/${conversationId}/messages/stream`;
 
   try {
@@ -352,9 +375,6 @@ export const POST = async (request: Request, { params }: RouteParams) => {
       workflowUrl,
       error: errorMsg,
     });
-    return NextResponse.json(
-      { error: "Failed to trigger chat workflow", details: errorMsg },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to trigger chat workflow", details: errorMsg }, { status: 500 });
   }
 };

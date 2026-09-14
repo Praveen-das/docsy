@@ -1,34 +1,55 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { Message } from "@/types";
 import { EmptyChatState } from "./empty-chat-state";
 import { ChatMessageItem } from "./chat-message-item";
 
 export interface MessageListProps {
   messages: Message[];
-  isLoading?: boolean;
+  isLoadingMessages?: boolean;
+  isAiTyping?: boolean;
   onSelectStarterQuestion?: (question: string) => void;
 }
 
-export function MessageList({ messages, isLoading = false, onSelectStarterQuestion }: MessageListProps) {
+export function MessageList({
+  messages,
+  isLoadingMessages = false,
+  isAiTyping = false,
+  onSelectStarterQuestion,
+}: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new message or loading change
+  // Filter out any empty placeholder assistant messages so an empty bubble is never rendered
+  const displayMessages = messages.filter(
+    (message) => message.role !== "assistant" || message.content.trim().length > 0
+  );
+
+  // Auto-scroll to bottom on new message or AI typing state change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [displayMessages, isAiTyping]);
+
+  // Loading spinner while messages are being fetched
+  if (isLoadingMessages && displayMessages.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-400 dark:text-zinc-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-      {messages.length === 0 ? (
+      {displayMessages.length === 0 ? (
         <EmptyChatState onSelectQuestion={onSelectStarterQuestion} />
       ) : (
-        messages.map((message) => <ChatMessageItem key={message.id} message={message} />)
+        displayMessages.map((message) => <ChatMessageItem key={message.id} message={message} />)
       )}
 
-      {/* Typing Indicator Chat Bubble with Jumping Dots */}
-      {isLoading && (
+      {/* Typing Indicator — shown when server signals AI is generating */}
+      {isAiTyping && (
         <div className="flex items-center gap-2.5 text-sm justify-start">
           <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white text-[10px] font-bold shrink-0 shadow-2xs">
             D

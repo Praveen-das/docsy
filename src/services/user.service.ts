@@ -13,7 +13,7 @@ import type { UserRecord } from "@/db/schema";
  * Invoked on Clerk `user.created` webhook event.
  */
 export async function createUser(clerkUserId: string, name: string, email: string): Promise<UserRecord> {
-  const [user] = await db
+  const [createdUser] = await db
     .insert(users)
     .values({
       id: clerkUserId,
@@ -23,13 +23,31 @@ export async function createUser(clerkUserId: string, name: string, email: strin
     .onConflictDoNothing({ target: users.id })
     .returning();
 
-  if (user) {
+  let user: UserRecord | null = createdUser ?? null;
+
+  if (createdUser) {
     logger.info("user.created", { userId: clerkUserId, email });
-    return user;
+  } else {
+    user = await getUserById(clerkUserId);
   }
 
-  const existing = await getUserById(clerkUserId);
-  return existing!;
+  if (!user) {
+    throw new Error(`Failed to create or retrieve user: ${clerkUserId}`);
+  }
+
+  const cacheKey = CACHE_KEYS.userProfile(clerkUserId);
+  const profile = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    dailyQueriesUsed: user.dailyQueriesUsed,
+    dailyQueriesLimit: user.dailyQueriesLimit,
+    createdAt: user.createdAt.toISOString(),
+  };
+
+  await setCached(cacheKey, profile, CACHE_TTL.USER_PROFILE);
+
+  return user;
 }
 
 /**
@@ -149,16 +167,15 @@ export async function getUserProfile(userId: string) {
   } else {
   }
 
-  const user = await getUserById(userId);
-  if (!user) return null;
+  const [user, usedToday] = await Promise.all([getUserById(userId), redis ? ((await redis.get(quotaKey)) ?? 0) : null]);
 
-  const usedToday = redis ? ((await redis.get(quotaKey)) ?? 0) : user.dailyQueriesUsed;
+  if (!user) return null;
 
   const profile = {
     id: user.id,
     name: user.name,
     email: user.email,
-    dailyQueriesUsed: Number(usedToday),
+    dailyQueriesUsed: Number(usedToday || user.dailyQueriesUsed),
     dailyQueriesLimit: user.dailyQueriesLimit,
     createdAt: user.createdAt.toISOString(),
   };
@@ -201,7 +218,6 @@ export async function incrementQueryCount(userId: string): Promise<boolean> {
       // ignore parse error
     }
   }
-  console.log({ results, count, cachedProfile });
 
   // If this is the first query of the day, set expiration to midnight UTC asynchronously
   if (count === 1) {
@@ -214,7 +230,7 @@ export async function incrementQueryCount(userId: string): Promise<boolean> {
 
   let limit = cachedProfile?.dailyQueriesLimit;
   if (limit === undefined) {
-    const user = await getUserById(userId);
+    const user = await getUserProfile(userId);
     limit = user?.dailyQueriesLimit ?? 25;
   }
 

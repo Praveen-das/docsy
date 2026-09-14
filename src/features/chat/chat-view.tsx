@@ -34,6 +34,8 @@ export function ChatView({
     title,
     messages,
     isLoading,
+    isAiTyping,
+    isLoadingMessages,
     isGeneratingTitle,
     handleSendMessage,
     handleDelete,
@@ -81,7 +83,7 @@ export function ChatView({
         />
 
         {/* Message Feed Container */}
-        <MessageList messages={messages} isLoading={isLoading} />
+        <MessageList messages={messages} isLoadingMessages={isLoadingMessages} isAiTyping={isAiTyping} />
 
         {/* Input Composer Bar */}
         <ChatComposer

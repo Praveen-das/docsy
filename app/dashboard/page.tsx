@@ -45,12 +45,10 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDocuments();
     fetchConversations();
-    console.time("aaaaaaaaaaaaaaaaaaaaaaaaa");
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
-          console.timeEnd("aaaaaaaaaaaaaaaaaaaaaaaaa");
           setQuota({
             dailyQueriesUsed: data.dailyQueriesUsed ?? 0,
             dailyQueriesLimit: data.dailyQueriesLimit ?? 50,

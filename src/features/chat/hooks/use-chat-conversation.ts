@@ -34,6 +34,7 @@ export function useChatConversation({
   const conversations = useConversationStore((state) => state.conversations);
   const messagesRecord = useConversationStore((state) => state.messages);
   const storeIsLoading = useConversationStore((state) => state.isLoadingAi);
+  const storeIsAiTyping = useConversationStore((state) => state.isAiTyping);
   const sendMessage = useConversationStore((state) => state.sendMessage);
   const setMessages = useConversationStore((state) => state.setMessages);
   const deleteConversation = useConversationStore((state) => state.deleteConversation);
@@ -68,10 +69,9 @@ export function useChatConversation({
   }, [activeConvId, queryMessages, storeIsLoading, storeMsgs, setMessages]);
 
   const messages = propMessages ?? (storeMsgs && storeMsgs.length > 0 ? storeMsgs : (queryMessages ?? []));
-  const isLoading =
-    propIsLoading !== undefined
-      ? propIsLoading
-      : storeIsLoading || (isQueryLoading && (!storeMsgs || storeMsgs.length === 0));
+  const isAiTyping = storeIsAiTyping;
+  const isLoadingMessages = isQueryLoading && (!storeMsgs || storeMsgs.length === 0);
+  const isLoading = (propIsLoading ?? storeIsLoading) || isLoadingMessages;
 
   // Single unified message sending action
   const handleSendMessage = useCallback(
@@ -194,6 +194,8 @@ export function useChatConversation({
     primaryDoc,
     messages,
     isLoading,
+    isAiTyping,
+    isLoadingMessages,
     isGeneratingTitle,
     handleSendMessage,
     handleDelete,
