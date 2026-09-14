@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
-import { useConversationStore } from "@/stores/conversation-store";
 import { Upload } from "lucide-react";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarNavigation } from "./sidebar-navigation";
@@ -14,6 +13,18 @@ import { ConversationSidebar } from "./conversation-sidebar";
 
 // Module-scoped hydration flag: persists across client-side Next.js route transitions
 let isAppHydrated = false;
+
+function ConversationSidebarWithDoc({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose?: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const documentId = searchParams.get("doc");
+  return <ConversationSidebar isOpen={isOpen} onClose={onClose} documentId={documentId} />;
+}
 
 export interface SidebarProps {
   isOpen?: boolean;
@@ -27,7 +38,6 @@ export function Sidebar({ isOpen = true, onClose, onOpenUpload }: SidebarProps) 
   const router = useRouter();
   const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
-  const activeDocumentId = useConversationStore((state) => state.activeDocumentId);
 
   const [mounted, setMounted] = useState(isAppHydrated);
   const [enableTransitions, setEnableTransitions] = useState(isAppHydrated);
@@ -41,10 +51,18 @@ export function Sidebar({ isOpen = true, onClose, onOpenUpload }: SidebarProps) 
     return () => clearTimeout(timer);
   }, []);
 
-  const isConversationMode = pathname.startsWith("/conversation") || pathname.startsWith("/chat");
+  const isConversationMode =
+    pathname === "/conversation" ||
+    pathname.startsWith("/conversation/") ||
+    pathname === "/chat" ||
+    pathname.startsWith("/chat/");
 
   if (isConversationMode) {
-    return <ConversationSidebar isOpen={isOpen} onClose={onClose} documentId={activeDocumentId || "doc-1"} />;
+    return (
+      <Suspense fallback={null}>
+        <ConversationSidebarWithDoc isOpen={isOpen} onClose={onClose} />
+      </Suspense>
+    );
   }
 
   const isCollapsed = mounted ? isSidebarCollapsed : false;

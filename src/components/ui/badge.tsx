@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ProcessingStatus } from "@/types";
-import { Check, Loader2, Sparkles, UploadCloud } from "lucide-react";
+import { Check, Loader2, Sparkles, UploadCloud, AlertCircle } from "lucide-react";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?:
@@ -59,9 +59,11 @@ export function Badge({
 
 export function StatusBadge({
   status,
+  error,
   className,
 }: {
   status: ProcessingStatus;
+  error?: string | null;
   className?: string;
 }) {
   switch (status) {
@@ -77,17 +79,27 @@ export function StatusBadge({
         </span>
       );
 
-    case "FAILED":
+    case "FAILED": {
+      const isUploadFailure =
+        Boolean(error) &&
+        (error!.toLowerCase().includes("upload") ||
+          error!.toLowerCase().includes("storage") ||
+          error!.toLowerCase().includes("file not found") ||
+          error!.toLowerCase().includes("incomplete"));
+
       return (
         <span
           className={cn(
-            "inline-flex items-center text-xs font-medium text-rose-600 dark:text-rose-400 select-none",
+            "inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 select-none",
             className
           )}
+          title={error || undefined}
         >
-          <span>Failed</span>
+          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
+          <span>{isUploadFailure ? "Upload Incomplete" : "Failed"}</span>
         </span>
       );
+    }
 
     case "UPLOADING":
       return (

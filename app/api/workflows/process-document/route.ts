@@ -4,10 +4,7 @@ import { extractTextFromPdf } from "@/lib/pdf-parser";
 import { chunkText } from "@/lib/chunking";
 import { embedDocuments } from "@/lib/embeddings";
 import { upsertVectors, type VectorRecord } from "@/lib/pinecone";
-import {
-  getDocumentById,
-  updateDocumentStatus,
-} from "@/services/document.service";
+import { getDocumentById, updateDocumentStatus } from "@/services/document.service";
 import { logger } from "@/lib/logger";
 
 type ProcessDocumentPayload = { documentId: string };
@@ -39,18 +36,24 @@ export const { POST } = serve<ProcessDocumentPayload>(
       }
 
       const pdfBuffer = await downloadPdf(filePath);
-      const result = await extractTextFromPdf(pdfBuffer);
 
-      await updateDocumentStatus(documentId, "EXTRACTING", {
-        metadata: { pageCount: result.length },
-      });
+      try {
+        const result = await extractTextFromPdf(pdfBuffer);
 
-      logger.info("document.processing.extracted", {
-        documentId,
-        pageCount: result.length,
-      });
+        await updateDocumentStatus(documentId, "EXTRACTING", {
+          metadata: { pageCount: result.length },
+        });
 
-      return result;
+        logger.info("document.processing.extracted", {
+          documentId,
+          pageCount: result.length,
+        });
+
+        return result;
+      } catch (err) {
+        console.log("error: ", err);
+        throw err;
+      }
     });
 
     // Step 3: Split text into chunks
@@ -70,29 +73,26 @@ export const { POST } = serve<ProcessDocumentPayload>(
     });
 
     // Step 4: Generate embeddings (batched to avoid rate limits)
-    const allEmbeddings = await context.run(
-      "generate-embeddings",
-      async () => {
-        const BATCH_SIZE = 100;
-        const chunkTexts = chunks.map((c) => c.text);
-        const embeddings: number[][] = [];
+    const allEmbeddings = await context.run("generate-embeddings", async () => {
+      const BATCH_SIZE = 100;
+      const chunkTexts = chunks.map((c) => c.text);
+      const embeddings: number[][] = [];
 
-        for (let i = 0; i < chunkTexts.length; i += BATCH_SIZE) {
-          const batch = chunkTexts.slice(i, i + BATCH_SIZE);
-          const batchEmbeddings = await embedDocuments(batch);
-          embeddings.push(...batchEmbeddings);
-        }
+      for (let i = 0; i < chunkTexts.length; i += BATCH_SIZE) {
+        const batch = chunkTexts.slice(i, i + BATCH_SIZE);
+        const batchEmbeddings = await embedDocuments(batch);
+        embeddings.push(...batchEmbeddings);
+      }
 
-        await updateDocumentStatus(documentId, "EMBEDDING");
+      await updateDocumentStatus(documentId, "EMBEDDING");
 
-        logger.info("document.processing.embedded", {
-          documentId,
-          embeddingCount: embeddings.length,
-        });
+      logger.info("document.processing.embedded", {
+        documentId,
+        embeddingCount: embeddings.length,
+      });
 
-        return embeddings;
-      },
-    );
+      return embeddings;
+    });
 
     // Step 5: Upsert vectors to Pinecone
     await context.run("upsert-vectors", async () => {
@@ -107,7 +107,7 @@ export const { POST } = serve<ProcessDocumentPayload>(
         },
       }));
 
-      await upsertVectors(doc.userId, vectors);
+      await upsertVectors(documentId, vectors);
       await updateDocumentStatus(documentId, "INDEXING");
 
       logger.info("document.processing.indexed", {
@@ -129,22 +129,15 @@ export const { POST } = serve<ProcessDocumentPayload>(
   {
     failureFunction: async ({ context, failStatus, failResponse }) => {
       const { documentId } = context.requestPayload;
-      const errorMessage =
-        failResponse ?? `Workflow failed with status ${failStatus}`;
+      const errorMessage = failResponse ?? `Workflow failed with status ${failStatus}`;
 
       logger.error("document.processing.failed", {
         documentId,
-        error:
-          typeof errorMessage === "string"
-            ? errorMessage
-            : String(errorMessage),
+        error: typeof errorMessage === "string" ? errorMessage : String(errorMessage),
       });
 
       await updateDocumentStatus(documentId, "FAILED", {
-        error:
-          typeof errorMessage === "string"
-            ? errorMessage
-            : String(errorMessage),
+        error: typeof errorMessage === "string" ? errorMessage : String(errorMessage),
       });
     },
   },
@@ -156,9 +149,7 @@ export const { POST } = serve<ProcessDocumentPayload>(
 function extractFilePathFromUrl(fileUrl: string): string | null {
   try {
     const url = new URL(fileUrl);
-    const match = url.pathname.match(
-      /\/storage\/v1\/object\/public\/[^/]+\/(.+)/,
-    );
+    const match = url.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)/);
     return match ? match[1] : null;
   } catch {
     return null;

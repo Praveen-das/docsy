@@ -7,12 +7,29 @@ import {
 } from "@/db/schema";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import {
+  getCached,
+  setCached,
+  invalidateCache,
+  CACHE_TTL,
+} from "@/lib/cache";
+import { CACHE_KEYS } from "@/lib/cache-keys";
 
 import type {
   ConversationRecord,
   MessageRecord,
   NewMessage,
 } from "@/db/schema";
+
+/**
+ * Ensures date fields are proper Date instances when deserialized from JSON cache.
+ */
+function normalizeMessageDates(msg: MessageRecord): MessageRecord {
+  return {
+    ...msg,
+    createdAt: new Date(msg.createdAt),
+  };
+}
 
 // --- Conversations ---
 
@@ -44,6 +61,9 @@ export async function createConversation(
     );
   }
 
+  // Invalidate user's conversation list cache
+  await invalidateCache(CACHE_KEYS.conversationList(userId));
+
   logger.info("conversation.created", {
     conversationId: conv.id,
     userId,
@@ -54,20 +74,16 @@ export async function createConversation(
 }
 
 /**
- * List conversations for a user with metadata:
- * - Document associations
- * - Last message snippet
- * - Message count
+ * Internal helper to query and enrich conversations from PostgreSQL.
  */
-export async function listConversations(userId: string) {
+async function fetchEnrichedConversations(userId: string) {
   const convs = await db
     .select()
     .from(conversations)
     .where(eq(conversations.userId, userId))
     .orderBy(desc(conversations.updatedAt));
 
-  // Enrich with document IDs and last message for each conversation
-  const enriched = await Promise.all(
+  return Promise.all(
     convs.map(async (conv) => {
       const docLinks = await db
         .select({ documentId: conversationDocuments.documentId })
@@ -100,37 +116,109 @@ export async function listConversations(userId: string) {
       };
     })
   );
+}
 
+/**
+ * List conversations for a user with metadata:
+ * - Document associations
+ * - Last message snippet
+ * - Message count
+ * Backed by Redis cache (120s TTL). Eliminates heavy N+1 multi-table subqueries.
+ */
+export async function listConversations(userId: string) {
+  const cacheKey = CACHE_KEYS.conversationList(userId);
+  const cached = await getCached<Awaited<ReturnType<typeof fetchEnrichedConversations>>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const enriched = await fetchEnrichedConversations(userId);
+  await setCached(cacheKey, enriched, CACHE_TTL.CONVERSATIONS_LIST);
   return enriched;
 }
 
 /**
  * Get a single conversation with ownership verification.
+ * Backed by Redis cache (180s TTL).
  */
 export async function getConversation(userId: string, convId: string) {
-  const result = await db
-    .select()
-    .from(conversations)
-    .where(
-      and(eq(conversations.id, convId), eq(conversations.userId, userId))
-    )
-    .limit(1);
+  const cacheKey = CACHE_KEYS.conversationDetail(convId);
+  const cached = await getCached<{
+    id: string;
+    userId: string;
+    title: string;
+    documentIds: string[];
+    createdAt: string;
+    updatedAt: string;
+  }>(cacheKey);
+
+  if (cached) {
+    if (cached.userId === userId) {
+      return cached;
+    }
+    return null;
+  }
+
+  // On cache miss: query conversation and linked documents in parallel
+  const [result, docLinks] = await Promise.all([
+    db
+      .select()
+      .from(conversations)
+      .where(
+        and(eq(conversations.id, convId), eq(conversations.userId, userId))
+      )
+      .limit(1),
+    db
+      .select({ documentId: conversationDocuments.documentId })
+      .from(conversationDocuments)
+      .where(eq(conversationDocuments.conversationId, convId)),
+  ]);
 
   if (result.length === 0) return null;
 
   const conv = result[0];
-  const docLinks = await db
-    .select({ documentId: conversationDocuments.documentId })
-    .from(conversationDocuments)
-    .where(eq(conversationDocuments.conversationId, conv.id));
-
-  return {
+  const convData = {
     ...conv,
     documentIds: docLinks.map((d) => d.documentId),
     createdAt: conv.createdAt.toISOString(),
     updatedAt: conv.updatedAt.toISOString(),
   };
+
+  // Populate cache asynchronously without blocking return
+  setCached(cacheKey, convData, CACHE_TTL.CONVERSATION_DETAIL).catch(() => {});
+
+  return convData;
 }
+
+/**
+ * Retrieve conversation by ID without requiring prior userId knowledge (used by background workflows).
+ */
+export async function getConversationById(convId: string) {
+  const [result, docLinks] = await Promise.all([
+    db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.id, convId))
+      .limit(1),
+    db
+      .select({ documentId: conversationDocuments.documentId })
+      .from(conversationDocuments)
+      .where(eq(conversationDocuments.conversationId, convId)),
+  ]);
+
+  if (result.length === 0) return null;
+
+  const conv = result[0];
+  return {
+    id: conv.id,
+    userId: conv.userId,
+    title: conv.title,
+    documentIds: docLinks.map((d) => d.documentId),
+    createdAt: conv.createdAt.toISOString(),
+    updatedAt: conv.updatedAt.toISOString(),
+  };
+}
+
 
 /**
  * Get document IDs linked to a conversation (used by RAG pipeline).
@@ -162,7 +250,15 @@ export async function renameConversation(
     )
     .returning({ id: conversations.id });
 
-  return result.length > 0;
+  if (result.length > 0) {
+    await invalidateCache(
+      CACHE_KEYS.conversationList(userId),
+      CACHE_KEYS.conversationDetail(convId),
+    );
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -181,6 +277,11 @@ export async function deleteConversation(
     .returning({ id: conversations.id });
 
   if (result.length > 0) {
+    await invalidateCache(
+      CACHE_KEYS.conversationList(userId),
+      CACHE_KEYS.conversationDetail(convId),
+      CACHE_KEYS.conversationMessages(convId),
+    );
     logger.info("conversation.deleted", { conversationId: convId, userId });
     return true;
   }
@@ -192,6 +293,7 @@ export async function deleteConversation(
 
 /**
  * Get chronological messages for a conversation (with ownership check).
+ * Backed by Redis cache (180s TTL).
  */
 export async function getMessages(
   userId: string,
@@ -201,26 +303,89 @@ export async function getMessages(
   const conv = await getConversation(userId, convId);
   if (!conv) return [];
 
-  return db
+  const cacheKey = CACHE_KEYS.conversationMessages(convId);
+  const cached = await getCached<MessageRecord[]>(cacheKey);
+  if (cached) {
+    return cached.map(normalizeMessageDates);
+  }
+
+  const msgs = await db
     .select()
     .from(messages)
     .where(eq(messages.conversationId, convId))
     .orderBy(asc(messages.createdAt));
+
+  await setCached(cacheKey, msgs, CACHE_TTL.MESSAGES_LIST);
+  return msgs;
 }
 
 /**
  * Persist a message to the database.
+ * Combines message insertion and conversation touch into a single atomic CTE database roundtrip.
+ * Cache invalidation is triggered asynchronously without blocking execution.
  */
 export async function persistMessage(
   data: NewMessage
 ): Promise<MessageRecord> {
-  const [msg] = await db.insert(messages).values(data).returning();
+  const sourcesParam = data.sources ? JSON.stringify(data.sources) : "[]";
 
-  // Touch conversation's updatedAt
-  await db
-    .update(conversations)
-    .set({ updatedAt: new Date() })
-    .where(eq(conversations.id, data.conversationId));
+  const rows = await db.execute<{
+    id: string;
+    conversation_id: string;
+    role: "user" | "assistant" | "system";
+    content: string;
+    sources: unknown;
+    created_at: string | Date;
+    user_id: string | null;
+  }>(sql`
+    WITH inserted_message AS (
+      INSERT INTO messages (${data.id ? sql`id, ` : sql``}conversation_id, role, content, sources)
+      VALUES (${data.id ? sql`${data.id}::uuid, ` : sql``}${data.conversationId}::uuid, ${data.role}, ${data.content}, ${sourcesParam}::jsonb)
+      RETURNING id, conversation_id, role, content, sources, created_at
+    ),
+    updated_conversation AS (
+      UPDATE conversations
+      SET updated_at = NOW()
+      WHERE id = ${data.conversationId}::uuid
+      RETURNING user_id
+    )
+    SELECT 
+      im.id,
+      im.conversation_id,
+      im.role,
+      im.content,
+      im.sources,
+      im.created_at,
+      uc.user_id
+    FROM inserted_message im
+    LEFT JOIN updated_conversation uc ON true;
+  `);
+
+  const row = rows[0];
+  if (!row) {
+    throw new Error("Failed to persist message: No record returned from database");
+  }
+
+  const msg: MessageRecord = {
+    id: row.id,
+    conversationId: row.conversation_id,
+    role: row.role,
+    content: row.content,
+    sources: row.sources as any,
+    createdAt: new Date(row.created_at),
+  };
+
+  // Invalidate Redis cache completely in background (non-blocking)
+  if (row.user_id) {
+    invalidateCache(
+      CACHE_KEYS.conversationMessages(data.conversationId),
+      CACHE_KEYS.conversationList(row.user_id),
+    ).catch((err) => {
+      logger.warn("cache.invalidation_failed", { error: String(err) });
+    });
+  } else {
+    invalidateCache(CACHE_KEYS.conversationMessages(data.conversationId)).catch(() => {});
+  }
 
   return msg;
 }

@@ -1,11 +1,8 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
-import { Citation } from "@/types";
 
 export interface ChatContextValue {
-  activeCitation?: Citation | null;
-  onSelectCitation?: (citation: Citation) => void;
   onSelectStarterQuestion?: (question: string) => void;
 }
 

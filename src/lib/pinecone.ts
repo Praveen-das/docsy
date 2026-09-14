@@ -32,15 +32,15 @@ export interface VectorRecord {
 }
 
 /**
- * Upsert vectors into Pinecone under a user-specific namespace.
- * Per PRD §15: namespace = userId for cross-tenant isolation.
+ * Upsert vectors into Pinecone under a document-specific namespace.
+ * namespace = documentId ensures strict isolation per document and enables O(1) deletion.
  */
 export async function upsertVectors(
-  userId: string,
+  documentId: string,
   vectors: VectorRecord[]
 ): Promise<void> {
   const client = getPineconeClient();
-  const index = client.index(getIndexName()).namespace(userId);
+  const index = client.index(getIndexName()).namespace(documentId);
 
   // Pinecone batch limit is typically 100 vectors per upsert
   const BATCH_SIZE = 100;
@@ -51,13 +51,12 @@ export async function upsertVectors(
 }
 
 /**
- * Query vectors for similarity search within a user namespace.
- * Filters by documentId to restrict retrieval to conversation-linked documents (PRD §15).
+ * Query vectors for similarity search within a single document namespace.
+ * No metadata filter is required since the namespace contains only this document's vectors.
  */
 export async function queryVectors(
-  userId: string,
+  documentId: string,
   queryVector: number[],
-  documentIds: string[],
   topK = 5
 ): Promise<
   Array<{
@@ -67,15 +66,12 @@ export async function queryVectors(
   }>
 > {
   const client = getPineconeClient();
-  const index = client.index(getIndexName()).namespace(userId);
+  const index = client.index(getIndexName()).namespace(documentId);
 
   const result = await index.query({
     vector: queryVector,
     topK,
     includeMetadata: true,
-    filter: {
-      documentId: { $in: documentIds },
-    },
   });
 
   return (result.matches || []).map((match) => ({
@@ -86,18 +82,12 @@ export async function queryVectors(
 }
 
 /**
- * Delete all vectors for a specific document within a user namespace.
- * Called when a document is deleted (PRD §10 FR-06).
+ * Delete all vectors for a specific document by purging its namespace.
+ * Instant O(1) namespace deletion with zero metadata filter overhead.
  */
 export async function deleteDocumentVectors(
-  userId: string,
   documentId: string
 ): Promise<void> {
   const client = getPineconeClient();
-  const index = client.index(getIndexName()).namespace(userId);
-
-  // Delete by metadata filter
-  await index.deleteMany({
-    documentId: { $eq: documentId },
-  });
+  await client.index(getIndexName()).namespace(documentId).deleteAll();
 }

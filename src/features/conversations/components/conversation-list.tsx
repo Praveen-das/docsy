@@ -8,7 +8,7 @@ import { ConversationItem } from "./conversation-item";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
 
 export interface ConversationListProps {
-  documentId: string;
+  documentId?: string | null;
   isCollapsed: boolean;
   onClose?: () => void;
   // Optional overrides for flexible usage and testing
@@ -50,12 +50,14 @@ export function ConversationList({
   // Derive conversations if not explicitly provided via props
   const conversations =
     propConversations ??
-    storeConversations
-      .filter((c) => c.documentIds.includes(documentId))
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      );
+    (documentId
+      ? storeConversations
+          .filter((c) => c.documentIds.includes(documentId))
+          .sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          )
+      : []);
 
   const activeId =
     propActiveConversationId !== undefined
@@ -68,7 +70,11 @@ export function ConversationList({
       return;
     }
     switchConversation(convId);
-    router.push(`/conversation?doc=${documentId}&conv=${convId}`);
+    if (documentId) {
+      router.push(`/conversation?doc=${documentId}&conv=${convId}`);
+    } else {
+      router.push(`/conversation?conv=${convId}`);
+    }
     onClose?.();
   };
 
@@ -77,8 +83,12 @@ export function ConversationList({
       onCreateConversation();
       return;
     }
-    const newConvId = createConversation(documentId);
-    router.push(`/conversation?doc=${documentId}&conv=${newConvId}`);
+    useConversationStore.getState().setActiveConversation(null);
+    if (documentId) {
+      router.push(`/conversation?doc=${documentId}`);
+    } else {
+      router.push(`/conversation`);
+    }
     onClose?.();
   };
 

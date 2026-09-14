@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/providers/query-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,7 +57,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen font-sans bg-[#f7f7f8] text-[#09090b] dark:bg-[#08080a] dark:text-[#f4f4f5] antialiased selection:bg-zinc-200 dark:selection:bg-zinc-800">
         <ClerkProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </QueryProvider>
         </ClerkProvider>
       </body>
     </html>

@@ -1,4 +1,4 @@
-import { getDocumentProxy, extractText } from "unpdf";
+import { extractText } from "unpdf";
 
 export interface ExtractedPage {
   pageNumber: number;
@@ -9,24 +9,38 @@ export interface ExtractedPage {
  * Extract text from a PDF buffer page-by-page using unpdf.
  * Returns an array of pages with their text content and page numbers.
  *
+ * Uses a clean, unpooled ArrayBuffer slice to prevent DataCloneError
+ * during worker postMessage transfers in Node.js runtimes.
+ *
  * Throws a user-safe error if no usable text is found (image-only PDFs).
  */
 export async function extractTextFromPdf(
-  pdfBuffer: Buffer
+  pdfBuffer: Buffer | ArrayBuffer | Uint8Array
 ): Promise<ExtractedPage[]> {
-  const uint8 = new Uint8Array(pdfBuffer);
-  const doc = await getDocumentProxy(uint8);
-  const totalPages = doc.numPages;
+  // Ensure we pass a standalone, unpooled ArrayBuffer copy
+  let uint8: Uint8Array;
+  if (Buffer.isBuffer(pdfBuffer)) {
+    const arrayBuffer = pdfBuffer.buffer.slice(
+      pdfBuffer.byteOffset,
+      pdfBuffer.byteOffset + pdfBuffer.byteLength
+    );
+    uint8 = new Uint8Array(arrayBuffer);
+  } else if (pdfBuffer instanceof Uint8Array) {
+    uint8 = new Uint8Array(pdfBuffer.slice());
+  } else {
+    uint8 = new Uint8Array(pdfBuffer.slice(0));
+  }
 
-  if (totalPages === 0) {
+  // extractText resolves the PDF, extracts all pages, and destroys the task in one call
+  const { text: fullText, totalPages } = await extractText(uint8, {
+    mergePages: false,
+  });
+
+  if (!totalPages || totalPages === 0) {
     throw new Error(
       "This PDF contains no pages. Please upload a valid PDF document."
     );
   }
-
-  const { text: fullText, totalPages: extractedPages } = await extractText(uint8, {
-    mergePages: false,
-  });
 
   // `fullText` is string[] when mergePages=false — one string per page
   const pages: ExtractedPage[] = [];

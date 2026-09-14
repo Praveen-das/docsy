@@ -1,23 +1,13 @@
 import { embedQuery } from "@/lib/embeddings";
-import { queryVectors, type VectorMetadata } from "@/lib/pinecone";
-import { buildContextBlock, buildPromptMessages } from "@/lib/prompt-templates";
-import { getDocumentById } from "./document.service";
+import { queryVectors } from "@/lib/pinecone";
+import { buildContextBlock, buildSystemPrompt, buildPromptMessages } from "@/lib/prompt-templates";
 import { logger } from "@/lib/logger";
-
-export interface RetrievedSource {
-  documentId: string;
-  documentName: string;
-  page: number;
-  chunkIndex: number;
-  textSnippet: string;
-  relevanceScore: number;
-}
 
 export interface RAGResult {
   contextBlock: string;
-  sources: RetrievedSource[];
+  systemPrompt: string;
   promptMessages: Array<{
-    role: "system" | "user" | "assistant";
+    role: "user" | "assistant";
     content: string;
   }>;
 }
@@ -25,81 +15,68 @@ export interface RAGResult {
 /**
  * Full RAG pipeline: embed query → Pinecone retrieval → context construction → prompt assembly.
  *
- * @param userId - Authenticated user ID (for Pinecone namespace isolation)
+ * @param userId - Authenticated user ID (for logging/auditing)
  * @param query - User's question
- * @param documentIds - Documents linked to the current conversation (scoped retrieval)
+ * @param documentIdOrIds - Document ID (or array) linked to the current conversation
  * @param conversationHistory - Recent messages for multi-turn context
  * @param topK - Number of chunks to retrieve (default 5 per PRD §17)
  */
 export async function executeRAG(
   userId: string,
   query: string,
-  documentIds: string[],
+  documentIdOrIds: string | string[],
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = [],
-  topK = 5
+  topK = 5,
 ): Promise<RAGResult> {
+  const documentId = Array.isArray(documentIdOrIds) ? documentIdOrIds[0] : documentIdOrIds;
+
   logger.info("rag.started", {
     userId,
-    documentIds,
+    documentId,
     queryLength: query.length,
     topK,
   });
 
-  // Step 1: Embed the query
-  const queryVector = await embedQuery(query);
-
-  // Step 2: Search Pinecone with document scoping (PRD §17 FR-15)
-  const matches = await queryVectors(userId, queryVector, documentIds, topK);
-
-  // Step 3: Enrich matches with document names for citations
-  const sources: RetrievedSource[] = [];
-  const contextChunks: Array<{
-    documentName: string;
-    page: number;
-    text: string;
-    score: number;
-  }> = [];
-
-  for (const match of matches) {
-    const meta = match.metadata;
-    // Look up document name
-    const doc = await getDocumentById(meta.documentId);
-    const documentName = doc?.originalName || "Unknown Document";
-
-    sources.push({
-      documentId: meta.documentId,
-      documentName,
-      page: meta.page,
-      chunkIndex: meta.chunkIndex,
-      textSnippet: meta.textSnippet,
-      relevanceScore: match.score,
-    });
-
-    contextChunks.push({
-      documentName,
-      page: meta.page,
-      text: meta.textSnippet,
-      score: match.score,
-    });
+  if (!documentId) {
+    logger.warn("rag.no_document_provided", { userId });
+    return {
+      contextBlock: "",
+      systemPrompt: buildSystemPrompt(""),
+      promptMessages: buildPromptMessages(conversationHistory, query),
+    };
   }
 
-  // Step 4: Build context block and prompt messages
+  // Step 1: Embed the query
+  console.time("\x1b[1;96m🧠 [Embed the query]\x1b[0m");
+  const queryVector = await embedQuery(query);
+  console.timeEnd("\x1b[1;96m🧠 [Embed the query]\x1b[0m");
+
+  // Step 2: Search Pinecone scoped to the document namespace
+  console.time("\x1b[1;96m🧠 [Search Pinecone]\x1b[0m");
+  const matches = await queryVectors(documentId, queryVector, topK);
+  console.timeEnd("\x1b[1;96m🧠 [Search Pinecone]\x1b[0m");
+
+  // Step 3: Extract context chunks directly from matches (zero DB lookups required)
+  const contextChunks = matches.map((match) => ({
+    text: match.metadata.textSnippet,
+    score: match.score,
+  }));
+
+  // Step 4: Build context block, system instructions, and chat messages
   const contextBlock = buildContextBlock(contextChunks);
-  const promptMessages = buildPromptMessages(
-    contextBlock,
-    conversationHistory,
-    query
-  );
+  const systemPrompt = buildSystemPrompt(contextBlock);
+  const promptMessages = buildPromptMessages(conversationHistory, query);
 
   logger.info("rag.completed", {
     userId,
+    documentId,
     matchCount: matches.length,
     topScore: matches[0]?.score ?? 0,
   });
 
   return {
     contextBlock,
-    sources,
+    systemPrompt,
     promptMessages,
   };
 }

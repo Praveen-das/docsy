@@ -1,27 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { MessageSquare, FileText } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useConversationStore } from "@/stores/conversation-store";
 
 export interface MobilePaneSwitcherProps {
   activeTab: "conversation" | "pdf";
   conversationCount?: number;
+  documentId?: string | null;
   onTabChange: (tab: "conversation" | "pdf") => void;
 }
 
-export function MobilePaneSwitcher({
+function MobilePaneSwitcherInner({
   activeTab,
   conversationCount: propCount,
+  documentId: propDocId,
   onTabChange,
 }: MobilePaneSwitcherProps) {
+  const searchParams = useSearchParams();
   const conversations = useConversationStore((state) => state.conversations);
-  const activeDocumentId =
-    useConversationStore((state) => state.activeDocumentId) || "doc-1";
+  const docId = propDocId !== undefined ? propDocId : searchParams.get("doc");
 
   const count =
     propCount ??
-    conversations.filter((c) => c.documentIds.includes(activeDocumentId)).length;
+    (docId
+      ? conversations.filter((c) => c.documentIds.includes(docId)).length
+      : 0);
 
   return (
     <div className="flex border-b border-zinc-200 bg-white dark:border-white/5 dark:bg-[#0e0e12] lg:hidden">
@@ -48,5 +53,13 @@ export function MobilePaneSwitcher({
         <span>Document Reader</span>
       </button>
     </div>
+  );
+}
+
+export function MobilePaneSwitcher(props: MobilePaneSwitcherProps) {
+  return (
+    <Suspense fallback={null}>
+      <MobilePaneSwitcherInner {...props} />
+    </Suspense>
   );
 }

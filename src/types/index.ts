@@ -7,6 +7,17 @@ export type ProcessingStatus =
   | "READY"
   | "FAILED";
 
+export interface DocumentStatusDto {
+  id: string;
+  userId?: string;
+  status: ProcessingStatus;
+  processingProgress: number;
+  error: string | null;
+  pageCount: number;
+  chunkCount: number;
+  updatedAt: string;
+}
+
 export interface Citation {
   documentId: string;
   documentName: string;
@@ -51,6 +62,7 @@ export interface Conversation {
   messageCount: number;
   createdAt: string;
   updatedAt: string;
+  streamToken?: string;
 }
 
 export interface User {

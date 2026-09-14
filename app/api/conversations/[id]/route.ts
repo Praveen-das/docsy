@@ -11,9 +11,11 @@ const renameSchema = z.object({
   title: z.string().min(1).max(200),
 });
 
+import { signConversationToken } from "@/lib/conversation-token";
+
 /**
  * GET /api/conversations/:id
- * Get conversation details with ownership verification.
+ * Get conversation details with ownership verification and stream capability token.
  */
 export async function GET(
   _request: NextRequest,
@@ -34,7 +36,16 @@ export async function GET(
     );
   }
 
-  return NextResponse.json(conv);
+  const streamToken = await signConversationToken({
+    userId,
+    conversationId: conv.id,
+    documentIds: conv.documentIds,
+  });
+
+  return NextResponse.json({
+    ...conv,
+    streamToken,
+  });
 }
 
 /**

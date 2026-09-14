@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 /**
  * Protected routes — everything except auth pages, landing, and webhook endpoints.
@@ -18,8 +19,25 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  // Allow Upstash QStash workflow callbacks to pass through to signature verification
+  if (req.headers.get("upstash-signature") || req.headers.get("Upstash-Signature")) {
+    return;
+  }
+
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    // For API requests, return explicit 401 JSON when unauthenticated instead of Clerk's default 404
+    if (req.nextUrl.pathname.startsWith("/api")) {
+      const { userId } = await auth();
+
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Unauthorized: Session expired or invalid. Please refresh or sign in." },
+          { status: 401 }
+        );
+      }
+    } else {
+      await auth.protect();
+    }
   }
 });
 

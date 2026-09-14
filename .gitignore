@@ -42,3 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# slop-detector: governance config (contains codebase complexity surface — keep private)
+.slopconfig.yaml

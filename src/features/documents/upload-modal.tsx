@@ -1,28 +1,23 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   UploadCloud,
   FileText,
   AlertCircle,
-  CheckCircle2,
   Loader2,
-  Layers,
-  Sparkles,
   ArrowRight,
   Check,
   X,
   ShieldCheck,
-  Bookmark,
   FileUp,
   RefreshCw,
+  Bookmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDocumentStore } from "@/stores/document-store";
-import { Document } from "@/types";
 
 export interface UploadModalProps {
   isOpen: boolean;
@@ -30,15 +25,7 @@ export interface UploadModalProps {
   onUploadSuccess?: (filename: string) => void;
 }
 
-type UploadStep = "idle" | "uploading" | "extracting" | "chunking" | "embedding" | "indexing" | "ready" | "failed";
-
-const STAGES = [
-  { id: "uploading", label: "Upload", min: 15 },
-  { id: "extracting", label: "Scan Pages", min: 40 },
-  { id: "chunking", label: "Organize", min: 70 },
-  { id: "embedding", label: "Index", min: 90 },
-  { id: "ready", label: "Ready", min: 100 },
-] as const;
+type UploadStep = "idle" | "uploading" | "failed";
 
 export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps) {
   const router = useRouter();
@@ -49,19 +36,8 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [uploadedDoc, setUploadedDoc] = useState<Document | null>(null);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, []);
-
   const resetState = () => {
-    if (pollingRef.current) clearInterval(pollingRef.current);
     setSelectedFile(null);
-    setUploadedDoc(null);
     setStep("idle");
     setProgress(0);
     setErrorMessage(null);
@@ -165,131 +141,38 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
         xhr.send(selectedFile);
       });
 
-      setProgress(35);
+      setProgress(100);
 
-      // Step 3: Confirm upload — server verifies file landed and triggers workflow
-      const confirmRes = await fetch("/api/documents/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId: docId }),
+      // Optimistically add the document to the store so it appears
+      // at the top of the /documents list with "Analyzing..." status
+      const now = new Date().toISOString();
+      useDocumentStore.getState().addDocument({
+        id: docId,
+        userId: "", // filled on next fetchDocuments()
+        filename: "", // filled on next fetchDocuments()
+        originalName: selectedFile.name,
+        fileUrl: "", // filled on next fetchDocuments()
+        fileSize: selectedFile.size,
+        pageCount: 0,
+        chunkCount: 0,
+        status: "UPLOADING",
+        processingProgress: 0,
+        error: null,
+        createdAt: now,
+        updatedAt: now,
       });
 
-      if (!confirmRes.ok) {
-        let errDetail = "Failed to confirm upload";
-        try {
-          const errData = await confirmRes.json();
-          console.log("file uploaded failed");
-          if (errData.error) errDetail = errData.error;
-        } catch {}
-        setErrorMessage(errDetail);
-        setStep("failed");
-        return;
-      }
+      // Call onUploadSuccess callback if provided (e.g. to re-fetch)
+      onUploadSuccess?.(selectedFile.name);
 
-      console.log("file uploaded successfully");
-
-      setStep("extracting");
-      setProgress(40);
-
-      // Start polling document status (existing logic)
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      pollingRef.current = setInterval(async () => {
-        try {
-          const pollRes = await fetch(`/api/documents/${docId}`);
-          if (!pollRes.ok) return;
-
-          const doc: Document = await pollRes.json();
-
-          if (doc.status === "EXTRACTING") {
-            setStep("extracting");
-            setProgress(Math.max(40, doc.processingProgress || 40));
-          } else if (doc.status === "CHUNKING") {
-            setStep("chunking");
-            setProgress(Math.max(65, doc.processingProgress || 65));
-          } else if (doc.status === "EMBEDDING") {
-            setStep("embedding");
-            setProgress(Math.max(80, doc.processingProgress || 80));
-          } else if (doc.status === "INDEXING") {
-            setStep("indexing");
-            setProgress(Math.max(90, doc.processingProgress || 90));
-          } else if (doc.status === "READY") {
-            if (pollingRef.current) clearInterval(pollingRef.current);
-            setUploadedDoc(doc);
-            setStep("ready");
-            setProgress(100);
-            useDocumentStore.getState().addDocument(doc);
-            if (onUploadSuccess) {
-              onUploadSuccess(doc as any);
-            }
-          } else if (doc.status === "FAILED") {
-            if (pollingRef.current) clearInterval(pollingRef.current);
-            setStep("failed");
-            setErrorMessage(doc.error || "Document processing failed");
-            useDocumentStore.getState().updateDocument(doc.id, {
-              status: "FAILED",
-              error: doc.error,
-            });
-          }
-        } catch (e) {
-          console.error("Polling error:", e);
-        }
-      }, 1500);
+      // Close modal and navigate to the documents list
+      resetState();
+      onClose();
+      router.push("/documents");
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Network error during upload");
       setStep("failed");
     }
-  };
-
-  const handleStartConversation = () => {
-    handleClose();
-    if (uploadedDoc) {
-      router.push(`/conversation?doc=${uploadedDoc.id}`);
-    } else {
-      router.push("/conversation");
-    }
-  };
-
-  const stepDetails: Record<UploadStep, { title: string; subtitle: string; icon: React.ReactNode }> = {
-    idle: {
-      title: "Upload Document",
-      subtitle: "Select a PDF document to begin",
-      icon: <UploadCloud className="h-5 w-5 text-blue-600" />,
-    },
-    uploading: {
-      title: "Uploading Document...",
-      subtitle: "Transferring file securely to your private workspace...",
-      icon: <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />,
-    },
-    extracting: {
-      title: "Scanning Pages & Text...",
-      subtitle: "Extracting text and preserving coordinates for page citations...",
-      icon: <FileText className="h-5 w-5 text-indigo-600 animate-pulse" />,
-    },
-    chunking: {
-      title: "Organizing Searchable Sections...",
-      subtitle: "Structuring content by paragraphs, tables, and sections...",
-      icon: <Layers className="h-5 w-5 text-blue-600 animate-bounce" />,
-    },
-    embedding: {
-      title: "Indexing Key Information...",
-      subtitle: "Preparing question-answering references and direct links...",
-      icon: <Sparkles className="h-5 w-5 text-purple-600 animate-pulse" />,
-    },
-    indexing: {
-      title: "Finalizing Citations...",
-      subtitle: "Connecting references to exact document pages...",
-      icon: <Bookmark className="h-5 w-5 text-emerald-600 animate-pulse" />,
-    },
-    ready: {
-      title: "Document Ready for Conversation!",
-      subtitle: "Your document is fully analyzed and citation-verified.",
-      icon: <CheckCircle2 className="h-6 w-6 text-emerald-600" />,
-    },
-    failed: {
-      title: "Analysis Incomplete",
-      subtitle: "Unable to read text from this document.",
-      icon: <AlertCircle className="h-5 w-5 text-rose-600" />,
-    },
   };
 
   return (
@@ -443,37 +326,29 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
               </Button>
             </div>
           </>
-        ) : step === "ready" ? (
-          /* Celebratory Ready State */
-          <div className="py-5 text-center space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 shadow-sm animate-in zoom-in-95">
-              <CheckCircle2 className="h-8 w-8 stroke-[2.2]" />
+        ) : step === "uploading" ? (
+          /* Brief uploading state — shown only during XHR transfer */
+          <div className="py-8 text-center space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 shadow-sm">
+              <Loader2 className="h-8 w-8 stroke-[2.2] animate-spin" />
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Document Ready for Conversation!</h4>
-              <p className="max-w-sm mx-auto text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed truncate px-4">
-                &ldquo;{selectedFile?.name}&rdquo; is ready for verified questioning.
+              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Uploading Document...</h4>
+              <p className="max-w-sm mx-auto text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Transferring file securely to your private workspace.
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 font-medium">
-              <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Page citations linked and verified</span>
+            <div className="w-full max-w-xs mx-auto bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-
-            {/* Launch Action */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-4 border-t border-zinc-100 dark:border-white/5">
-              <Button variant="outline" size="sm" onClick={handleClose} className="w-full sm:w-auto">
-                Done & View List
-              </Button>
-              <Button variant="accent" size="sm" onClick={handleStartConversation} className="w-full sm:w-auto">
-                <span>Start Conversation Now</span>
-                <ArrowRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </div>
+            <p className="text-xs font-mono text-blue-600 dark:text-blue-400">{progress}%</p>
           </div>
-        ) : step === "failed" ? (
+        ) : (
           /* Failed Error State with Retry */
           <div className="py-5 text-center space-y-4">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 shadow-sm">
@@ -481,7 +356,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Analysis Incomplete</h4>
+              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Upload Failed</h4>
               <p className="max-w-sm mx-auto text-xs text-rose-600 dark:text-rose-400 leading-relaxed px-4">
                 {errorMessage || "Unable to process this document. Please check the file and try again."}
               </p>
@@ -496,87 +371,6 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                 <span>Retry Upload</span>
               </Button>
             </div>
-          </div>
-        ) : (
-          /* Live Dynamic Analysis Pipeline */
-          <div className="py-3 space-y-5">
-            {/* Active Stage Info */}
-            <div className="flex items-center gap-3.5 rounded-xl border border-zinc-200 bg-zinc-50 p-3.5 dark:border-white/10 dark:bg-[#16161b]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-2xs border border-zinc-200 dark:bg-[#1c1c22] dark:text-blue-400 dark:border-white/10">
-                {stepDetails[step].icon}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {stepDetails[step].title}
-                </h4>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-                  {stepDetails[step].subtitle}
-                </p>
-              </div>
-            </div>
-
-            {/* Continuous Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-blue-500 animate-ping" />
-                  <span>Processing document</span>
-                </span>
-                <span className="font-mono text-blue-600 dark:text-blue-400">{progress}%</span>
-              </div>
-              <Progress
-                value={progress}
-                indicatorColor="bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500"
-              />
-            </div>
-
-            {/* Connected Stage Nodes */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between relative">
-                <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-zinc-200 dark:bg-zinc-800 -translate-y-1/2 z-0" />
-
-                {STAGES.map((stage, idx) => {
-                  const isPassed = progress >= stage.min;
-                  const isCurrent = progress >= stage.min - 25 && progress < stage.min;
-
-                  return (
-                    <div
-                      key={stage.id}
-                      className="relative z-10 flex flex-col items-center gap-1.5 bg-white dark:bg-[#121216] px-1"
-                    >
-                      <div
-                        className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-all shadow-2xs",
-                          isPassed
-                            ? "bg-emerald-600 text-white"
-                            : isCurrent
-                              ? "bg-blue-600 text-white ring-4 ring-blue-500/20 animate-pulse"
-                              : "bg-zinc-100 text-zinc-400 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-500 dark:border-white/10",
-                        )}
-                      >
-                        {isPassed ? <Check className="h-3 w-3 stroke-[2.5]" /> : <span>{idx + 1}</span>}
-                      </div>
-                      <span
-                        className={cn(
-                          "text-[10px] font-medium transition-colors",
-                          isPassed
-                            ? "text-emerald-600 dark:text-emerald-400 font-semibold"
-                            : isCurrent
-                              ? "text-blue-600 dark:text-blue-400 font-bold"
-                              : "text-zinc-400 dark:text-zinc-500",
-                        )}
-                      >
-                        {stage.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 italic pt-1">
-              Analyzing text and generating verified page reference index...
-            </p>
           </div>
         )}
       </div>

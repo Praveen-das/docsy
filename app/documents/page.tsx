@@ -13,6 +13,7 @@ import {
   FileText,
   Search,
   Upload,
+  UploadCloud,
   Trash2,
   RefreshCw,
   ExternalLink,
@@ -30,13 +31,27 @@ import { useConversationStore } from "@/stores/conversation-store";
 import { DocumentConversationsDialog } from "@/features/conversations/document-conversations-dialog";
 import { formatDate } from "@/lib/format-time";
 
+import { useDocumentPolling } from "@/features/documents/hooks/use-document-polling";
+
 export default function DocumentsPage() {
   const documents = useDocumentStore((state) => state.documents);
   const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
   const reprocessDocument = useDocumentStore((state) => state.reprocessDocument);
+  const checkDocumentStatus = useDocumentStore((state) => state.checkDocumentStatus);
   const openedDocumentIds = useDocumentStore((state) => state.openedDocumentIds);
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
+
+  const [checkingDocId, setCheckingDocId] = useState<string | null>(null);
+
+  const handleForceCheck = async (docId: string) => {
+    setCheckingDocId(docId);
+    try {
+      await checkDocumentStatus(docId);
+    } finally {
+      setCheckingDocId(null);
+    }
+  };
 
   const conversations = useConversationStore((state) => state.conversations);
   const fetchConversations = useConversationStore((state) => state.fetchConversations);
@@ -52,6 +67,9 @@ export default function DocumentsPage() {
     fetchDocuments();
     fetchConversations();
   }, [fetchDocuments, fetchConversations]);
+
+  // Auto-refresh when any document is actively processing
+  useDocumentPolling();
 
   // Filter documents
   const filtered = documents.filter((doc) => {
@@ -209,7 +227,9 @@ export default function DocumentsPage() {
                         {doc.status === "READY" && !isOpened && <StatusBadge status="READY" />}
 
                         {/* Error state: no background, no border */}
-                        {doc.status === "FAILED" && <StatusBadge status="FAILED" />}
+                        {doc.status === "FAILED" && (
+                          <StatusBadge status="FAILED" error={doc.error} />
+                        )}
                       </div>
 
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -261,16 +281,51 @@ export default function DocumentsPage() {
                       </>
                     )}
 
-                    {doc.status === "FAILED" && (
+                    {doc.status !== "READY" && doc.status !== "FAILED" && (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleReprocess(doc.id)}
-                        className="h-8 px-3 text-xs"
+                        onClick={() => handleForceCheck(doc.id)}
+                        disabled={checkingDocId === doc.id}
+                        className="h-8 px-2.5 text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                        title="Force check status from database & storage"
                       >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        <span>Retry</span>
+                        <RefreshCw
+                          className={`h-3.5 w-3.5 ${checkingDocId === doc.id ? "animate-spin" : ""}`}
+                        />
+                        <span>{checkingDocId === doc.id ? "Checking..." : "Check Status"}</span>
                       </Button>
+                    )}
+
+                    {doc.status === "FAILED" && (
+                      <>
+                        {doc.error &&
+                        (doc.error.toLowerCase().includes("upload") ||
+                          doc.error.toLowerCase().includes("storage") ||
+                          doc.error.toLowerCase().includes("file not found") ||
+                          doc.error.toLowerCase().includes("incomplete")) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setIsUploadOpen(true)}
+                            className="h-8 px-3 text-xs gap-1.5 hover:border-blue-300 dark:hover:border-blue-500/40"
+                            title="File not found in storage — please re-upload"
+                          >
+                            <UploadCloud className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>Re-upload</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReprocess(doc.id)}
+                            className="h-8 px-3 text-xs"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            <span>Retry</span>
+                          </Button>
+                        )}
+                      </>
                     )}
 
                     <button
@@ -302,7 +357,9 @@ export default function DocumentsPage() {
                         <FileText className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />
                       </div>
                       {doc.status === "READY" && !isOpened && <StatusBadge status="READY" />}
-                      {doc.status === "FAILED" && <StatusBadge status="FAILED" />}
+                      {doc.status === "FAILED" && (
+                        <StatusBadge status="FAILED" error={doc.error} />
+                      )}
                       {doc.status !== "READY" && doc.status !== "FAILED" && (
                         <StatusBadge status={doc.status} />
                       )}
@@ -365,14 +422,46 @@ export default function DocumentsPage() {
 
                     <div className="flex items-center gap-2">
                       {doc.status === "FAILED" && (
+                        doc.error &&
+                        (doc.error.toLowerCase().includes("upload") ||
+                          doc.error.toLowerCase().includes("storage") ||
+                          doc.error.toLowerCase().includes("file not found") ||
+                          doc.error.toLowerCase().includes("incomplete")) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setIsUploadOpen(true)}
+                            className="h-8 text-xs gap-1.5 hover:border-blue-300 dark:hover:border-blue-500/40"
+                            title="File not found in storage — please re-upload"
+                          >
+                            <UploadCloud className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                            <span>Re-upload</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReprocess(doc.id)}
+                            className="h-8 text-xs"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                            <span>Retry</span>
+                          </Button>
+                        )
+                      )}
+                      {doc.status !== "READY" && doc.status !== "FAILED" && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleReprocess(doc.id)}
-                          className="h-8 text-xs"
+                          onClick={() => handleForceCheck(doc.id)}
+                          disabled={checkingDocId === doc.id}
+                          className="h-8 text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                          title="Force check status from database & storage"
                         >
-                          <RefreshCw className="h-3 w-3" />
-                          <span>Retry</span>
+                          <RefreshCw
+                            className={`h-3 w-3 ${checkingDocId === doc.id ? "animate-spin" : ""}`}
+                          />
+                          <span>{checkingDocId === doc.id ? "Checking..." : "Check Status"}</span>
                         </Button>
                       )}
                       {doc.status === "READY" && (

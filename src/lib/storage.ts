@@ -1,11 +1,12 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 let _client: SupabaseClient | null = null;
 
 function getStorageClient(): SupabaseClient {
   if (_client) return _client;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_KEY;
 
   if (!url || !key) {
@@ -13,6 +14,9 @@ function getStorageClient(): SupabaseClient {
       "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables"
     );
   }
+
+  // Strip trailing slashes and any accidentally appended API paths (e.g. /rest/v1)
+  url = url.replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
 
   _client = createClient(url, key);
   return _client;
@@ -89,19 +93,33 @@ export async function createSignedUploadUrl(
  * Verify that a file exists in storage (used to confirm client-side upload succeeded).
  */
 export async function verifyFileExists(filePath: string): Promise<boolean> {
-  const client = getStorageClient();
-  const bucket = getBucket();
+  try {
+    if (!filePath || typeof filePath !== "string") return false;
 
-  // List with exact prefix — if the file exists, we get exactly one result
-  const { data, error } = await client.storage
-    .from(bucket)
-    .list(filePath.substring(0, filePath.lastIndexOf("/")), {
-      search: filePath.substring(filePath.lastIndexOf("/") + 1),
-      limit: 1,
+    const client = getStorageClient();
+    const bucket = getBucket();
+
+    const lastSlashIndex = filePath.lastIndexOf("/");
+    const folder = lastSlashIndex !== -1 ? filePath.substring(0, lastSlashIndex) : "";
+    const filename = lastSlashIndex !== -1 ? filePath.substring(lastSlashIndex + 1) : filePath;
+
+    // List with search prefix — confirm exact filename exists
+    const { data, error } = await client.storage
+      .from(bucket)
+      .list(folder, {
+        search: filename,
+        limit: 10,
+      });
+
+    if (error || !Array.isArray(data)) return false;
+    return data.some((item) => item.name === filename);
+  } catch (err) {
+    logger.warn("storage.verify_file_exists_failed", {
+      filePath,
+      error: err instanceof Error ? err.message : String(err),
     });
-
-  if (error) return false;
-  return Array.isArray(data) && data.length > 0;
+    return false;
+  }
 }
 
 /**

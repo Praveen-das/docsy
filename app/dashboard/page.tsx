@@ -14,14 +14,18 @@ import { useDocumentStore } from "@/stores/document-store";
 import { useConversationStore } from "@/stores/conversation-store";
 import { DocumentConversationsDialog } from "@/features/conversations/document-conversations-dialog";
 import { formatRelativeTime, formatDate } from "@/lib/format-time";
+import { useDocumentPolling } from "@/features/documents/hooks/use-document-polling";
 
 export default function DashboardPage() {
   const { user } = useUser();
   const documents = useDocumentStore((state) => state.documents);
   const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
   const reprocessDocument = useDocumentStore((state) => state.reprocessDocument);
+  const checkDocumentStatus = useDocumentStore((state) => state.checkDocumentStatus);
   const openedDocumentIds = useDocumentStore((state) => state.openedDocumentIds);
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
+
+  const [checkingDocId, setCheckingDocId] = useState<string | null>(null);
 
   const conversations = useConversationStore((state) => state.conversations);
   const fetchConversations = useConversationStore((state) => state.fetchConversations);
@@ -41,10 +45,12 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDocuments();
     fetchConversations();
+    console.time("aaaaaaaaaaaaaaaaaaaaaaaaa");
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
+          console.timeEnd("aaaaaaaaaaaaaaaaaaaaaaaaa");
           setQuota({
             dailyQueriesUsed: data.dailyQueriesUsed ?? 0,
             dailyQueriesLimit: data.dailyQueriesLimit ?? 50,
@@ -54,8 +60,20 @@ export default function DashboardPage() {
       .catch(() => {});
   }, [fetchDocuments, fetchConversations]);
 
+  // Auto-refresh when any document is actively processing
+  useDocumentPolling();
+
   const handleReprocess = async (docId: string) => {
     await reprocessDocument(docId);
+  };
+
+  const handleForceCheck = async (docId: string) => {
+    setCheckingDocId(docId);
+    try {
+      await checkDocumentStatus(docId);
+    } finally {
+      setCheckingDocId(null);
+    }
   };
 
   return (
@@ -77,13 +95,8 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="font-semibold text-zinc-800 dark:text-zinc-200">Daily Queries</span>
               <span className="font-mono text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                {Math.max(
-                  0,
-                  100 -
-                    Math.round(
-                      (quota.dailyQueriesUsed / (quota.dailyQueriesLimit || 1)) * 100
-                    )
-                )}% remaining
+                {Math.max(0, 100 - Math.round((quota.dailyQueriesUsed / (quota.dailyQueriesLimit || 1)) * 100))}%
+                remaining
               </span>
             </div>
             <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
@@ -92,9 +105,7 @@ export default function DashboardPage() {
                 style={{
                   width: `${Math.min(
                     100,
-                    Math.round(
-                      (quota.dailyQueriesUsed / (quota.dailyQueriesLimit || 1)) * 100
-                    )
+                    Math.round((quota.dailyQueriesUsed / (quota.dailyQueriesLimit || 1)) * 100),
                   )}%`,
                 }}
               />
@@ -201,7 +212,7 @@ export default function DashboardPage() {
                           {doc.status === "READY" && !isOpened && <StatusBadge status="READY" />}
 
                           {/* Error state */}
-                          {doc.status === "FAILED" && <StatusBadge status="FAILED" />}
+                          {doc.status === "FAILED" && <StatusBadge status="FAILED" error={doc.error} />}
                         </div>
 
                         <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -233,11 +244,7 @@ export default function DashboardPage() {
                             title="View conversations for this document"
                           >
                             <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                            <span>
-                              (
-                              {conversations.filter((c) => c.documentIds.includes(doc.id)).length}
-                              )
-                            </span>
+                            <span>({conversations.filter((c) => c.documentIds.includes(doc.id)).length})</span>
                           </Button>
 
                           <Link href={`/conversation?doc=${doc.id}`} onClick={() => markDocumentAsOpened(doc.id)}>
@@ -247,17 +254,46 @@ export default function DashboardPage() {
                           </Link>
                         </>
                       )}
-                      {doc.status === "FAILED" && (
+                      {doc.status !== "READY" && doc.status !== "FAILED" && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleReprocess(doc.id)}
-                          className="h-8 px-3 text-xs"
+                          onClick={() => handleForceCheck(doc.id)}
+                          disabled={checkingDocId === doc.id}
+                          className="h-8 px-2.5 text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                          title="Force check status from database & storage"
                         >
-                          <RefreshCw className="h-3.5 w-3.5" />
-                          <span>Retry</span>
+                          <RefreshCw className={`h-3.5 w-3.5 ${checkingDocId === doc.id ? "animate-spin" : ""}`} />
+                          <span>{checkingDocId === doc.id ? "Checking..." : "Check Status"}</span>
                         </Button>
                       )}
+                      {doc.status === "FAILED" &&
+                        (doc.error &&
+                        (doc.error.toLowerCase().includes("upload") ||
+                          doc.error.toLowerCase().includes("storage") ||
+                          doc.error.toLowerCase().includes("file not found") ||
+                          doc.error.toLowerCase().includes("incomplete")) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setIsUploadOpen(true)}
+                            className="h-8 px-3 text-xs gap-1.5 hover:border-blue-300 dark:hover:border-blue-500/40"
+                            title="File not found in storage — please re-upload"
+                          >
+                            <UploadCloud className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>Re-upload</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReprocess(doc.id)}
+                            className="h-8 px-3 text-xs"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            <span>Retry</span>
+                          </Button>
+                        ))}
                     </div>
                   </div>
                 );

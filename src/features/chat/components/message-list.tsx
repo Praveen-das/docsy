@@ -1,26 +1,17 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { Message, Citation } from "@/types";
+import { Message } from "@/types";
 import { EmptyChatState } from "./empty-chat-state";
 import { ChatMessageItem } from "./chat-message-item";
 
 export interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
-  // Optional overrides for standalone use
-  activeCitation?: Citation | null;
-  onSelectCitation?: (citation: Citation) => void;
   onSelectStarterQuestion?: (question: string) => void;
 }
 
-export function MessageList({
-  messages,
-  isLoading = false,
-  activeCitation,
-  onSelectCitation,
-  onSelectStarterQuestion,
-}: MessageListProps) {
+export function MessageList({ messages, isLoading = false, onSelectStarterQuestion }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new message or loading change
@@ -33,28 +24,28 @@ export function MessageList({
       {messages.length === 0 ? (
         <EmptyChatState onSelectQuestion={onSelectStarterQuestion} />
       ) : (
-        messages.map((message) => (
-          <ChatMessageItem
-            key={message.id}
-            message={message}
-            activeCitation={activeCitation}
-            onSelectCitation={onSelectCitation}
-          />
-        ))
+        messages.map((message) => <ChatMessageItem key={message.id} message={message} />)
       )}
 
-      {/* Quiet Research Disclosure when Loading */}
+      {/* Typing Indicator Chat Bubble with Jumping Dots */}
       {isLoading && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-2xs space-y-2 dark:border-white/10 dark:bg-[#141418]">
-          <div className="flex items-center gap-2.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            <span>Scanning document text & cross-verifying page citations...</span>
+        <div className="flex items-center gap-2.5 text-sm justify-start">
+          <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white text-[10px] font-bold shrink-0 shadow-2xs">
+            D
           </div>
-          <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full w-2/3 animate-pulse" />
+          <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-xs border border-zinc-200 bg-white px-3.5 py-2.5 shadow-2xs dark:border-white/10 dark:bg-[#121215]">
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-400 animate-bounce"
+              style={{ animationDelay: "-0.32s", animationDuration: "1s" }}
+            />
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-400 animate-bounce"
+              style={{ animationDelay: "-0.16s", animationDuration: "1s" }}
+            />
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-400 animate-bounce"
+              style={{ animationDuration: "1s" }}
+            />
           </div>
         </div>
       )}

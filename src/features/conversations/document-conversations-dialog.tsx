@@ -49,10 +49,14 @@ export function DocumentConversationsDialog({
     router.push(`/conversation?doc=${document.id}&conv=${conv.id}`);
   };
 
-  const handleCreateNew = () => {
-    const newConvId = createConversation(document.id);
-    onClose();
-    router.push(`/conversation?doc=${document.id}&conv=${newConvId}`);
+  const handleCreateNew = async () => {
+    try {
+      const newConvId = await createConversation(document.id);
+      onClose();
+      router.push(`/conversation?doc=${document.id}&conv=${newConvId}`);
+    } catch (err) {
+      console.error("Failed to create conversation:", err);
+    }
   };
 
   return (

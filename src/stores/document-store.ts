@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Document } from "@/types";
+import { Document, DocumentStatusDto } from "@/types";
 
 interface DocumentState {
   documents: Document[];
@@ -16,6 +16,7 @@ interface DocumentState {
   updateDocument: (id: string, updates: Partial<Document>) => void;
   deleteDocument: (id: string) => Promise<boolean>;
   reprocessDocument: (id: string) => Promise<boolean>;
+  checkDocumentStatus: (id: string) => Promise<DocumentStatusDto | null>;
   markDocumentAsOpened: (docId: string) => void;
   isDocumentOpened: (docId: string) => boolean;
 }
@@ -99,6 +100,43 @@ export const useDocumentStore = create<DocumentState>()(
             error: "Reprocessing request failed",
           });
           return false;
+        }
+      },
+
+      checkDocumentStatus: async (id: string): Promise<DocumentStatusDto | null> => {
+        try {
+          const res = await fetch("/api/documents/status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ documentIds: [id] }),
+          });
+
+          if (!res.ok) return null;
+
+          const data: { statuses?: DocumentStatusDto[] } = await res.json();
+          const statusItem = data.statuses?.[0];
+
+          if (statusItem) {
+            get().updateDocument(statusItem.id, {
+              status: statusItem.status,
+              processingProgress: statusItem.processingProgress,
+              error: statusItem.error,
+              pageCount: statusItem.pageCount,
+              chunkCount: statusItem.chunkCount,
+              updatedAt: statusItem.updatedAt,
+            });
+
+            if (statusItem.status === "READY") {
+              get().fetchDocuments().catch(() => {});
+            }
+
+            return statusItem;
+          }
+
+          return null;
+        } catch (err) {
+          console.error("Failed to check document status:", err);
+          return null;
         }
       },
 

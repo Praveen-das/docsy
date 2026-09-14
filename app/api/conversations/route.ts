@@ -12,9 +12,11 @@ const createConversationSchema = z.object({
   title: z.string().optional(),
 });
 
+import { signConversationToken } from "@/lib/conversation-token";
+
 /**
  * GET /api/conversations
- * List all conversations for the authenticated user.
+ * List all conversations for the authenticated user with stream capability tokens.
  */
 export async function GET() {
   const { userId } = await auth();
@@ -23,12 +25,23 @@ export async function GET() {
   }
 
   const conversations = await listConversations(userId);
-  return NextResponse.json(conversations);
+  const withTokens = await Promise.all(
+    conversations.map(async (conv) => ({
+      ...conv,
+      streamToken: await signConversationToken({
+        userId,
+        conversationId: conv.id,
+        documentIds: conv.documentIds,
+      }),
+    }))
+  );
+
+  return NextResponse.json(withTokens);
 }
 
 /**
  * POST /api/conversations
- * Create a new conversation linked to one or more documents.
+ * Create a new conversation linked to one or more documents and return a stream capability token.
  */
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -54,6 +67,12 @@ export async function POST(request: NextRequest) {
       parsed.data.id
     );
 
+    const streamToken = await signConversationToken({
+      userId,
+      conversationId: conv.id,
+      documentIds: parsed.data.documentIds,
+    });
+
     return NextResponse.json(
       {
         id: conv.id,
@@ -63,6 +82,7 @@ export async function POST(request: NextRequest) {
         messageCount: 0,
         createdAt: conv.createdAt.toISOString(),
         updatedAt: conv.updatedAt.toISOString(),
+        streamToken,
       },
       { status: 201 }
     );

@@ -26,7 +26,7 @@ export function EmptyChatState({
       </h3>
       <p className="max-w-sm text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
         Ask questions across your uploaded documents. Every answer is grounded
-        with page citations you can verify in the viewer.
+        directly in your document content.
       </p>
 
       {/* Suggested Starter Questions */}

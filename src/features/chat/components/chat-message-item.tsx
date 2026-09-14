@@ -1,25 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Message, Citation } from "@/types";
+import { Message } from "@/types";
 import { cn } from "@/lib/utils";
 import { Copy, Check } from "lucide-react";
-import { CitationList } from "./citation-list";
 import { formatTime } from "@/lib/format-time";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 
 export interface ChatMessageItemProps {
   message: Message;
-  activeCitation?: Citation | null;
-  onSelectCitation?: (citation: Citation) => void;
 }
 
-export function ChatMessageItem({
-  message,
-  activeCitation,
-  onSelectCitation,
-}: ChatMessageItemProps) {
+export function ChatMessageItem({ message }: ChatMessageItemProps) {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
+  const formattedTime = formatTime(message.createdAt);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -59,7 +54,7 @@ export function ChatMessageItem({
               </div>
 
               <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">
-                <span>{formatTime(message.createdAt)}</span>
+                <span>{formattedTime}</span>
                 <button
                   onClick={handleCopy}
                   className="rounded p-1 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 dark:hover:bg-white/5 dark:text-zinc-500 dark:hover:text-zinc-200 transition-colors cursor-pointer"
@@ -75,22 +70,13 @@ export function ChatMessageItem({
             </div>
 
             {/* Content Body */}
-            <div className="text-[13px] text-zinc-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap font-normal">
-              {message.content}
-            </div>
-
-            {/* Sources & Citations Shelf */}
-            <CitationList
-              citations={message.sources || []}
-              activeCitation={activeCitation}
-              onSelectCitation={onSelectCitation}
-            />
+            <MarkdownRenderer content={message.content} />
           </div>
         )}
 
         {isUser && (
           <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 px-1">
-            {formatTime(message.createdAt)}
+            {formattedTime}
           </span>
         )}
       </div>

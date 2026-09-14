@@ -18,7 +18,7 @@ let isAppHydrated = false;
 export interface ConversationSidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
-  documentId: string;
+  documentId?: string | null;
 }
 
 export function ConversationSidebar({
@@ -44,18 +44,22 @@ export function ConversationSidebar({
 
   const isCollapsed = mounted ? isSidebarCollapsed : false;
 
-  const createConversation = useConversationStore(
-    (state) => state.createConversation
+  const setActiveConversation = useConversationStore(
+    (state) => state.setActiveConversation
   );
 
   // Current document info
   const documents = useDocumentStore((state) => state.documents);
-  const activeDocument = documents.find((d) => d.id === documentId);
-  const documentName = activeDocument?.originalName || "Document";
+  const activeDocument = documentId ? documents.find((d) => d.id === documentId) : undefined;
+  const documentName = activeDocument?.originalName || (documentId ? "Document" : "No Document Selected");
 
   const handleCreateNewConversation = () => {
-    const newConvId = createConversation(documentId);
-    router.push(`/conversation?doc=${documentId}&conv=${newConvId}`);
+    setActiveConversation(null);
+    if (documentId) {
+      router.push(`/conversation?doc=${documentId}`);
+    } else {
+      router.push("/conversation");
+    }
     onClose?.();
   };
 
