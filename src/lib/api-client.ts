@@ -10,10 +10,7 @@ let setTokenFn: TokenUpdater | null = null;
  * Registers token provider and updater callbacks to decouple Axios interceptors
  * from Zustand store implementation details.
  */
-export function registerTokenHandlers(handlers: {
-  getToken: TokenProvider;
-  setToken: TokenUpdater;
-}) {
+export function registerTokenHandlers(handlers: { getToken: TokenProvider; setToken: TokenUpdater }) {
   getTokenFn = handlers.getToken;
   setTokenFn = handlers.setToken;
 }
@@ -57,7 +54,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response Interceptor: Auto-refresh expired capability token on 401 & retry
@@ -85,10 +82,9 @@ api.interceptors.response.use(
 
       try {
         // Direct unintercepted fetch to retrieve fresh conversation capability token
-        const refreshRes = await axios.get<{ streamToken?: string }>(
-          `/api/conversations/${convId}`,
-          { adapter: "fetch" }
-        );
+        const refreshRes = await axios.get<{ streamToken?: string }>(`/api/conversations/${convId}`, {
+          adapter: "fetch",
+        });
 
         const freshToken = refreshRes.data?.streamToken;
         if (freshToken) {
@@ -128,5 +124,5 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );

@@ -3,9 +3,8 @@ import {
   conversations,
   conversationDocuments,
   messages,
-  documents,
 } from "@/db/schema";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, lt, desc, asc, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import {
   getCached,
@@ -14,6 +13,7 @@ import {
   CACHE_TTL,
 } from "@/lib/cache";
 import { CACHE_KEYS } from "@/lib/cache-keys";
+import { verifyConversationToken } from "@/lib/conversation-token";
 
 import type {
   ConversationRecord,
@@ -292,21 +292,166 @@ export async function deleteConversation(
 // --- Messages ---
 
 /**
+ * Verifies conversation ownership, preferring fast in-memory JWT cryptographic validation (<0.05ms)
+ * and falling back to cached/DB lookup if token is missing or invalid.
+ */
+export async function verifyConversationOwnership(
+  userId: string,
+  convId: string,
+  token?: string
+): Promise<boolean> {
+  if (token) {
+    const payload = await verifyConversationToken(token);
+    if (payload && payload.userId === userId && payload.conversationId === convId) {
+      return true;
+    }
+  }
+
+  const conv = await getConversation(userId, convId);
+  return Boolean(conv);
+}
+
+/**
  * Get chronological messages for a conversation (with ownership check).
  * Backed by Redis cache (180s TTL).
+ * Uses JWT session token for instant in-memory ownership verification (<0.05ms)
+ * with graceful fallback to DB/cache.
+ */
+export interface PaginatedMessagesResult {
+  messages: MessageRecord[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+/**
+ * Encodes a message's timestamp and unique ID into an opaque, URL-safe cursor.
+ */
+export function encodeCursor(message: { createdAt: Date | string; id: string }): string {
+  const iso = typeof message.createdAt === "string" ? message.createdAt : message.createdAt.toISOString();
+  return Buffer.from(`${iso}|${message.id}`).toString("base64url");
+}
+
+/**
+ * Decodes a cursor string back into its constituent timestamp and message ID.
+ */
+export function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
+  try {
+    const raw = Buffer.from(cursor, "base64url").toString("utf8");
+    const [iso, id] = raw.split("|");
+    if (!iso || !id) return null;
+    const date = new Date(iso);
+    if (isNaN(date.getTime())) return null;
+    return { createdAt: date, id };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get paginated chronological messages for a conversation (with ownership check).
+ * Uses cursor-based pagination backed by PostgreSQL index on (conversation_id, created_at).
+ * Caches the initial page (latest messages) in Redis (180s TTL).
+ */
+export async function getPaginatedMessages(
+  userId: string,
+  convId: string,
+  options: { limit?: number; cursor?: string; token?: string } = {}
+): Promise<PaginatedMessagesResult> {
+  // Fast path: Verify conversation ownership via JWT, falling back to cache/DB
+  const isOwner = await verifyConversationOwnership(userId, convId, options.token);
+  if (!isOwner) {
+    return { messages: [], nextCursor: null, hasMore: false };
+  }
+
+  const limit = Math.max(1, Math.min(options.limit ?? 30, 100));
+  const { cursor } = options;
+
+  // Fast path: Check Redis cache for initial batch (latest messages)
+  if (!cursor && limit === 30) {
+    const cacheKey = CACHE_KEYS.conversationMessages(convId);
+    const cached = await getCached<PaginatedMessagesResult>(cacheKey);
+    if (cached && Array.isArray(cached.messages)) {
+      return {
+        ...cached,
+        messages: cached.messages.map(normalizeMessageDates),
+      };
+    }
+  }
+
+  const whereConditions = [eq(messages.conversationId, convId)];
+
+  if (cursor) {
+    const decoded = decodeCursor(cursor);
+    if (decoded) {
+      whereConditions.push(
+        or(
+          lt(messages.createdAt, decoded.createdAt),
+          and(
+            eq(messages.createdAt, decoded.createdAt),
+            lt(messages.id, decoded.id)
+          )
+        )!
+      );
+    }
+  }
+
+  // Fetch limit + 1 in descending order using (conversationId, createdAt) index
+  const rows = await db
+    .select()
+    .from(messages)
+    .where(and(...whereConditions))
+    .orderBy(desc(messages.createdAt), desc(messages.id))
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+  // Next cursor points to oldest message in descending batch (last element)
+  const nextCursor =
+    hasMore && pageRows.length > 0 ? encodeCursor(pageRows[pageRows.length - 1]) : null;
+
+  // Reverse back to ascending chronological order (oldest to newest)
+  pageRows.reverse();
+
+  const result: PaginatedMessagesResult = {
+    messages: pageRows,
+    nextCursor,
+    hasMore,
+  };
+
+  // Cache initial page in Redis
+  if (!cursor && limit === 30) {
+    const cacheKey = CACHE_KEYS.conversationMessages(convId);
+    await setCached(cacheKey, result, CACHE_TTL.MESSAGES_LIST);
+  }
+
+  return result;
+}
+
+/**
+ * Get chronological messages for a conversation (with ownership check).
+ * Backed by Redis cache (180s TTL).
+ * Uses JWT session token for instant in-memory ownership verification (<0.05ms)
+ * with graceful fallback to DB/cache.
  */
 export async function getMessages(
   userId: string,
-  convId: string
+  convId: string,
+  token?: string
 ): Promise<MessageRecord[]> {
-  // Verify conversation ownership first
-  const conv = await getConversation(userId, convId);
-  if (!conv) return [];
+  // Fast path: Verify conversation ownership via JWT, falling back to cache/DB
+  const isOwner = await verifyConversationOwnership(userId, convId, token);
+  if (!isOwner) return [];
 
   const cacheKey = CACHE_KEYS.conversationMessages(convId);
-  const cached = await getCached<MessageRecord[]>(cacheKey);
+  const cached = await getCached<unknown>(cacheKey);
   if (cached) {
-    return cached.map(normalizeMessageDates);
+    if (Array.isArray(cached)) {
+      return cached.map(normalizeMessageDates);
+    }
+    if (typeof cached === "object" && cached !== null && "messages" in cached && Array.isArray((cached as { messages: MessageRecord[] }).messages)) {
+      return (cached as { messages: MessageRecord[] }).messages.map(normalizeMessageDates);
+    }
   }
 
   const msgs = await db
@@ -315,7 +460,6 @@ export async function getMessages(
     .where(eq(messages.conversationId, convId))
     .orderBy(asc(messages.createdAt));
 
-  await setCached(cacheKey, msgs, CACHE_TTL.MESSAGES_LIST);
   return msgs;
 }
 
@@ -371,7 +515,7 @@ export async function persistMessage(
     conversationId: row.conversation_id,
     role: row.role,
     content: row.content,
-    sources: row.sources as any,
+    sources: (row.sources as unknown as MessageRecord["sources"]) ?? [],
     createdAt: new Date(row.created_at),
   };
 
@@ -388,4 +532,112 @@ export async function persistMessage(
   }
 
   return msg;
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Update a message's content (e.g. for user message editing or assistant response regeneration).
+ * Verifies conversation ownership, validates UUID, touches conversation timestamp, and invalidates Redis caches.
+ */
+export async function updateMessage(
+  userId: string,
+  convId: string,
+  messageId: string,
+  content: string,
+  token?: string
+): Promise<MessageRecord | null> {
+  if (!UUID_REGEX.test(messageId) || !UUID_REGEX.test(convId)) {
+    return null;
+  }
+
+  const isOwner = await verifyConversationOwnership(userId, convId, token);
+  if (!isOwner) return null;
+
+  const rows = await db.execute<{
+    id: string;
+    conversation_id: string;
+    role: "user" | "assistant" | "system";
+    content: string;
+    sources: unknown;
+    created_at: string | Date;
+  }>(sql`
+    WITH updated_message AS (
+      UPDATE messages
+      SET content = ${content}
+      WHERE id = ${messageId}::uuid AND conversation_id = ${convId}::uuid
+      RETURNING id, conversation_id, role, content, sources, created_at
+    ),
+    touched_conversation AS (
+      UPDATE conversations
+      SET updated_at = NOW()
+      WHERE id = ${convId}::uuid
+      RETURNING id
+    )
+    SELECT 
+      um.id,
+      um.conversation_id,
+      um.role,
+      um.content,
+      um.sources,
+      um.created_at
+    FROM updated_message um;
+  `);
+
+  const row = rows[0];
+  if (!row) return null;
+
+  const msg: MessageRecord = {
+    id: row.id,
+    conversationId: row.conversation_id,
+    role: row.role,
+    content: row.content,
+    sources: (row.sources as unknown as MessageRecord["sources"]) ?? [],
+    createdAt: new Date(row.created_at),
+  };
+
+  invalidateCache(
+    CACHE_KEYS.conversationMessages(convId),
+    CACHE_KEYS.conversationList(userId)
+  ).catch((err) => {
+    logger.warn("cache.invalidation_failed", { error: String(err) });
+  });
+
+  logger.info("message.updated", { conversationId: convId, messageId });
+  return msg;
+}
+
+/**
+ * Delete a message from a conversation (with ownership verification).
+ */
+export async function deleteMessage(
+  userId: string,
+  convId: string,
+  messageId: string,
+  token?: string
+): Promise<boolean> {
+  if (!UUID_REGEX.test(messageId) || !UUID_REGEX.test(convId)) {
+    return false;
+  }
+
+  const isOwner = await verifyConversationOwnership(userId, convId, token);
+  if (!isOwner) return false;
+
+  const result = await db
+    .delete(messages)
+    .where(and(eq(messages.id, messageId), eq(messages.conversationId, convId)))
+    .returning({ id: messages.id });
+
+  if (result.length > 0) {
+    invalidateCache(
+      CACHE_KEYS.conversationMessages(convId),
+      CACHE_KEYS.conversationList(userId)
+    ).catch((err) => {
+      logger.warn("cache.invalidation_failed", { error: String(err) });
+    });
+    logger.info("message.deleted", { conversationId: convId, messageId });
+    return true;
+  }
+
+  return false;
 }

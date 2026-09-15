@@ -8,7 +8,7 @@ import { realtime } from "@/lib/realtime";
 import { getChatModel } from "@/lib/ai";
 import { getWorkflowClient } from "@/lib/workflow";
 import { verifyChatPreflight, dispatchChatPipeline } from "@/services/chat.service";
-import { persistMessage } from "@/services/conversation.service";
+import { persistMessage, updateMessage } from "@/services/conversation.service";
 import { updateConversationTitleIfDefault } from "@/services/title.service";
 import { chatStreamSchema } from "@/lib/validations/chat.schema";
 import { logger } from "@/lib/logger";
@@ -16,11 +16,14 @@ import type { HistoryMessage } from "@/lib/validations/chat.schema";
 
 export interface ChatWorkflowPayload {
   messageId: string;
+  streamChannelId?: string;
   conversationId: string;
   userId: string;
   documentIds: string[];
   content: string;
   conversationHistory?: HistoryMessage[];
+  skipUserPersistence?: boolean;
+  replaceAssistantMessageId?: string;
 }
 
 interface RouteParams {
@@ -120,6 +123,7 @@ export const GET = async (req: Request) => {
             // Null byte as a control marker for typing signal
             safeEnqueue(encoder.encode("\0"));
           } else if (chunk.type === "text-delta" && typeof chunk.text === "string") {
+            console.log("aaaaaaaaaaaa: ", chunk.text);
             safeEnqueue(encoder.encode(chunk.text));
           } else if (chunk.type === "finish") {
             clearInterval(heartbeat);
@@ -150,7 +154,17 @@ export const GET = async (req: Request) => {
  * Receives pre-verified payload from the POST route entrypoint.
  */
 const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => {
-  const { conversationId, messageId, userId, documentIds, content, conversationHistory = [] } = context.requestPayload;
+  const {
+    conversationId,
+    messageId,
+    streamChannelId,
+    userId,
+    documentIds,
+    content,
+    conversationHistory = [],
+    skipUserPersistence = false,
+    replaceAssistantMessageId,
+  } = context.requestPayload;
 
   if (!conversationId || !messageId || !userId || !content) {
     logger.error("chat.workflow_invalid_payload", {
@@ -162,13 +176,28 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
     throw new WorkflowAbort("Invalid workflow request payload: missing required fields");
   }
 
-  logger.info("chat.workflow_started", { userId, conversationId, messageId });
+  // Use the ephemeral streamChannelId for realtime so regeneration doesn't
+  // replay old chunks from channel.history(). Falls back to messageId for
+  // backwards compatibility with first-time message generation.
+  const channelId = streamChannelId || messageId;
+
+  logger.info("chat.workflow_started", {
+    userId,
+    conversationId,
+    messageId,
+    channelId,
+    skipUserPersistence,
+    replaceAssistantMessageId,
+  });
 
   // 1. Durable AI Generation Step (streaming LLM deltas to Upstash Realtime)
   const generationResult = await context.run("ai-generation", async () => {
-    const channel = realtime.channel(messageId);
+    const channel = realtime.channel(channelId);
 
     try {
+      // Signal to client that AI generation is about to start
+      await channel.emit("ai.chunk", { type: "typing" });
+
       // Dispatch RAG retrieval and async user message persistence
       const { ragResult, persistUserPromise } = await dispatchChatPipeline({
         userId,
@@ -176,10 +205,9 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
         content,
         documentIds,
         conversationHistory,
+        skipUserPersistence,
       });
 
-      // Signal to client that AI generation is about to start
-      await channel.emit("ai.chunk", { type: "typing" });
       // Stream LLM text deltas to the Upstash Realtime channel
       const result = streamText({
         model: getChatModel(),
@@ -202,13 +230,17 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
         type: "finish",
       });
 
-      // Persist assistant message to database
+      // Persist or in-place update assistant message in database
       await persistUserPromise;
-      await persistMessage({
-        conversationId,
-        role: "assistant",
-        content: fullText,
-      });
+      if (replaceAssistantMessageId) {
+        await updateMessage(userId, conversationId, replaceAssistantMessageId, fullText);
+      } else {
+        await persistMessage({
+          conversationId,
+          role: "assistant",
+          content: fullText,
+        });
+      }
 
       logger.info("chat.completed", {
         userId,
@@ -305,7 +337,15 @@ export const POST = async (request: Request, { params }: RouteParams) => {
     return NextResponse.json({ error: "Invalid message payload" }, { status: 400 });
   }
 
-  const { content, conversationHistory, conversationToken, messageId } = parsed.data;
+  const {
+    content,
+    conversationHistory,
+    conversationToken,
+    messageId,
+    streamChannelId,
+    skipUserPersistence,
+    replaceAssistantMessageId,
+  } = parsed.data;
 
   if (!messageId || !content) {
     return NextResponse.json({ error: "Missing messageId or content" }, { status: 400 });
@@ -336,11 +376,14 @@ export const POST = async (request: Request, { params }: RouteParams) => {
   // 5. Construct verified workflow payload and trigger via QStash
   const verifiedPayload: ChatWorkflowPayload = {
     messageId,
+    streamChannelId,
     conversationId,
     userId,
     documentIds: preflight.documentIds,
     content,
     conversationHistory,
+    skipUserPersistence,
+    replaceAssistantMessageId,
   };
 
   const workflowClient = getWorkflowClient();

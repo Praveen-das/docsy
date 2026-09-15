@@ -9,30 +9,43 @@ import { Conversation, Message, Document } from "@/types";
 
 interface ConversationState {
   conversations: Conversation[];
-  messages: Record<string, Message[]>;
+  sessionMessages: Record<string, Message[]>;
   drafts: Record<string, string>;
   activeConversationId: string | null;
   isLoadingAi: boolean;
   isAiTyping: boolean;
+  streamingContent: string | null;
+  regeneratingMessageId: string | null;
   isLoadingConversations: boolean;
-  isLoadingMessages: boolean;
   error: string | null;
 
   // Actions
   setActiveConversation: (convId: string | null) => void;
   setStreamToken: (convId: string, token: string) => void;
   fetchConversations: () => Promise<void>;
-  fetchMessages: (convId: string) => Promise<void>;
-  setMessages: (convId: string, messages: Message[]) => void;
   createConversation: (documentId: string, initialTitle?: string) => Promise<string>;
   switchConversation: (targetConvId: string, currentDraft?: string) => void;
   saveDraft: (convId: string, draft: string) => void;
   renameConversation: (convId: string, newTitle: string) => Promise<void>;
   deleteConversation: (convId: string) => Promise<void>;
-  clearMessages: (convId: string) => void;
+  clearSessionMessages: (convId: string) => void;
   syncConversationTitle: (convId: string) => Promise<void>;
   pollConversationTitle: (convId: string, initialTitle: string) => void;
-  sendMessage: (convId: string, content: string, activeDoc?: Document) => Promise<void>;
+  sendMessage: (
+    convId: string,
+    content: string,
+    options?: { priorMessages?: Message[]; activeDoc?: Document } | Document,
+  ) => Promise<void>;
+  editMessage: (convId: string, messageId: string, newContent: string) => Promise<void>;
+  regenerateMessage: (
+    convId: string,
+    assistantMessageId: string,
+    options: {
+      promptContent: string;
+      conversationHistory?: { role: "user" | "assistant"; content: string }[];
+    },
+  ) => Promise<void>;
+  deleteMessage: (convId: string, messageId: string) => Promise<void>;
   resetToDefaults: () => void;
 }
 
@@ -90,22 +103,193 @@ export function createClientConversation(
 /** Active poll interval timers per conversation ID to prevent duplicate polling */
 const activePollTimers = new Map<string, NodeJS.Timeout>();
 
+interface ExecuteChatStreamOptions {
+  convId: string;
+  assistantMessageId: string;
+  content: string;
+  conversationHistory: { role: "user" | "assistant"; content: string }[];
+  skipUserPersistence?: boolean;
+  replaceAssistantMessageId?: string;
+  set: (fn: (state: ConversationState) => Partial<ConversationState>) => void;
+  get: () => ConversationState;
+}
+
+/**
+ * Reusable durable streaming helper executing realtime Upstash reader and workflow invocation.
+ */
+async function executeChatStream({
+  convId,
+  assistantMessageId,
+  content,
+  conversationHistory,
+  skipUserPersistence,
+  replaceAssistantMessageId,
+  set,
+  get,
+}: ExecuteChatStreamOptions): Promise<void> {
+  let rafId: number | null = null;
+  const state = get();
+
+  try {
+    const currentConv = state.conversations.find((c) => c.id === convId);
+    const conversationToken = currentConv?.streamToken;
+
+    // Use a unique ephemeral channel ID per stream invocation so
+    // channel.history() never replays chunks from a previous generation.
+    const streamChannelId = replaceAssistantMessageId
+      ? `regen-${assistantMessageId}-${Date.now()}`
+      : assistantMessageId;
+
+    const [res] = await Promise.all([
+      api.get<ReadableStream<Uint8Array>>(`/api/conversations/${convId}/messages/stream?id=${streamChannelId}`, {
+        responseType: "stream",
+        adapter: "fetch",
+      }),
+      api.post(`/api/conversations/${convId}/messages/stream`, {
+        messageId: assistantMessageId,
+        streamChannelId,
+        conversationId: convId,
+        content,
+        conversationHistory,
+        conversationToken,
+        skipUserPersistence,
+        replaceAssistantMessageId,
+      }),
+    ]);
+
+    const stream = res.data;
+    const reader =
+      stream?.getReader?.() || (stream as unknown as { body?: ReadableStream<Uint8Array> })?.body?.getReader?.();
+    if (!reader) {
+      throw new Error("No readable stream response from server");
+    }
+
+    const decoder = new TextDecoder();
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const rawChunk = decoder.decode(value, { stream: true });
+      if (rawChunk.includes("\0")) {
+        set(() => ({ isAiTyping: true }));
+      }
+
+      const chunk = rawChunk.replace(/\0/g, "");
+      if (!chunk || !chunk.trim()) continue;
+
+      fullText += chunk;
+
+      if (rafId === null && typeof requestAnimationFrame !== "undefined") {
+        rafId = requestAnimationFrame(() => {
+          set(() => ({ isAiTyping: false, streamingContent: fullText }));
+          rafId = null;
+        });
+      } else if (typeof requestAnimationFrame === "undefined") {
+        set(() => ({ isAiTyping: false, streamingContent: fullText }));
+      }
+    }
+
+    if (rafId !== null && typeof cancelAnimationFrame !== "undefined") {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    set((s) => {
+      const currentSession = s.sessionMessages[convId] || [];
+      const targetId = replaceAssistantMessageId || assistantMessageId;
+      const existingIdx = currentSession.findIndex((m) => m.id === targetId);
+
+      let updatedSession: Message[];
+      if (existingIdx !== -1) {
+        updatedSession = currentSession.map((m, idx) => (idx === existingIdx ? { ...m, content: fullText } : m));
+      } else {
+        const assistantMsg = createMessage(convId, "assistant", fullText, { id: targetId });
+        updatedSession = [...currentSession, assistantMsg];
+      }
+
+      return {
+        sessionMessages: {
+          ...s.sessionMessages,
+          [convId]: updatedSession,
+        },
+        conversations: s.conversations.map((c) =>
+          c.id === convId
+            ? {
+                ...c,
+                messageCount: replaceAssistantMessageId ? c.messageCount : (c.messageCount || 0) + 1,
+                lastMessageSnippet: fullText.slice(0, 90) + (fullText.length > 90 ? "..." : ""),
+                updatedAt: new Date().toISOString(),
+              }
+            : c,
+        ),
+        streamingContent: null,
+        regeneratingMessageId: null,
+        isLoadingAi: false,
+        isAiTyping: false,
+      };
+    });
+  } catch (err: unknown) {
+    console.error("Stream error:", err);
+    if (rafId !== null && typeof cancelAnimationFrame !== "undefined") {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    let errorDetail = "Failed to generate response";
+    if (axios.isAxiosError(err)) {
+      errorDetail = (err.response?.data as { error?: string })?.error || err.message || errorDetail;
+    } else if (err instanceof Error) {
+      errorDetail = err.message;
+    }
+
+    const targetId = replaceAssistantMessageId || assistantMessageId;
+    const errorMsg = createMessage(convId, "assistant", `⚠️ **Request Notice**: ${errorDetail}`, {
+      id: targetId,
+    });
+
+    set((s) => {
+      const currentSession = s.sessionMessages[convId] || [];
+      const existingIdx = currentSession.findIndex((m) => m.id === targetId);
+
+      let updatedSession: Message[];
+      if (existingIdx !== -1) {
+        updatedSession = currentSession.map((m, idx) => (idx === existingIdx ? errorMsg : m));
+      } else {
+        updatedSession = [...currentSession, errorMsg];
+      }
+
+      return {
+        sessionMessages: {
+          ...s.sessionMessages,
+          [convId]: updatedSession,
+        },
+        streamingContent: null,
+        regeneratingMessageId: null,
+        isLoadingAi: false,
+        isAiTyping: false,
+      };
+    });
+  }
+}
+
 export const useConversationStore = create<ConversationState>()(
   persist(
     (set, get) => ({
       conversations: [],
-      messages: {},
+      sessionMessages: {},
       drafts: {},
       activeConversationId: null,
       isLoadingAi: false,
       isAiTyping: false,
+      streamingContent: null,
+      regeneratingMessageId: null,
       isLoadingConversations: false,
-      isLoadingMessages: false,
       error: null,
 
       setActiveConversation: (convId: string | null) => {
         if (get().activeConversationId === convId) return;
-        set({ activeConversationId: convId });
+        set({ activeConversationId: convId, streamingContent: null });
       },
 
       setStreamToken: (convId: string, token: string) => {
@@ -140,32 +324,6 @@ export const useConversationStore = create<ConversationState>()(
         }
       },
 
-      fetchMessages: async (convId: string) => {
-        if (!convId) return;
-        set({ isLoadingMessages: true });
-        try {
-          const res = await api.get<Message[]>(`/api/conversations/${convId}/messages`);
-          set((state) => ({
-            messages: {
-              ...state.messages,
-              [convId]: res.data,
-            },
-            isLoadingMessages: false,
-          }));
-        } catch {
-          set({ isLoadingMessages: false });
-        }
-      },
-
-      setMessages: (convId: string, msgs: Message[]) => {
-        set((state) => ({
-          messages: {
-            ...state.messages,
-            [convId]: msgs,
-          },
-        }));
-      },
-
       createConversation: async (documentId: string, initialTitle?: string): Promise<string> => {
         const state = get();
         const existingForDoc = state.conversations.filter((c) => c.documentIds.includes(documentId));
@@ -176,8 +334,8 @@ export const useConversationStore = create<ConversationState>()(
 
         set({
           conversations: [newConversation, ...state.conversations],
-          messages: {
-            ...state.messages,
+          sessionMessages: {
+            ...state.sessionMessages,
             [newConvId]: [],
           },
           drafts: {
@@ -218,6 +376,7 @@ export const useConversationStore = create<ConversationState>()(
         set({
           activeConversationId: targetConvId,
           drafts: updatedDrafts,
+          streamingContent: null,
         });
       },
 
@@ -251,8 +410,8 @@ export const useConversationStore = create<ConversationState>()(
       deleteConversation: async (convId: string) => {
         const state = get();
         const remaining = state.conversations.filter((c) => c.id !== convId);
-        const remainingMessages = { ...state.messages };
-        delete remainingMessages[convId];
+        const remainingSessionMessages = { ...state.sessionMessages };
+        delete remainingSessionMessages[convId];
         const remainingDrafts = { ...state.drafts };
         delete remainingDrafts[convId];
 
@@ -263,7 +422,7 @@ export const useConversationStore = create<ConversationState>()(
 
         set({
           conversations: remaining,
-          messages: remainingMessages,
+          sessionMessages: remainingSessionMessages,
           drafts: remainingDrafts,
           activeConversationId: newActiveId,
         });
@@ -280,10 +439,10 @@ export const useConversationStore = create<ConversationState>()(
         }
       },
 
-      clearMessages: (convId: string) => {
+      clearSessionMessages: (convId: string) => {
         set((state) => ({
-          messages: {
-            ...state.messages,
+          sessionMessages: {
+            ...state.sessionMessages,
             [convId]: [],
           },
           conversations: state.conversations.map((c) =>
@@ -354,28 +513,40 @@ export const useConversationStore = create<ConversationState>()(
         activePollTimers.set(convId, timer);
       },
 
-      sendMessage: async (convId: string, content: string, _activeDoc?: Document) => {
+      sendMessage: async (
+        convId: string,
+        content: string,
+        options?: { priorMessages?: Message[]; activeDoc?: Document } | Document,
+      ) => {
         const state = get();
         const now = new Date().toISOString();
 
+        let priorMessages: Message[] | undefined;
+
+        if (options) {
+          if ("priorMessages" in options) {
+            priorMessages = options.priorMessages;
+          }
+        }
+
         const userMsg = createMessage(convId, "user", content, { createdAt: now });
 
-        const existingMessages = state.messages[convId] || [];
-        const updatedMessages = [...existingMessages, userMsg];
+        const existingSession = state.sessionMessages[convId] || [];
+        const updatedSession = [...existingSession, userMsg];
 
         const updatedDrafts = { ...state.drafts, [convId]: "" };
 
         // Save user message immediately & set loading state
         set({
-          messages: {
-            ...state.messages,
-            [convId]: updatedMessages,
+          sessionMessages: {
+            ...state.sessionMessages,
+            [convId]: updatedSession,
           },
           conversations: state.conversations.map((c) =>
             c.id === convId
               ? {
                   ...c,
-                  messageCount: updatedMessages.length,
+                  messageCount: (c.messageCount || 0) + 1,
                   lastMessageSnippet: content,
                   updatedAt: now,
                 }
@@ -383,14 +554,17 @@ export const useConversationStore = create<ConversationState>()(
           ),
           drafts: updatedDrafts,
           isLoadingAi: true,
+          streamingContent: null,
+          regeneratingMessageId: null,
         });
 
-        // Pre-create assistant message reference (appended to messages once first text chunk arrives)
+        // Pre-create assistant message reference
         const placeholderAiMsg = createMessage(convId, "assistant");
         const assistantMessageId = placeholderAiMsg.id;
 
         // Prepare prior conversation history for multi-turn context (last 10 turns)
-        const conversationHistory = existingMessages
+        const allPrior = priorMessages ?? existingSession;
+        const conversationHistory = allPrior
           .filter((m) => m.role === "user" || m.role === "assistant")
           .slice(-10)
           .map((m) => ({
@@ -398,127 +572,73 @@ export const useConversationStore = create<ConversationState>()(
             content: m.content,
           }));
 
-        try {
-          const currentConv = state.conversations.find((c) => c.id === convId);
-          const conversationToken = currentConv?.streamToken;
+        await executeChatStream({
+          convId,
+          assistantMessageId,
+          content,
+          conversationHistory,
+          set,
+          get,
+        });
+      },
 
-          // Simultaneously start reading from the durable realtime stream and trigger the Upstash workflow
-          const [res] = await Promise.all([
-            api.get<ReadableStream<Uint8Array>>(
-              `/api/conversations/${convId}/messages/stream?id=${assistantMessageId}`,
-              {
-                responseType: "stream",
-                adapter: "fetch",
-              },
-            ),
-            api.post(`/api/conversations/${convId}/messages/stream`, {
-              messageId: assistantMessageId,
-              conversationId: convId,
-              content,
-              conversationHistory,
-              conversationToken,
-            }),
-          ]);
+      editMessage: async (convId: string, messageId: string, newContent: string) => {
+        set((state) => {
+          const currentSession = state.sessionMessages[convId];
+          if (!currentSession) return {};
+          return {
+            sessionMessages: {
+              ...state.sessionMessages,
+              [convId]: currentSession.map((m) => (m.id === messageId ? { ...m, content: newContent } : m)),
+            },
+          };
+        });
 
-          const stream = res.data;
-          const reader =
-            stream?.getReader?.() || (stream as unknown as { body?: ReadableStream<Uint8Array> })?.body?.getReader?.();
-          if (!reader) {
-            throw new Error("No readable stream response from server");
-          }
+        await api.patch(`/api/conversations/${convId}/messages/${messageId}`, {
+          content: newContent,
+        });
+      },
 
-          const decoder = new TextDecoder();
-          let fullText = "";
+      regenerateMessage: async (
+        convId: string,
+        assistantMessageId: string,
+        options: {
+          promptContent: string;
+          conversationHistory?: { role: "user" | "assistant"; content: string }[];
+        },
+      ) => {
+        set({
+          isLoadingAi: true,
+          regeneratingMessageId: assistantMessageId,
+          streamingContent: null,
+        });
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const rawChunk = decoder.decode(value, { stream: true });
-            // Detect server typing signal (null byte marker)
-            console.log('rawChunk.includes("\0"):', rawChunk.includes("\0"));
-            if (rawChunk.includes("\0")) {
-              set({ isAiTyping: true });
-            }
+        const history = options.conversationHistory?.slice(-10) || [];
+        await executeChatStream({
+          convId,
+          assistantMessageId,
+          content: options.promptContent,
+          conversationHistory: history,
+          skipUserPersistence: true,
+          replaceAssistantMessageId: assistantMessageId,
+          set,
+          get,
+        });
+      },
 
-            // Strip control markers and heartbeat-only chunks
-            const chunk = rawChunk.replace(/\0/g, "");
-            if (!chunk || !chunk.trim()) continue;
+      deleteMessage: async (convId: string, messageId: string) => {
+        set((state) => {
+          const currentSession = state.sessionMessages[convId];
+          if (!currentSession) return {};
+          return {
+            sessionMessages: {
+              ...state.sessionMessages,
+              [convId]: currentSession.filter((m) => m.id !== messageId),
+            },
+          };
+        });
 
-            fullText += chunk;
-
-            set((s) => {
-              const currentList = s.messages[convId] || [];
-              const exists = currentList.some((m) => m.id === assistantMessageId);
-              return {
-                isAiTyping: false,
-                messages: {
-                  ...s.messages,
-                  [convId]: exists
-                    ? currentList.map((m) =>
-                        m.id === assistantMessageId
-                          ? {
-                              ...m,
-                              content: fullText,
-                            }
-                          : m,
-                      )
-                    : [...currentList, { ...placeholderAiMsg, content: fullText }],
-                },
-              };
-            });
-          }
-
-          // Final update on completion
-          set((s) => ({
-            conversations: s.conversations.map((c) =>
-              c.id === convId
-                ? {
-                    ...c,
-                    messageCount: (s.messages[convId] || []).length,
-                    lastMessageSnippet: fullText.slice(0, 90) + (fullText.length > 90 ? "..." : ""),
-                    updatedAt: new Date().toISOString(),
-                  }
-                : c,
-            ),
-            isLoadingAi: false,
-          }));
-        } catch (err: unknown) {
-          console.error("Stream error:", err);
-          let errorDetail = "Failed to generate response";
-          if (axios.isAxiosError(err)) {
-            errorDetail = (err.response?.data as { error?: string })?.error || err.message || errorDetail;
-          } else if (err instanceof Error) {
-            errorDetail = err.message;
-          }
-
-          set((s) => {
-            const currentList = s.messages[convId] || [];
-            const exists = currentList.some((m) => m.id === assistantMessageId);
-            return {
-              messages: {
-                ...s.messages,
-                [convId]: exists
-                  ? currentList.map((m) =>
-                      m.id === assistantMessageId
-                        ? {
-                            ...m,
-                            content: `⚠️ **Request Notice**: ${errorDetail}`,
-                          }
-                        : m,
-                    )
-                  : [
-                      ...currentList,
-                      {
-                        ...placeholderAiMsg,
-                        content: `⚠️ **Request Notice**: ${errorDetail}`,
-                      },
-                    ],
-              },
-              isLoadingAi: false,
-              isAiTyping: false,
-            };
-          });
-        }
+        await api.delete(`/api/conversations/${convId}/messages/${messageId}`);
       },
 
       resetToDefaults: () => {
@@ -526,11 +646,13 @@ export const useConversationStore = create<ConversationState>()(
         activePollTimers.clear();
         set({
           conversations: [],
-          messages: {},
+          sessionMessages: {},
           drafts: {},
           activeConversationId: null,
           isLoadingAi: false,
           isAiTyping: false,
+          streamingContent: null,
+          regeneratingMessageId: null,
           error: null,
         });
       },

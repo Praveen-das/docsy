@@ -32,7 +32,7 @@ export default clerkMiddleware(async (auth, req) => {
       if (!userId) {
         return NextResponse.json(
           { error: "Unauthorized: Session expired or invalid. Please refresh or sign in." },
-          { status: 401 }
+          { status: 401 },
         );
       }
     } else {

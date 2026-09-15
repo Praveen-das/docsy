@@ -32,12 +32,23 @@ export function ChatView({
   const {
     activeConvId,
     title,
-    messages,
+    historyMessages,
+    pendingMessages,
     isLoading,
     isAiTyping,
+    streamingContent,
     isLoadingMessages,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    isErrorOlderMessages,
+    fetchOlderMessages,
     isGeneratingTitle,
     handleSendMessage,
+    handleEditMessage,
+    handleRegenerateMessage,
+    handleRetryMessage,
+    handleShareMessage,
+    regeneratingMessageId,
     handleDelete,
     handleGenerateTitle,
   } = useChatConversation({
@@ -83,7 +94,22 @@ export function ChatView({
         />
 
         {/* Message Feed Container */}
-        <MessageList messages={messages} isLoadingMessages={isLoadingMessages} isAiTyping={isAiTyping} />
+        <MessageList
+          messages={historyMessages}
+          pendingMessages={pendingMessages}
+          isLoadingMessages={isLoadingMessages}
+          isAiTyping={isAiTyping}
+          streamingContent={streamingContent}
+          regeneratingMessageId={regeneratingMessageId}
+          hasMoreMessages={hasMoreMessages}
+          isLoadingOlderMessages={isLoadingOlderMessages}
+          isErrorOlderMessages={isErrorOlderMessages}
+          onLoadOlderMessages={fetchOlderMessages}
+          onEditMessage={handleEditMessage}
+          onRegenerateMessage={handleRegenerateMessage}
+          onRetryMessage={handleRetryMessage}
+          onShareMessage={handleShareMessage}
+        />
 
         {/* Input Composer Bar */}
         <ChatComposer

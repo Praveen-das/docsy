@@ -74,6 +74,7 @@ export interface DispatchChatPipelineParams {
   content: string;
   documentIds: string[];
   conversationHistory?: HistoryMessage[];
+  skipUserPersistence?: boolean;
 }
 
 export interface ChatPipelineResult {
@@ -90,22 +91,25 @@ export async function dispatchChatPipeline({
   content,
   documentIds,
   conversationHistory,
+  skipUserPersistence = false,
 }: DispatchChatPipelineParams): Promise<ChatPipelineResult> {
-  // Fire-and-forget user message persistence in background
-  const persistUserPromise = timeOperation("persist", async () =>
-    persistMessage({
-      conversationId,
-      role: "user",
-      content,
-    }).catch((err) => {
-      logger.error("chat.user_message_persist_failed", {
-        userId,
-        conversationId,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      return null;
-    })
-  );
+  // Fire-and-forget user message persistence in background if not explicitly skipped
+  const persistUserPromise = skipUserPersistence
+    ? Promise.resolve(null)
+    : timeOperation("persist", async () =>
+        persistMessage({
+          conversationId,
+          role: "user",
+          content,
+        }).catch((err) => {
+          logger.error("chat.user_message_persist_failed", {
+            userId,
+            conversationId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+          return null;
+        })
+      );
 
   // Execute RAG pipeline using verified document IDs from token
   const ragResult = await timeOperation("rag", () =>

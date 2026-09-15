@@ -53,6 +53,12 @@ export interface Message {
   createdAt: string;
 }
 
+export interface PaginatedMessagesResponse {
+  messages: Message[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export interface Conversation {
   id: string;
   userId: string;
