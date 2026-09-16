@@ -8,12 +8,16 @@ import { ChatComposer } from "./components/chat-composer";
 import { ChatProvider } from "./context/chat-context";
 import { useChatConversation } from "./hooks/use-chat-conversation";
 import { useChatDraft } from "./hooks/use-chat-draft";
+import { useDocumentStore } from "@/stores/document-store";
 
 export interface ChatViewProps {
   conversationId?: string;
   conversationTitle?: string;
   documentId?: string;
+  isViewerOpen?: boolean;
+  onToggleViewer?: () => void;
   onDeleteChat?: () => void;
+  onCitationClick?: (pageNumber: number) => void;
   // Optional overrides for standalone usage and testing
   messages?: Message[];
   isLoading?: boolean;
@@ -24,7 +28,10 @@ export function ChatView({
   conversationId: propConversationId,
   conversationTitle: propConversationTitle,
   documentId: propDocumentId,
+  isViewerOpen = true,
+  onToggleViewer,
   onDeleteChat,
+  onCitationClick,
   messages: propMessages,
   isLoading: propIsLoading,
   onSendMessage: propOnSendMessage,
@@ -42,7 +49,6 @@ export function ChatView({
     isLoadingOlderMessages,
     isErrorOlderMessages,
     fetchOlderMessages,
-    isGeneratingTitle,
     handleSendMessage,
     handleEditMessage,
     handleRegenerateMessage,
@@ -50,7 +56,6 @@ export function ChatView({
     handleShareMessage,
     regeneratingMessageId,
     handleDelete,
-    handleGenerateTitle,
   } = useChatConversation({
     conversationId: propConversationId,
     conversationTitle: propConversationTitle,
@@ -62,6 +67,11 @@ export function ChatView({
   });
 
   const { inputText, handleInputChange, clearInput } = useChatDraft(activeConvId);
+
+  const documents = useDocumentStore((state) => state.documents);
+  const activeDoc = propDocumentId ? documents.find((d) => d.id === propDocumentId) : undefined;
+  const documentName = activeDoc?.originalName || "System Design Notes.pdf";
+  const pageCount = activeDoc?.pageCount || 24;
 
   const handleSubmit = useCallback(() => {
     handleSendMessage(inputText, clearInput);
@@ -83,41 +93,49 @@ export function ChatView({
 
   return (
     <ChatProvider value={chatContextValue}>
-      <div className="flex h-full flex-col bg-white dark:bg-[#08080a]">
-        {/* Top Header */}
+      <div className="flex h-full flex-col bg-[#08090d] text-white">
+        {/* Top Header matching Image 2 */}
         <ChatHeader
-          conversationTitle={title}
+          conversationTitle={title || "Summarize the key findings"}
+          documentName={documentName}
+          pageCount={pageCount}
+          lastUpdated="2 hours ago"
+          isViewerOpen={isViewerOpen}
+          onToggleViewer={onToggleViewer}
           onDeleteChat={handleDelete}
-          onGenerateTitle={handleGenerateTitle}
-          isGeneratingTitle={isGeneratingTitle}
-          canGenerateTitle={Boolean(activeConvId)}
         />
 
-        {/* Message Feed Container */}
-        <MessageList
-          messages={historyMessages}
-          pendingMessages={pendingMessages}
-          isLoadingMessages={isLoadingMessages}
-          isAiTyping={isAiTyping}
-          streamingContent={streamingContent}
-          regeneratingMessageId={regeneratingMessageId}
-          hasMoreMessages={hasMoreMessages}
-          isLoadingOlderMessages={isLoadingOlderMessages}
-          isErrorOlderMessages={isErrorOlderMessages}
-          onLoadOlderMessages={fetchOlderMessages}
-          onEditMessage={handleEditMessage}
-          onRegenerateMessage={handleRegenerateMessage}
-          onRetryMessage={handleRetryMessage}
-          onShareMessage={handleShareMessage}
-        />
+        {/* Main Chat Body Container */}
+        <div className="relative flex flex-1 flex-col overflow-hidden min-h-0">
+          <MessageList
+            messages={historyMessages}
+            pendingMessages={pendingMessages}
+            isLoadingMessages={isLoadingMessages}
+            isAiTyping={isAiTyping}
+            streamingContent={streamingContent}
+            regeneratingMessageId={regeneratingMessageId}
+            hasMoreMessages={hasMoreMessages}
+            isLoadingOlderMessages={isLoadingOlderMessages}
+            isErrorOlderMessages={isErrorOlderMessages}
+            onLoadOlderMessages={fetchOlderMessages}
+            onEditMessage={handleEditMessage}
+            onRegenerateMessage={handleRegenerateMessage}
+            onRetryMessage={handleRetryMessage}
+            onShareMessage={handleShareMessage}
+          />
 
-        {/* Input Composer Bar */}
-        <ChatComposer
-          inputText={inputText}
-          onInputChange={handleInputChange}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
+          {/* Floating Input Composer Bar matching Image 2 */}
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-[#08090d] via-[#08090d]/80 to-transparent pt-6">
+            <div className="pointer-events-auto">
+              <ChatComposer
+                inputText={inputText}
+                onInputChange={handleInputChange}
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </ChatProvider>
   );

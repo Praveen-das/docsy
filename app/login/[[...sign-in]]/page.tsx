@@ -33,7 +33,7 @@ export default function LoginPage() {
               headerTitle: "hidden",
               headerSubtitle: "hidden",
               formButtonPrimary:
-                "bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-sm font-semibold",
+                "bg-zinc-900 hover:bg-zinc-800 dark:bg-white/10 dark:hover:bg-white/15 dark:text-white dark:border dark:border-white/10 text-sm font-semibold",
               footerActionLink:
                 "text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white",
             },

@@ -145,6 +145,44 @@ export const mockConversations: Conversation[] = [
 ];
 
 export const mockMessages: Record<string, Message[]> = {
+  "conv-ref-1": [
+    {
+      id: "ref-msg-1",
+      conversationId: "conv-ref-1",
+      role: "user",
+      content: "Can you summarize the key findings from this document?",
+      createdAt: new Date(nowMs - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "ref-msg-2",
+      conversationId: "conv-ref-1",
+      role: "assistant",
+      content: `Here are the key findings from **"System Design Notes.pdf"**:
+
+### 1. Scalability Through Distributed Architecture
+The document emphasizes that modern applications achieve scalability by adopting distributed systems principles, including horizontal scaling, stateless services, and asynchronous communication.
+
+> "A well-designed system should gracefully handle increased load by scaling out, not just scaling up." p. 6
+
+### 2. Importance of Data Layer Design
+Choosing the right database (SQL vs NoSQL) depends on the access patterns, consistency requirements, and scale. The document provides a comparison of common databases:
+
+| Database | Type | Best Use Case | Key Strengths |
+| :--- | :--- | :--- | :--- |
+| **PostgreSQL** | Relational | Transactional data | ACID, rich queries |
+| **MongoDB** | Document | Flexible schema | Horizontal scalability |
+| **Redis** | In-memory | Caching, sessions | Low latency |
+| **Kafka** | Event streaming | Event-driven systems | High throughput |
+
+p. 12
+
+### 3. Event-Driven Architecture Enables Resilience
+Using message brokers like Kafka decouples services, improves fault tolerance, and allows independent scaling. The document highlights real-world use cases such as activity feeds, notifications, and data pipelines.
+
+p. 18`,
+      createdAt: new Date(nowMs - 2 * 60 * 60 * 1000 + 3000).toISOString(),
+    },
+  ],
   "conv-1": [
     {
       id: "msg-1",

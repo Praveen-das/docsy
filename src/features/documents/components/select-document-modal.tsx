@@ -111,7 +111,7 @@ export function SelectDocumentModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search documents by name..."
-              className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 pl-9 pr-8 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-white/10 dark:bg-[#18181d] dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:bg-[#1e1e24]"
+              className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 pl-9 pr-8 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:bg-white focus:outline-none dark:border-white/10 dark:bg-[#16161b] dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-white/20"
             />
             {searchQuery && (
               <button
@@ -132,7 +132,7 @@ export function SelectDocumentModal({
               }}
               variant="outline"
               size="sm"
-              className="shrink-0 h-9 gap-1.5 border-zinc-200 hover:bg-zinc-100 dark:border-white/10 dark:hover:bg-white/5"
+              className="shrink-0 h-9 gap-1.5"
             >
               <Plus className="h-4 w-4" />
               <span>Upload</span>
@@ -144,7 +144,7 @@ export function SelectDocumentModal({
         <div className="max-h-[380px] overflow-y-auto space-y-2 pr-0.5 custom-scrollbar">
           {isLoadingDocs && documents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
-              <Loader2 className="h-7 w-7 animate-spin text-blue-600 dark:text-blue-400 mb-2" />
+              <Loader2 className="h-7 w-7 animate-spin text-zinc-600 dark:text-zinc-400 mb-2" />
               <p className="text-sm font-medium">Loading documents...</p>
             </div>
           ) : filteredDocuments.length === 0 ? (
@@ -160,7 +160,7 @@ export function SelectDocumentModal({
               </div>
             ) : (
               <div className="py-12 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400 mb-3">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800 dark:bg-white/5 dark:text-white mb-3">
                   <UploadCloud className="h-6 w-6" />
                 </div>
                 <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
@@ -175,6 +175,7 @@ export function SelectDocumentModal({
                       onClose();
                       onOpenUpload();
                     }}
+                    variant="accent"
                     className="mt-4 gap-1.5"
                     size="sm"
                   >
@@ -194,22 +195,22 @@ export function SelectDocumentModal({
                   key={doc.id}
                   onClick={() => handleSelect(doc)}
                   className={cn(
-                    "group relative flex items-center justify-between rounded-xl border border-zinc-200/80 bg-white p-3.5 transition-all duration-150 hover:border-blue-500 hover:shadow-md cursor-pointer",
-                    "dark:border-white/5 dark:bg-[#16161b] dark:hover:border-blue-500/70 dark:hover:bg-[#1b1b22]"
+                    "group relative flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3.5 transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50/70 cursor-pointer shadow-2xs",
+                    "dark:border-white/5 dark:bg-[#16161b] dark:hover:border-white/10 dark:hover:bg-[#1a1a22]"
                   )}
                 >
                   <div className="flex items-center gap-3.5 min-w-0 pr-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-600/15 dark:text-blue-400 group-hover:scale-105 transition-transform">
-                      <FileText className="h-5 w-5" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/5 group-hover:scale-105 transition-transform">
+                      <FileText className="h-4 w-4" />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400 transition-colors">
+                        <span className="truncate text-sm font-semibold text-zinc-900 group-hover:text-zinc-950 dark:text-zinc-100 dark:group-hover:text-white transition-colors">
                           {doc.originalName}
                         </span>
                         {!isReady && (
-                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 shrink-0">
+                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 shrink-0">
                             {doc.status}
                           </span>
                         )}
@@ -232,7 +233,7 @@ export function SelectDocumentModal({
                         <span>{convCount}</span>
                       </div>
                     )}
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 group-hover:bg-blue-600 group-hover:text-white dark:bg-white/5 dark:text-zinc-500 dark:group-hover:bg-blue-600 dark:group-hover:text-white transition-colors">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 group-hover:bg-zinc-900 group-hover:text-white dark:bg-white/5 dark:text-zinc-500 dark:group-hover:bg-white/10 dark:group-hover:text-white transition-colors">
                       <ArrowRight className="h-3.5 w-3.5" />
                     </div>
                   </div>

@@ -27,24 +27,24 @@ export function Badge({
 
   const variants = {
     ready:
-      "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
+      "bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/15",
     processing:
-      "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
+      "bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/15",
     failed:
-      "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20",
+      "bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/15",
     neutral:
-      "bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-300 dark:border-white/10",
+      "bg-zinc-100 text-zinc-600 border border-zinc-200/80 dark:bg-white/5 dark:text-zinc-400 dark:border-white/5",
     citation:
-      "bg-amber-100/80 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
+      "bg-amber-50 text-amber-800 border border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
     ai:
-      "bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20",
+      "bg-zinc-100 text-zinc-800 border border-zinc-200 dark:bg-white/5 dark:text-zinc-200 dark:border-white/10",
     accent:
-      "bg-[#0071e3] text-white font-semibold shadow-xs hover:bg-[#0077ed]",
+      "bg-zinc-900 text-white font-medium shadow-2xs dark:bg-white/10 dark:text-zinc-100 dark:border dark:border-white/10",
   };
 
   const sizes = {
-    sm: "text-[11px] px-2 py-0.5 gap-1.5",
-    md: "text-xs px-2.5 py-1 gap-1.5",
+    sm: "text-[10px] font-mono px-1.5 py-0.5 gap-1 leading-none",
+    md: "text-xs px-2 py-0.5 gap-1.5",
   };
 
   return (
@@ -105,15 +105,15 @@ export function StatusBadge({
       return (
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200 shadow-2xs select-none dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
+            "inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-800 border border-zinc-200/80 shadow-2xs select-none dark:bg-white/5 dark:text-zinc-200 dark:border-white/5",
             className
           )}
         >
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.7)]" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zinc-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-zinc-600 dark:bg-zinc-300" />
           </span>
-          <UploadCloud className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
+          <UploadCloud className="h-3 w-3 text-zinc-700 dark:text-zinc-300 shrink-0" />
           <span>Uploading...</span>
         </span>
       );
@@ -125,14 +125,10 @@ export function StatusBadge({
       return (
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200 shadow-2xs select-none dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
+            "inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-600 border border-amber-500/20 shadow-2xs select-none dark:text-amber-400",
             className
           )}
         >
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.85)]" />
-          </span>
           <Loader2 className="h-3 w-3 text-amber-600 dark:text-amber-400 animate-spin shrink-0" />
           <span>Analyzing...</span>
         </span>

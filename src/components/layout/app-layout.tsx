@@ -1,22 +1,33 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
 import { UploadModal } from "@/features/documents/upload-modal";
 
 export interface AppLayoutProps {
   children: React.ReactNode;
   title?: string;
+  hideHeader?: boolean;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children, title, hideHeader }: AppLayoutProps) {
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
+  const isConversationMode =
+    pathname === "/conversation" ||
+    pathname.startsWith("/conversation/") ||
+    pathname === "/chat" ||
+    pathname.startsWith("/chat/");
+
+  const shouldShowHeader = !hideHeader && !isConversationMode;
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#f7f7f8] text-[#09090b] dark:bg-[#08080a] dark:text-[#f4f4f5] transition-colors duration-150">
-      {/* Pinned Desktop Sidebar / Drawer */}
+    <div className="flex h-screen w-full overflow-hidden bg-[#08090d] text-[#f4f4f5] transition-colors duration-150">
+      {/* Desktop & Mobile Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -25,19 +36,18 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main Content Viewport */}
       <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden relative">
-        {/* Mobile floating toggle to open sidebar when drawer is closed on mobile */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="fixed top-3.5 left-3.5 z-30 flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white/90 shadow-sm backdrop-blur text-zinc-600 dark:border-white/10 dark:bg-[#141418]/90 dark:text-zinc-300 lg:hidden cursor-pointer active:scale-95 transition-transform"
-          aria-label="Toggle navigation menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        {/* Global Top Header matching Image 1 for non-conversation pages */}
+        {shouldShowHeader && (
+          <Header
+            title={title}
+            onToggleSidebar={() => setSidebarOpen(true)}
+          />
+        )}
 
         <main className="flex-1 overflow-y-auto min-w-0">{children}</main>
       </div>
 
-      {/* Global Ingestion / Upload Modal */}
+      {/* Global Upload Ingestion Modal */}
       <UploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} />
     </div>
   );

@@ -3,6 +3,8 @@ import { Message, PaginatedMessagesResponse } from "@/types";
 import { api } from "@/lib/api-client";
 import axios from "axios";
 
+import { mockMessages } from "@/lib/mock-data";
+
 export const MESSAGES_PAGE_SIZE = 30;
 
 /**
@@ -61,6 +63,9 @@ export function useConversationMessages(conversationId: string | null | undefine
     queryFn: async ({ pageParam }): Promise<PaginatedMessagesResponse> => {
       if (!conversationId) {
         return { messages: [], nextCursor: null, hasMore: false };
+      }
+      if (conversationId.startsWith("conv-ref-") || mockMessages[conversationId]) {
+        return { messages: mockMessages[conversationId] || [], nextCursor: null, hasMore: false };
       }
       try {
         const params: Record<string, string | number> = {

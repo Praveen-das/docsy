@@ -68,23 +68,23 @@ export function DocumentConversationsDialog({
     >
       <div className="space-y-4 pt-2">
         {/* Document Quick Metadata Banner */}
-        <div className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 border border-zinc-200 dark:bg-[#141418] dark:border-white/5 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 border border-zinc-200 dark:bg-white/5 dark:border-white/5 text-xs text-zinc-500 dark:text-zinc-400">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <FileText className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
             <span className="font-medium text-zinc-800 dark:text-zinc-200">
               {document.pageCount} pages
             </span>
             <span>•</span>
             <span>{(document.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
           </div>
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-600/15 dark:text-blue-300">
+          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-mono font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
             {docConversations.length} conversation{docConversations.length === 1 ? "" : "s"}
           </span>
         </div>
 
         {/* Section Header with + New Conversation CTA */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/5 pb-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
             Conversations
           </span>
           <Button
@@ -101,7 +101,7 @@ export function DocumentConversationsDialog({
         {/* Conversation List */}
         <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
           {docConversations.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-200 p-6 text-center dark:border-zinc-800">
+            <div className="rounded-lg border border-dashed border-zinc-200 p-6 text-center dark:border-white/5">
               <MessageSquare className="h-6 w-6 text-zinc-400 mx-auto mb-1.5" />
               <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 No conversations yet
@@ -130,8 +130,8 @@ export function DocumentConversationsDialog({
                   className={cn(
                     "flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer group",
                     isActive
-                      ? "border-blue-500/40 bg-blue-50/50 dark:border-blue-500/30 dark:bg-blue-950/20"
-                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/70 dark:border-white/10 dark:bg-[#16161c] dark:hover:border-white/20 dark:hover:bg-[#1a1a22]"
+                      ? "border-zinc-300 bg-zinc-100/70 dark:border-white/10 dark:bg-white/5"
+                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/70 dark:border-white/5 dark:bg-[#16161c] dark:hover:border-white/10 dark:hover:bg-[#1a1a22]"
                   )}
                 >
                   <div className="min-w-0 flex-1 pr-3">
@@ -140,14 +140,14 @@ export function DocumentConversationsDialog({
                         className={cn(
                           "h-2 w-2 rounded-full shrink-0",
                           isActive
-                            ? "bg-blue-600 dark:bg-blue-400 ring-2 ring-blue-500/20"
+                            ? "bg-zinc-900 dark:bg-white"
                             : "bg-zinc-300 dark:bg-zinc-700"
                         )}
                       />
-                      <h4 className="text-xs font-semibold text-zinc-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <h4 className="text-xs font-semibold text-zinc-900 dark:text-white truncate group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
                         {conv.title}
                       </h4>
-                      <span className="text-[10px] text-zinc-400 font-mono">
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
                         ({conv.messageCount} msg{conv.messageCount === 1 ? "" : "s"})
                       </span>
                     </div>

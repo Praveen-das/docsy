@@ -2,43 +2,39 @@
 
 import React from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export interface NewConversationButtonProps {
   isCollapsed: boolean;
   onClick: () => void;
+  className?: string;
 }
 
 export function NewConversationButton({
   isCollapsed,
   onClick,
+  className,
 }: NewConversationButtonProps) {
   return (
-    <div className="px-3.5 mt-4 pb-1">
-      <Button
-        variant="primary"
-        size="md"
+    <div className={cn("px-3 mt-3 pb-2", className)}>
+      <button
+        type="button"
         onClick={onClick}
-        title="Create a new conversation for this document"
+        title={isCollapsed ? "New conversation" : undefined}
         className={cn(
-          "w-full h-10 p-0 flex items-center overflow-hidden tracking-[-0.01em]",
-          "rounded-[10px] shadow-sm",
-          "bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950",
-          "dark:bg-[#1d1d24] dark:text-white dark:hover:bg-[#27272f] dark:active:bg-[#18181e]",
-          "dark:ring-1 dark:ring-white/[0.08]"
+          "group relative flex h-10 w-full items-center justify-center rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer select-none",
+          "border border-indigo-500/40 bg-gradient-to-r from-indigo-950/80 via-purple-950/70 to-indigo-950/80 text-white",
+          "shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.35)] active:scale-[0.98]",
+          isCollapsed ? "px-0" : "px-3 gap-2"
         )}
       >
-        <div className="w-10 h-10 flex items-center justify-center shrink-0">
-          <Plus className="h-4 w-4 shrink-0" />
-        </div>
-
+        <Plus className="h-4 w-4 text-indigo-300 group-hover:text-white transition-colors shrink-0" />
         {!isCollapsed && (
-          <span className="pr-3.5 font-semibold text-sm truncate">
-            + New Conversation
+          <span className="truncate font-semibold tracking-[-0.01em]">
+            New conversation
           </span>
         )}
-      </Button>
+      </button>
     </div>
   );
 }

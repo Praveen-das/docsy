@@ -136,7 +136,7 @@ export default function DocumentsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter by filename..."
-                className="w-full rounded-lg border border-zinc-200 bg-white py-1.5 pl-9 pr-4 text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none dark:border-white/10 dark:bg-[#141418] dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-500/60"
+                className="w-full rounded-lg border border-zinc-200 bg-white py-1.5 pl-9 pr-4 text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-white/10 dark:bg-[#121216] dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-white/20"
               />
             </div>
 
@@ -155,13 +155,13 @@ export default function DocumentsPage() {
           </div>
 
           {/* List vs Grid view switcher */}
-          <div className="flex items-center gap-1 rounded-lg bg-zinc-100 p-1 border border-zinc-200 self-end sm:self-auto dark:bg-[#141418] dark:border-white/10">
+          <div className="flex items-center rounded-lg bg-zinc-100 p-0.5 border border-zinc-200 self-end sm:self-auto dark:bg-[#121216] dark:border-white/5">
             <button
               onClick={() => setViewMode("list")}
-              className={`rounded p-1.5 transition-colors cursor-pointer ${
+              className={`rounded-md p-1.5 transition-all cursor-pointer ${
                 viewMode === "list"
-                  ? "bg-white text-zinc-900 shadow-xs border-none dark:bg-[#24242d] dark:text-white dark:border-none"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-white/10 dark:text-white"
+                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
               }`}
               title="List view"
             >
@@ -169,10 +169,10 @@ export default function DocumentsPage() {
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`rounded p-1.5 transition-colors cursor-pointer ${
+              className={`rounded-md p-1.5 transition-all cursor-pointer ${
                 viewMode === "grid"
-                  ? "bg-white text-zinc-900 shadow-xs border-none dark:bg-[#24242d] dark:text-white dark:border-none"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-white/10 dark:text-white"
+                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
               }`}
               title="Grid view"
             >
@@ -183,7 +183,7 @@ export default function DocumentsPage() {
 
         {/* Document Content View */}
         {filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-200 bg-white p-12 text-center dark:border-zinc-800 dark:bg-[#141418]">
+          <div className="rounded-xl border border-dashed border-zinc-200 bg-white p-12 text-center dark:border-white/5 dark:bg-[#121216]">
             <FileText className="mx-auto h-8 w-8 text-zinc-400 dark:text-zinc-500 mb-2" />
             <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
               No matching documents found
@@ -201,12 +201,12 @@ export default function DocumentsPage() {
               return (
                 <div
                   key={doc.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 sm:px-5 sm:py-3.5 shadow-2xs hover:border-zinc-300 hover:bg-zinc-50/50 transition-all dark:border-white/10 dark:bg-[#141418] dark:hover:border-white/20 dark:hover:bg-[#18181f]"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 sm:px-5 sm:py-3.5 shadow-2xs hover:border-zinc-300 hover:bg-zinc-50/50 transition-all dark:border-white/5 dark:bg-[#121216] dark:hover:border-white/10 dark:hover:bg-[#16161b]"
                 >
                   {/* Left: Document Information */}
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-300 dark:border-white/5">
-                      <FileText className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ef4444] text-white shadow-xs">
+                      <span className="text-[10px] font-black uppercase font-sans">PDF</span>
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -257,12 +257,12 @@ export default function DocumentsPage() {
                       <>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => setConversationsDoc(doc)}
                           className="h-8 px-2.5 text-xs gap-1.5"
                           title="View conversations for this document"
                         >
-                          <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          <MessageSquare className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
                           <span>
                             Conversations (
                             {conversations.filter((c) => c.documentIds.includes(doc.id)).length}
@@ -308,10 +308,10 @@ export default function DocumentsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => setIsUploadOpen(true)}
-                            className="h-8 px-3 text-xs gap-1.5 hover:border-blue-300 dark:hover:border-blue-500/40"
+                            className="h-8 px-3 text-xs gap-1.5 hover:border-zinc-300 dark:hover:border-white/20"
                             title="File not found in storage — please re-upload"
                           >
-                            <UploadCloud className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            <UploadCloud className="h-3.5 w-3.5" />
                             <span>Re-upload</span>
                           </Button>
                         ) : (
@@ -330,7 +330,7 @@ export default function DocumentsPage() {
 
                     <button
                       onClick={() => setDocToDelete(doc)}
-                      className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer"
                       title="Delete Document"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -349,12 +349,12 @@ export default function DocumentsPage() {
               return (
                 <div
                   key={doc.id}
-                  className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:border-zinc-300 transition-all dark:border-white/10 dark:bg-[#141418] dark:hover:border-white/20 flex flex-col justify-between"
+                  className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:border-zinc-300 transition-all dark:border-white/5 dark:bg-[#121216] dark:hover:border-white/10 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-300 dark:border-white/5">
-                        <FileText className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ef4444] text-white shadow-xs">
+                        <span className="text-[10px] font-black uppercase font-sans">PDF</span>
                       </div>
                       {doc.status === "READY" && !isOpened && <StatusBadge status="READY" />}
                       {doc.status === "FAILED" && (
@@ -414,7 +414,7 @@ export default function DocumentsPage() {
                   <div className="mt-4 flex items-center justify-between border-t border-zinc-100 dark:border-white/5 pt-3">
                     <button
                       onClick={() => setDocToDelete(doc)}
-                      className="p-1.5 text-zinc-400 hover:text-rose-600 rounded transition-colors cursor-pointer text-xs flex items-center gap-1 dark:text-zinc-500 dark:hover:text-rose-400"
+                      className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer text-xs flex items-center gap-1 dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-500/10"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Delete</span>
@@ -431,10 +431,10 @@ export default function DocumentsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => setIsUploadOpen(true)}
-                            className="h-8 text-xs gap-1.5 hover:border-blue-300 dark:hover:border-blue-500/40"
+                            className="h-8 text-xs gap-1.5 hover:border-zinc-300 dark:hover:border-white/20"
                             title="File not found in storage — please re-upload"
                           >
-                            <UploadCloud className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                            <UploadCloud className="h-3 w-3" />
                             <span>Re-upload</span>
                           </Button>
                         ) : (
@@ -468,12 +468,12 @@ export default function DocumentsPage() {
                         <div className="flex items-center gap-1.5">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             onClick={() => setConversationsDoc(doc)}
                             className="h-8 px-2 text-xs gap-1"
                             title="View conversations for this document"
                           >
-                            <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            <MessageSquare className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
                             <span>
                               (
                               {conversations.filter((c) => c.documentIds.includes(doc.id)).length}

@@ -65,13 +65,13 @@ export default function ConversationsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search conversations by title or topic..."
-            className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none dark:border-white/10 dark:bg-[#141418] dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-500/60"
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-white/10 dark:bg-[#121216] dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-white/20"
           />
         </div>
 
         {/* Conversations List */}
         {filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-200 bg-white p-12 text-center dark:border-zinc-800 dark:bg-[#141418]">
+          <div className="rounded-xl border border-dashed border-zinc-200 bg-white p-12 text-center dark:border-white/5 dark:bg-[#121216]">
             <MessageSquare className="mx-auto h-8 w-8 text-zinc-400 dark:text-zinc-500 mb-2" />
             <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">No conversations found</p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
@@ -86,14 +86,14 @@ export default function ConversationsPage() {
               return (
                 <div
                   key={conv.id}
-                  className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:border-zinc-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group dark:border-white/10 dark:bg-[#141418] dark:hover:border-white/20"
+                  className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:border-zinc-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group dark:border-white/5 dark:bg-[#121216] dark:hover:border-white/10"
                 >
                   <div className="min-w-0 flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <h3 className="font-semibold text-zinc-900 dark:text-white text-sm sm:text-base truncate group-hover:text-zinc-950 dark:group-hover:text-zinc-100 transition-colors">
                         {conv.title}
                       </h3>
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-600 font-medium border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-400 dark:border-white/10">
+                      <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-mono font-medium text-zinc-600 dark:bg-white/5 dark:text-zinc-400 leading-none">
                         {conv.messageCount} messages
                       </span>
                     </div>
@@ -112,9 +112,9 @@ export default function ConversationsPage() {
                         {linkedDocs.map((doc) => (
                           <span
                             key={doc.id}
-                            className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 border border-blue-200 dark:bg-blue-600/10 dark:text-blue-400 dark:border-blue-500/20"
+                            className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-700 dark:bg-white/5 dark:text-zinc-300 dark:border-white/5"
                           >
-                            <FileText className="h-2.5 w-2.5" />
+                            <FileText className="h-2.5 w-2.5 text-zinc-500 dark:text-zinc-400" />
                             <span className="truncate max-w-[140px]">{doc.originalName}</span>
                           </span>
                         ))}
@@ -125,14 +125,14 @@ export default function ConversationsPage() {
                   <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                     <button
                       onClick={() => setConvToDelete(conv)}
-                      className="p-2 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-500/10"
+                      className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-500/10"
                       title="Delete conversation"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
 
                     <Link href={`/conversation?doc=${conv.documentIds[0] || "doc-1"}&conv=${conv.id}`}>
-                      <Button size="sm" variant="outline" className="h-9">
+                      <Button size="sm" variant="accent" className="h-8 text-xs font-medium gap-1.5 shadow-2xs">
                         <span>Continue</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Button>

@@ -217,8 +217,8 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                 className={cn(
                   "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer group select-none",
                   isDragging
-                    ? "border-zinc-900 bg-zinc-100/80 dark:border-white/40 dark:bg-white/5 scale-[0.99] shadow-sm"
-                    : "border-zinc-300 bg-zinc-50/50 hover:border-zinc-400 hover:bg-zinc-100/60 dark:border-zinc-700 dark:bg-[#16161b] dark:hover:border-zinc-600 dark:hover:bg-[#1a1a22]",
+                    ? "border-indigo-400 bg-indigo-950/20 scale-[0.99] shadow-[0_0_30px_rgba(99,102,241,0.25)]"
+                    : "border-zinc-300 bg-zinc-50/50 hover:border-zinc-400 hover:bg-zinc-100/60 dark:border-white/10 dark:bg-[#0c0e18]/80 dark:hover:border-indigo-500/30 dark:hover:bg-[#101322]",
                 )}
               >
                 <input
@@ -230,8 +230,8 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                 />
 
                 {/* Minimalist Floating Icon */}
-                <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-2xl bg-white text-zinc-800 border border-zinc-200 shadow-2xs group-hover:scale-105 group-hover:border-zinc-300 group-hover:bg-zinc-50 dark:bg-[#1c1c22] dark:text-white dark:border-white/10 dark:group-hover:border-white/20 dark:group-hover:bg-[#23232b] transition-all mb-3.5">
-                  <UploadCloud className="h-6 w-6 stroke-[2.2]" />
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-zinc-800 border border-zinc-200 shadow-2xs group-hover:scale-105 group-hover:border-zinc-300 group-hover:bg-zinc-50 dark:bg-[#141829] dark:text-zinc-200 dark:border-[#2e375e] dark:shadow-md dark:group-hover:border-indigo-500/40 transition-all mb-3.5">
+                  <UploadCloud className="h-6 w-6 stroke-[2]" />
                 </div>
 
                 <div className="space-y-1">
@@ -246,11 +246,11 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
                 {/* Feature Tags */}
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-zinc-700 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-300 dark:border-white/10 shadow-2xs">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-zinc-700 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/10 shadow-2xs">
                     <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                     Private & Secure
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-zinc-700 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-300 dark:border-white/10 shadow-2xs">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-zinc-700 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/10 shadow-2xs">
                     <Bookmark className="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
                     Page-Level Citations
                   </span>
@@ -258,8 +258,8 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
               </div>
             ) : (
               /* Selected Document Preview Card */
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 space-y-3.5 dark:border-white/10 dark:bg-[#16161b]">
-                <div className="flex items-center justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 space-y-3.5 dark:border-white/5 dark:bg-[#16161b]">
+                <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
                   <span>Selected Document</span>
                   <button
                     onClick={() => setSelectedFile(null)}
@@ -270,19 +270,19 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3.5 rounded-xl bg-white p-3.5 border border-zinc-200 dark:bg-[#1c1c22] dark:border-white/10 shadow-2xs">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 font-mono text-[11px] font-bold">
+                <div className="flex items-center gap-3.5 rounded-lg bg-white p-3 border border-zinc-200 dark:bg-[#121216] dark:border-white/5 shadow-2xs">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/5 font-mono text-[10px] font-semibold">
                     PDF
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm truncate">
+                    <p className="font-semibold text-zinc-900 dark:text-white text-xs sm:text-sm truncate">
                       {selectedFile.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                       <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
                       <span>•</span>
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
                         <Check className="h-3 w-3" />
                         Verified format
                       </span>
@@ -291,7 +291,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-transparent dark:text-zinc-300 dark:hover:bg-white/5 transition-colors shrink-0 cursor-pointer"
+                    className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-transparent dark:text-zinc-300 dark:hover:bg-white/5 transition-colors shrink-0 cursor-pointer"
                   >
                     Replace
                   </button>

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
-import { PdfViewer } from "@/features/pdf-viewer/pdf-viewer";
 import { ChatView } from "@/features/chat/chat-view";
+import { PdfViewer } from "@/features/pdf-viewer/pdf-viewer";
 import { Document } from "@/types";
 import { ConversationLayout } from "@/features/conversations/components/conversation-layout";
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
@@ -20,6 +20,7 @@ function ConversationWorkspace() {
   const docId = searchParams.get("doc");
   const convId = searchParams.get("conv");
 
+  const documents = useDocumentStore((state) => state.documents);
   const conversations = useConversationStore((state) => state.conversations);
   const setActiveConversation = useConversationStore(
     (state) => state.setActiveConversation
@@ -28,19 +29,9 @@ function ConversationWorkspace() {
     (state) => state.markDocumentAsOpened
   );
 
-  // Local UI state for mobile tabs
-  const [mobileTab, setMobileTab] = useState<"pdf" | "conversation">("conversation");
-
-  // Modal states for bare /conversation handling
-  const [selectDocOpen, setSelectDocOpen] = useState(!docId);
+  const [isViewerOpen, setIsViewerOpen] = useState(true);
+  const [selectDocOpen, setSelectDocOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
-
-  // Automatically trigger document selector if visiting /conversation without docId
-  useEffect(() => {
-    if (!docId) {
-      setSelectDocOpen(true);
-    }
-  }, [docId]);
 
   // Initial fetch of documents & conversations
   useEffect(() => {
@@ -48,16 +39,19 @@ function ConversationWorkspace() {
     useConversationStore.getState().fetchConversations();
   }, []);
 
+  // Effective doc ID: if none in search params, use first document if exists
+  const effectiveDocId = docId || (documents.length > 0 ? documents[0].id : null);
+
   // Sync conversation selection with URL search parameters
   useEffect(() => {
-    if (!docId) {
+    if (!effectiveDocId) {
       if (useConversationStore.getState().activeConversationId !== null) {
         setActiveConversation(null);
       }
       return;
     }
 
-    markDocumentAsOpened(docId);
+    markDocumentAsOpened(effectiveDocId);
 
     const currentActive = useConversationStore.getState().activeConversationId;
 
@@ -75,7 +69,7 @@ function ConversationWorkspace() {
     if (currentActive !== null) {
       setActiveConversation(null);
     }
-  }, [docId, convId, conversations, markDocumentAsOpened, setActiveConversation]);
+  }, [effectiveDocId, convId, conversations, markDocumentAsOpened, setActiveConversation]);
 
   const handleDocumentSelected = (doc: Document) => {
     setSelectDocOpen(false);
@@ -84,29 +78,41 @@ function ConversationWorkspace() {
 
   return (
     <AppLayout title="Conversation">
-      {docId ? (
+      {effectiveDocId ? (
         <ConversationLayout
-          mobileTab={mobileTab}
-          onMobileTabChange={setMobileTab}
-          pdfViewer={<PdfViewer activeDocumentId={docId} />}
-          chatPanel={<ChatView documentId={docId} />}
+          chatPanel={
+            <ChatView
+              documentId={effectiveDocId}
+              isViewerOpen={isViewerOpen}
+              onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
+            />
+          }
+          pdfViewer={
+            <PdfViewer
+              activeDocumentId={effectiveDocId}
+              onClose={() => setIsViewerOpen(false)}
+            />
+          }
+          isViewerOpen={isViewerOpen}
+          onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
         />
       ) : (
         /* Bare /conversation Empty Selection State */
-        <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-inner dark:bg-blue-600/10 dark:text-blue-400 mb-4">
-            <FileText className="h-8 w-8" />
+        <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center bg-[#08090d]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-indigo-400 border border-white/10 mb-4 shadow-inner">
+            <FileText className="h-6 w-6" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-2xl">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
             Select a Document to Start
           </h2>
-          <p className="mt-2 max-w-md text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+          <p className="mt-2 max-w-md text-xs sm:text-sm text-zinc-400 leading-relaxed">
             Choose a document from your library to view its PDF pages and start an AI-grounded conversation.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Button
+              variant="gradient"
               onClick={() => setSelectDocOpen(true)}
-              className="gap-2 px-5 py-2.5 font-medium shadow-sm"
+              className="gap-2 h-10 px-5 text-xs font-semibold"
             >
               <FileText className="h-4 w-4" />
               <span>Select Document</span>
@@ -114,7 +120,7 @@ function ConversationWorkspace() {
             <Button
               onClick={() => setUploadModalOpen(true)}
               variant="outline"
-              className="gap-2 px-5 py-2.5 border-zinc-200 hover:bg-zinc-100 dark:border-white/10 dark:hover:bg-white/5"
+              className="gap-2 h-10 px-5 text-xs font-medium"
             >
               <UploadCloud className="h-4 w-4" />
               <span>Upload New PDF</span>
@@ -148,8 +154,8 @@ export default function ConversationWorkspacePage() {
     <Suspense
       fallback={
         <AppLayout title="Conversation">
-          <div className="flex h-full w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
+          <div className="flex h-full w-full items-center justify-center bg-[#08090d]">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
           </div>
         </AppLayout>
       }

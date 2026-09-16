@@ -79,7 +79,7 @@ export function Tabs({
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-[9px] bg-zinc-100 border border-zinc-200/80 p-[3px] select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-xs dark:bg-[#141418] dark:border-white/5 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]",
+        "inline-flex items-center rounded-lg bg-zinc-100 border border-zinc-200 p-0.5 select-none dark:bg-[#121216] dark:border-white/5",
         size === "sm" ? "h-8" : "h-9",
         className
       )}
@@ -91,7 +91,7 @@ export function Tabs({
 
         return (
           <React.Fragment key={tab.id}>
-            {/* Signature Hairline Segment Separator - always rendered to eliminate layout shift */}
+            {/* Signature Hairline Segment Separator */}
             {index > 0 && (
               <span
                 aria-hidden="true"
@@ -105,10 +105,10 @@ export function Tabs({
             <button
               onClick={() => onChange(tab.id)}
               className={cn(
-                "relative flex items-center justify-center gap-1.5 px-3 rounded-[7px] text-xs font-medium transition-all duration-100 ease-out cursor-pointer select-none active:scale-[0.98] tracking-[-0.01em] h-full",
+                "relative flex items-center justify-center gap-1.5 px-2.5 rounded-md text-xs font-medium transition-all duration-100 ease-out cursor-pointer select-none active:scale-[0.98] tracking-[-0.01em] h-full",
                 isActive
-                  ? "bg-white text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border-none dark:bg-[#24242b] dark:text-white dark:border-none dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/5"
+                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-white/10 dark:text-white"
+                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-white/5"
               )}
             >
               {tab.icon}
@@ -118,10 +118,10 @@ export function Tabs({
               {tab.badge !== undefined && (
                 <span
                   className={cn(
-                    "text-[10px] font-mono px-1.5 py-0.2 rounded-full",
+                    "text-[10px] font-mono px-1.5 py-0.5 rounded-full leading-none",
                     isActive
-                      ? "bg-zinc-100 text-zinc-800 font-medium dark:bg-zinc-800 dark:text-zinc-200"
-                      : "text-zinc-500"
+                      ? "bg-zinc-200/80 text-zinc-900 font-medium dark:bg-white/15 dark:text-white"
+                      : "bg-zinc-200/40 text-zinc-500 dark:bg-white/5 dark:text-zinc-500"
                   )}
                 >
                   {tab.badge}

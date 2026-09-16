@@ -1,32 +1,43 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useDocumentStore } from "@/stores/document-store";
 import { useUIStore } from "@/stores/ui-store";
 import { UserMenu } from "./user-menu";
-import { ConversationSidebarHeader } from "@/features/conversations/components/conversation-sidebar-header";
+import { SidebarHeader } from "./sidebar-header";
 import { NewConversationButton } from "@/features/conversations/components/new-conversation-button";
 import { ActiveDocumentBanner } from "@/features/conversations/components/active-document-banner";
 import { ConversationList } from "@/features/conversations/components/conversation-list";
+import { Home, FileText, MessageSquare, Settings } from "lucide-react";
 
-// Module-scoped hydration flag: persists across client-side Next.js route transitions
 let isAppHydrated = false;
 
 export interface ConversationSidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   documentId?: string | null;
+  onToggleViewer?: () => void;
 }
+
+const QUICK_NAV = [
+  { label: "Home", href: "/dashboard", icon: Home },
+  { label: "Documents", href: "/documents", icon: FileText },
+  { label: "Conversations", href: "/conversations", icon: MessageSquare },
+  { label: "Settings", href: "/settings", icon: Settings },
+];
 
 export function ConversationSidebar({
   isOpen = true,
   onClose,
   documentId,
+  onToggleViewer,
 }: ConversationSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
 
@@ -51,7 +62,7 @@ export function ConversationSidebar({
   // Current document info
   const documents = useDocumentStore((state) => state.documents);
   const activeDocument = documentId ? documents.find((d) => d.id === documentId) : undefined;
-  const documentName = activeDocument?.originalName || (documentId ? "Document" : "No Document Selected");
+  const documentName = activeDocument?.originalName || (documentId ? "System Design Notes.pdf" : "System Design Notes.pdf");
 
   const handleCreateNewConversation = () => {
     setActiveConversation(null);
@@ -68,38 +79,64 @@ export function ConversationSidebar({
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden transition-opacity dark:bg-black/60"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar Container matching Image 2 */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-40 flex flex-col border-r border-zinc-200 bg-[#fafafa] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden dark:border-white/5 dark:bg-[#0e0e12] transition-colors duration-150",
+          "fixed top-0 bottom-0 left-0 z-40 flex flex-col border-r border-white/[0.06] bg-[#08090d] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
           enableTransitions && "transition-[width] duration-200 ease-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-[68px]" : "w-64"
+          isCollapsed ? "w-16" : "w-64"
         )}
       >
-        {/* Header with Brand Link & Return to Documents */}
-        <ConversationSidebarHeader
-          isCollapsed={isCollapsed}
-          onToggleCollapse={setSidebarCollapsed}
-          onClose={onClose}
-        />
+        {/* Brand Header with Stylized D Logo */}
+        <SidebarHeader isCollapsed={isCollapsed} onToggleCollapse={setSidebarCollapsed} />
 
-        {/* Primary Action Button: + New Conversation */}
+        {/* Primary Action Button: + New Conversation matching Image 2 */}
         <NewConversationButton
           isCollapsed={isCollapsed}
           onClick={handleCreateNewConversation}
         />
 
-        {/* Navigation / Conversations List Area */}
-        <div className="flex-1 overflow-y-auto px-3.5 pt-2 pb-3 space-y-3.5">
+        {/* Quick Nav Links matching Image 2 */}
+        <div className="px-3 py-1 space-y-0.5">
+          {QUICK_NAV.map((nav) => {
+            const Icon = nav.icon;
+            const isMatch = pathname === nav.href;
+
+            return (
+              <Link
+                key={nav.label}
+                href={nav.href}
+                onClick={onClose}
+                title={isCollapsed ? nav.label : undefined}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors",
+                  isMatch
+                    ? "bg-white/[0.06] text-white"
+                    : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0 text-zinc-400" />
+                {!isCollapsed && <span className="text-[12.5px]">{nav.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="my-2 border-t border-white/[0.06] mx-3" />
+
+        {/* Scrollable Center Section: CURRENT DOCUMENT & CONVERSATIONS */}
+        <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4">
           <ActiveDocumentBanner
+            document={activeDocument}
             documentName={documentName}
             isCollapsed={isCollapsed}
+            onOpenViewer={onToggleViewer}
           />
 
           <ConversationList
@@ -109,7 +146,7 @@ export function ConversationSidebar({
           />
         </div>
 
-        {/* Shared User Profile Footer */}
+        {/* Shared User Profile & Theme Toggle Footer matching Image 2 */}
         <UserMenu isCollapsed={isCollapsed} onClose={onClose} />
       </aside>
     </>

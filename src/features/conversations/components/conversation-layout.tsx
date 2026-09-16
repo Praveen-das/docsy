@@ -1,42 +1,33 @@
 "use client";
 
-import React from "react";
-import { MobilePaneSwitcher } from "./mobile-pane-switcher";
+import React, { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export interface ConversationLayoutProps {
-  mobileTab: "conversation" | "pdf";
-  onMobileTabChange: (tab: "conversation" | "pdf") => void;
-  pdfViewer: React.ReactNode;
   chatPanel: React.ReactNode;
-  conversationCount?: number;
+  pdfViewer?: React.ReactNode;
+  isViewerOpen?: boolean;
+  onToggleViewer?: () => void;
 }
 
 export function ConversationLayout({
-  mobileTab,
-  onMobileTabChange,
-  pdfViewer,
   chatPanel,
-  conversationCount,
+  pdfViewer,
+  isViewerOpen = true,
 }: ConversationLayoutProps) {
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Mobile Tab Switcher (<1024px) */}
-      <MobilePaneSwitcher activeTab={mobileTab} conversationCount={conversationCount} onTabChange={onMobileTabChange} />
-
-      {/* Dual Pane Desktop Workspace Layout */}
-      <div className="h-full flex flex-1 overflow-hidden">
-        {/* Left Pane: Interactive PDF Viewer */}
-        <div className={`w-full lg:w-1/2 h-full ${mobileTab === "pdf" ? "block" : "hidden lg:block"}`}>{pdfViewer}</div>
-
-        {/* Right Pane: Conversational Interface */}
-        <div
-          className={`w-full lg:w-1/2 h-full border-l border-zinc-200 dark:border-white/5 ${
-            mobileTab === "conversation" ? "block" : "hidden lg:block"
-          }`}
-        >
-          {chatPanel}
-        </div>
+    <div className="flex h-full w-full overflow-hidden bg-[#08090d]">
+      {/* Center Chat Panel */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        {chatPanel}
       </div>
+
+      {/* Right Document Viewer Panel matching Image 2 */}
+      {pdfViewer && isViewerOpen && (
+        <div className="hidden lg:flex w-[460px] xl:w-[520px] 2xl:w-[580px] shrink-0 h-full overflow-hidden animate-in slide-in-from-right duration-200">
+          {pdfViewer}
+        </div>
+      )}
     </div>
   );
 }
