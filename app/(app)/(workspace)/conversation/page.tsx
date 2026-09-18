@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AppLayout } from "@/components/layout/app-layout";
 import { ChatView } from "@/features/chat/chat-view";
 import { PdfViewer } from "@/features/pdf-viewer/pdf-viewer";
 import { Document } from "@/types";
 import { ConversationLayout } from "@/features/conversations/components/conversation-layout";
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
-import { UploadModal } from "@/features/documents/upload-modal";
+import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
 import { useConversationStore } from "@/stores/conversation-store";
 import { FileText, UploadCloud, Loader2 } from "lucide-react";
@@ -31,7 +30,7 @@ function ConversationWorkspace() {
 
   const [isViewerOpen, setIsViewerOpen] = useState(true);
   const [selectDocOpen, setSelectDocOpen] = useState(false);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const openUpload = useUIStore((state) => state.openUpload);
 
   // Initial fetch of documents & conversations
   useEffect(() => {
@@ -77,7 +76,7 @@ function ConversationWorkspace() {
   };
 
   return (
-    <AppLayout title="Conversation">
+    <>
       {effectiveDocId ? (
         <ConversationLayout
           chatPanel={
@@ -118,7 +117,7 @@ function ConversationWorkspace() {
               <span>Select Document</span>
             </Button>
             <Button
-              onClick={() => setUploadModalOpen(true)}
+              onClick={openUpload}
               variant="outline"
               className="gap-2 h-10 px-5 text-xs font-medium"
             >
@@ -134,18 +133,9 @@ function ConversationWorkspace() {
         isOpen={selectDocOpen}
         onClose={() => setSelectDocOpen(false)}
         onSelectDocument={handleDocumentSelected}
-        onOpenUpload={() => setUploadModalOpen(true)}
+        onOpenUpload={openUpload}
       />
-
-      {/* Upload Modal fallback */}
-      <UploadModal
-        isOpen={uploadModalOpen}
-        onClose={() => setUploadModalOpen(false)}
-        onUploadSuccess={() => {
-          useDocumentStore.getState().fetchDocuments();
-        }}
-      />
-    </AppLayout>
+    </>
   );
 }
 
@@ -153,11 +143,9 @@ export default function ConversationWorkspacePage() {
   return (
     <Suspense
       fallback={
-        <AppLayout title="Conversation">
-          <div className="flex h-full w-full items-center justify-center bg-[#08090d]">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-          </div>
-        </AppLayout>
+        <div className="flex h-full w-full items-center justify-center bg-[#08090d]">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        </div>
       }
     >
       <ConversationWorkspace />
