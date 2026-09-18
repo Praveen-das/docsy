@@ -23,9 +23,20 @@ export function applyTheme(theme: ThemeMode) {
 
 interface UIState {
   isSidebarCollapsed: boolean;
+  isMobileSidebarOpen: boolean;
+  isSearchOpen: boolean;
+  isUploadOpen: boolean;
   theme: ThemeMode;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebarCollapsed: () => void;
+  setMobileSidebarOpen: (open: boolean) => void;
+  toggleMobileSidebar: () => void;
+  setSearchOpen: (open: boolean) => void;
+  openSearch: () => void;
+  closeSearch: () => void;
+  setUploadOpen: (open: boolean) => void;
+  openUpload: () => void;
+  closeUpload: () => void;
   setTheme: (theme: ThemeMode) => void;
 }
 
@@ -33,11 +44,24 @@ export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       isSidebarCollapsed: false,
+      isMobileSidebarOpen: false,
+      isSearchOpen: false,
+      isUploadOpen: false,
       theme: "dark",
       setSidebarCollapsed: (collapsed: boolean) =>
         set({ isSidebarCollapsed: collapsed }),
       toggleSidebarCollapsed: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+      setMobileSidebarOpen: (open: boolean) =>
+        set({ isMobileSidebarOpen: open }),
+      toggleMobileSidebar: () =>
+        set((state) => ({ isMobileSidebarOpen: !state.isMobileSidebarOpen })),
+      setSearchOpen: (open: boolean) => set({ isSearchOpen: open }),
+      openSearch: () => set({ isSearchOpen: true }),
+      closeSearch: () => set({ isSearchOpen: false }),
+      setUploadOpen: (open: boolean) => set({ isUploadOpen: open }),
+      openUpload: () => set({ isUploadOpen: true }),
+      closeUpload: () => set({ isUploadOpen: false }),
       setTheme: (theme: ThemeMode) => {
         applyTheme(theme);
         set({ theme });
@@ -45,6 +69,10 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "docsy-ui-preferences",
+      partialize: (state) => ({
+        isSidebarCollapsed: state.isSidebarCollapsed,
+        theme: state.theme,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state?.theme) {
           applyTheme(state.theme);

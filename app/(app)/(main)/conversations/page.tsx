@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Conversation } from "@/types";
@@ -36,7 +35,7 @@ export default function ConversationsPage() {
   };
 
   return (
-    <AppLayout title="Conversations">
+    <>
       <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -166,6 +165,6 @@ export default function ConversationsPage() {
           </div>
         </div>
       </Dialog>
-    </AppLayout>
+    </>
   );
 }

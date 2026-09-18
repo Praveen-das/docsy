@@ -1,54 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
-import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
 import { UploadModal } from "@/features/documents/upload-modal";
+import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
+
+import { useUIStore } from "@/stores/ui-store";
 
 export interface AppLayoutProps {
   children: React.ReactNode;
-  title?: string;
-  hideHeader?: boolean;
 }
 
-export function AppLayout({ children, title, hideHeader }: AppLayoutProps) {
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+export function AppLayout({ children }: AppLayoutProps) {
+  console.log("app layout rendered");
 
-  const isConversationMode =
-    pathname === "/conversation" ||
-    pathname.startsWith("/conversation/") ||
-    pathname === "/chat" ||
-    pathname.startsWith("/chat/");
-
-  const shouldShowHeader = !hideHeader && !isConversationMode;
+  // Global UI store eliminating prop drilling
+  const isSearchOpen = useUIStore((state) => state.isSearchOpen);
+  const setSearchOpen = useUIStore((state) => state.setSearchOpen);
+  const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
+  const setMobileSidebarOpen = useUIStore((state) => state.setMobileSidebarOpen);
+  const isUploadOpen = useUIStore((state) => state.isUploadOpen);
+  const openUpload = useUIStore((state) => state.openUpload);
+  const closeUpload = useUIStore((state) => state.closeUpload);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#08090d] text-[#f4f4f5] transition-colors duration-150">
       {/* Desktop & Mobile Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onOpenUpload={() => setUploadModalOpen(true)}
-      />
+      <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} onOpenUpload={openUpload} />
 
       {/* Main Content Viewport */}
-      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden relative">
-        {/* Global Top Header matching Image 1 for non-conversation pages */}
-        {shouldShowHeader && (
-          <Header
-            title={title}
-            onToggleSidebar={() => setSidebarOpen(true)}
-          />
-        )}
-
-        <main className="flex-1 overflow-y-auto min-w-0">{children}</main>
-      </div>
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden relative">{children}</div>
 
       {/* Global Upload Ingestion Modal */}
-      <UploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} />
+      <UploadModal isOpen={isUploadOpen} onClose={closeUpload} />
+
+      {/* Global Search / Select Document Modal */}
+      <SelectDocumentModal
+        isOpen={isSearchOpen}
+        onClose={() => setSearchOpen(false)}
+        onOpenUpload={() => {
+          setSearchOpen(false);
+          openUpload();
+        }}
+      />
     </div>
   );
 }

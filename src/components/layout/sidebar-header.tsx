@@ -15,7 +15,7 @@ export function SidebarHeader({
   onToggleCollapse,
 }: SidebarHeaderProps) {
   return (
-    <div className="flex h-20 shrink-0 items-center px-6 relative overflow-hidden bg-transparent">
+    <div className="flex h-20 shrink-0 items-center px-5 relative overflow-hidden bg-transparent">
       {isCollapsed ? (
         /* Collapsed Mode: Stylized D Logo with Expand on Hover */
         <div className="w-10 h-10 flex items-center justify-center shrink-0">

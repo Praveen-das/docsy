@@ -11,13 +11,7 @@ import { ConversationSidebar } from "./conversation-sidebar";
 // Module-scoped hydration flag: persists across client-side Next.js route transitions
 let isAppHydrated = false;
 
-function ConversationSidebarWithDoc({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose?: () => void;
-}) {
+function ConversationSidebarWithDoc({ isOpen, onClose }: { isOpen: boolean; onClose?: () => void }) {
   const searchParams = useSearchParams();
   const documentId = searchParams.get("doc");
   return <ConversationSidebar isOpen={isOpen} onClose={onClose} documentId={documentId} />;
@@ -75,28 +69,24 @@ export function Sidebar({ isOpen = true, onClose, onOpenUpload, onOpenSearch }: 
         />
       )}
 
-      {/* Sidebar Container matching Image 1: Deep obsidian surface with refined borders */}
+      {/* Sidebar Container matching Image 1: Deep obsidian surface without right border */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-40 flex flex-col border-r border-white/[0.05] bg-[#07080c] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
+          "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#07080c] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
           enableTransitions && "transition-[width] duration-200 ease-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-16" : "w-72",
+          isCollapsed ? "w-16" : "w-64",
         )}
       >
-        {/* Ambient subtle light gradient inside sidebar */}
-        <div className="absolute -top-10 -left-10 w-48 h-48 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute bottom-20 -left-10 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        {/* Ambient subtle light gradient inside sidebar matching reference image */}
+        <div className="absolute top-4 -left-10 w-44 h-44 bg-blue-600/8 rounded-full blur-3xl transform-gpu pointer-events-none -z-10" />
+        <div className="absolute bottom-10 right-0 w-44 h-80 bg-indigo-300/5 rounded-full blur-3xl transform-gpu pointer-events-none -z-10" />
 
         {/* Brand Header with Stylized D Logo */}
         <SidebarHeader isCollapsed={isCollapsed} onToggleCollapse={setSidebarCollapsed} />
 
         {/* Navigation Menu & Upgrade to Pro Card */}
-        <SidebarNavigation
-          isCollapsed={isCollapsed}
-          onClose={onClose}
-          onOpenSearch={onOpenSearch}
-        />
+        <SidebarNavigation isCollapsed={isCollapsed} onClose={onClose} onOpenSearch={onOpenSearch} />
       </aside>
     </>
   );

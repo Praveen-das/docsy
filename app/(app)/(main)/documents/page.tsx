@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/layout/app-layout";
+import { useUIStore } from "@/stores/ui-store";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
 import { Dialog } from "@/components/ui/dialog";
-import { UploadModal } from "@/features/documents/upload-modal";
 import { Document, ProcessingStatus } from "@/types";
 import {
   FileText,
@@ -59,7 +58,7 @@ export default function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const openUpload = useUIStore((state) => state.openUpload);
   const [docToDelete, setDocToDelete] = useState<Document | null>(null);
   const [conversationsDoc, setConversationsDoc] = useState<Document | null>(null);
 
@@ -102,7 +101,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <AppLayout title="My Documents">
+    <>
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         {/* Header toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -118,7 +117,7 @@ export default function DocumentsPage() {
           <Button
             variant="accent"
             size="sm"
-            onClick={() => setIsUploadOpen(true)}
+            onClick={openUpload}
           >
             <Upload className="h-4 w-4" />
             <span>Upload New PDF</span>
@@ -307,7 +306,7 @@ export default function DocumentsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setIsUploadOpen(true)}
+                            onClick={openUpload}
                             className="h-8 px-3 text-xs gap-1.5 hover:border-zinc-300 dark:hover:border-white/20"
                             title="File not found in storage — please re-upload"
                           >
@@ -430,7 +429,7 @@ export default function DocumentsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setIsUploadOpen(true)}
+                            onClick={openUpload}
                             className="h-8 text-xs gap-1.5 hover:border-zinc-300 dark:hover:border-white/20"
                             title="File not found in storage — please re-upload"
                           >
@@ -534,20 +533,12 @@ export default function DocumentsPage() {
         </div>
       </Dialog>
 
-      {/* Upload Modal */}
-      <UploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onUploadSuccess={() => {
-          fetchDocuments();
-        }}
-      />
       {/* Document Conversations Modal */}
       <DocumentConversationsDialog
         isOpen={!!conversationsDoc}
         onClose={() => setConversationsDoc(null)}
         document={conversationsDoc}
       />
-    </AppLayout>
+    </>
   );
 }

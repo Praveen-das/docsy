@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 import { currentUser } from "@/lib/mock-data";
@@ -72,7 +71,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <AppLayout title="Account Settings">
+    <>
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
@@ -322,6 +321,6 @@ export default function SettingsPage() {
           </Link>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

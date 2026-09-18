@@ -39,7 +39,7 @@ export function ChatComposer({
   return (
     <form onSubmit={handleSubmit} className="w-full px-4 sm:px-6 pb-6 pt-2">
       {/* Floating Pill-Card matching Image 2 */}
-      <div className="mx-auto w-full max-w-3xl relative flex flex-col rounded-3xl border border-indigo-500/25 bg-[#0f111a]/95 shadow-[0_0_35px_rgba(99,102,241,0.15)] backdrop-blur-2xl transition-all focus-within:border-indigo-500/50 focus-within:shadow-[0_0_40px_rgba(99,102,241,0.22)] p-3 sm:p-3.5">
+      <div className="mx-auto w-full max-w-3xl relative flex flex-col rounded-3xl border border-indigo-500/25 bg-[#0f111a]/95 shadow-[0_0_35px_rgba(99,102,241,0.15)] backdrop-blur-md transition-[border-color,box-shadow] duration-200 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_40px_rgba(99,102,241,0.22)] p-3 sm:p-3.5">
         <textarea
           value={inputText}
           onChange={(e) => onInputChange(e.target.value)}
@@ -80,7 +80,7 @@ export function ChatComposer({
                     className="fixed inset-0 z-40"
                     onClick={() => setModelMenuOpen(false)}
                   />
-                  <div className="absolute left-0 bottom-full mb-2 z-50 w-36 rounded-xl border border-white/10 bg-[#12141e] p-1.5 shadow-xl shadow-black/40 backdrop-blur-xl">
+                  <div className="absolute left-0 bottom-full mb-2 z-50 w-36 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md">
                     {["Docsy AI", "Docsy Pro", "Fast Scan"].map((m) => (
                       <button
                         key={m}
@@ -121,7 +121,7 @@ export function ChatComposer({
                     className="fixed inset-0 z-40"
                     onClick={() => setModeMenuOpen(false)}
                   />
-                  <div className="absolute left-0 bottom-full mb-2 z-50 w-36 rounded-xl border border-white/10 bg-[#12141e] p-1.5 shadow-xl shadow-black/40 backdrop-blur-xl">
+                  <div className="absolute left-0 bottom-full mb-2 z-50 w-36 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md">
                     {["Standard", "Deep Analysis", "Concise"].map((m) => (
                       <button
                         key={m}

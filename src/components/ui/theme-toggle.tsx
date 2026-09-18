@@ -5,7 +5,12 @@ import { useUIStore, ThemeMode } from "@/stores/ui-store";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function ThemeToggle({ className }: { className?: string }) {
+export interface ThemeToggleProps {
+  className?: string;
+  variant?: "segmented" | "minimal";
+}
+
+export function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
   const [mounted, setMounted] = useState(false);
@@ -15,6 +20,25 @@ export function ThemeToggle({ className }: { className?: string }) {
   }, []);
 
   const currentTheme = mounted ? theme : "dark";
+
+  if (variant === "minimal") {
+    const isDark = currentTheme === "dark" || (currentTheme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    return (
+      <button
+        type="button"
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+        title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer select-none",
+          className
+        )}
+        aria-label="Toggle theme"
+      >
+        <Sun className="h-[18px] w-[18px] transition-transform duration-200 hover:rotate-45" strokeWidth={1.75} />
+      </button>
+    );
+  }
 
   const options: { id: ThemeMode; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: "light", label: "Light", icon: Sun },

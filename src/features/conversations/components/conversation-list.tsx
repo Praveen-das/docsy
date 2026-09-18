@@ -82,10 +82,10 @@ export function ConversationList({
 
   return (
     <>
-      <div className="space-y-2 select-none">
+      <div className="space-y-1.5 select-none">
         {!isCollapsed && (
           <>
-            <div className="flex items-center justify-between px-1 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+            <div className="flex items-center justify-between px-1 text-[9.5px] font-bold tracking-widest text-zinc-500 uppercase">
               <span>CONVERSATIONS</span>
               <span className="font-mono text-zinc-500 text-[10px]">
                 {filteredConversations.length}
@@ -94,13 +94,13 @@ export function ConversationList({
 
             {/* Search conversations input matching Image 2 */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-500" />
+              <Search className="absolute left-2.5 top-2 h-3 w-3 text-zinc-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search conversations..."
-                className="w-full rounded-xl border border-white/[0.06] bg-[#0c0e15] pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:border-indigo-500/40 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-white/[0.06] bg-[#0c0e15] pl-7 pr-2.5 py-1 text-[11px] text-white placeholder:text-zinc-500 focus:border-indigo-500/40 focus:outline-none transition-colors"
               />
             </div>
           </>

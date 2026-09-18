@@ -108,7 +108,7 @@ export function ChatHeader({
                   className="fixed inset-0 z-40"
                   onClick={() => setIsMenuOpen(false)}
                 />
-                <div className="absolute right-0 mt-1.5 z-50 w-44 rounded-xl border border-white/10 bg-[#12141e] p-1.5 shadow-xl shadow-black/40 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 mt-1.5 z-50 w-44 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md animate-in fade-in zoom-in-95 duration-100">
                   <button
                     type="button"
                     onClick={() => {
