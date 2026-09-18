@@ -51,7 +51,7 @@ export function HeaderSearchBar({ className, onOpen }: HeaderSearchBarProps) {
           }
         }}
         aria-label="Search documents and conversations"
-        className="group relative flex h-11 w-full items-center justify-between rounded-2xl border border-[#212738]/70 bg-(--surface-card)/90 px-4 text-xs text-zinc-300 shadow-inner backdrop-blur-md transition-all hover:border-[#333d59] hover:bg-[#111424] cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-indigo-500/50"
+        className="group relative flex h-11 w-full items-center justify-between rounded-2xl border border-[#212738]/70 bg-(--surface-card)/90 px-4 text-xs text-zinc-300 shadow-inner backdrop-blur-md will-change-transform transition-all hover:border-[#333d59] hover:bg-[#111424] cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-indigo-500/50"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Search className="h-4 w-4 text-[#727f9d] group-hover:text-zinc-200 transition-colors shrink-0 stroke-[1.8]" />

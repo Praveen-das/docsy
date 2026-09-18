@@ -18,17 +18,24 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDocumentStore } from "@/stores/document-store";
+import { useUIStore } from "@/stores/ui-store";
 
 export interface UploadModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   onUploadSuccess?: (filename: string) => void;
 }
 
 type UploadStep = "idle" | "uploading" | "failed";
 
-export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps) {
+export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps = {}) {
   const router = useRouter();
+  const storeIsOpen = useUIStore((state) => state.isUploadOpen);
+  const storeClose = useUIStore((state) => state.closeUpload);
+
+  const effectiveIsOpen = isOpen ?? storeIsOpen;
+  const effectiveOnClose = onClose ?? storeClose;
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [step, setStep] = useState<UploadStep>("idle");
@@ -45,7 +52,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
   const handleClose = () => {
     resetState();
-    onClose();
+    effectiveOnClose();
   };
 
   const validateAndSetFile = (file: File) => {
@@ -167,7 +174,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
       // Close modal and navigate to the documents list
       resetState();
-      onClose();
+      effectiveOnClose();
       router.push("/documents");
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Network error during upload");
@@ -177,7 +184,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
   return (
     <Dialog
-      isOpen={isOpen}
+      isOpen={effectiveIsOpen}
       onClose={handleClose}
       className="max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#121216] transition-all"
     >

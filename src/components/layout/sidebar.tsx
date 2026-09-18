@@ -11,7 +11,7 @@ import { ConversationSidebar } from "./conversation-sidebar";
 // Module-scoped hydration flag: persists across client-side Next.js route transitions
 let isAppHydrated = false;
 
-function ConversationSidebarWithDoc({ isOpen, onClose }: { isOpen: boolean; onClose?: () => void }) {
+function ConversationSidebarWithDoc({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const searchParams = useSearchParams();
   const documentId = searchParams.get("doc");
   return <ConversationSidebar isOpen={isOpen} onClose={onClose} documentId={documentId} />;
@@ -25,11 +25,16 @@ export interface SidebarProps {
   title?: string;
 }
 
-export function Sidebar({ isOpen = true, onClose, onOpenUpload, onOpenSearch }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: SidebarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
+  const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
+  const setMobileSidebarOpen = useUIStore((state) => state.setMobileSidebarOpen);
+
+  const effectiveIsOpen = isOpen ?? isMobileSidebarOpen;
+  const effectiveOnClose = onClose ?? (() => setMobileSidebarOpen(false));
 
   const [mounted, setMounted] = useState(isAppHydrated);
   const [enableTransitions, setEnableTransitions] = useState(isAppHydrated);
@@ -52,7 +57,7 @@ export function Sidebar({ isOpen = true, onClose, onOpenUpload, onOpenSearch }: 
   if (isConversationMode) {
     return (
       <Suspense fallback={null}>
-        <ConversationSidebarWithDoc isOpen={isOpen} onClose={onClose} />
+        <ConversationSidebarWithDoc isOpen={effectiveIsOpen} onClose={effectiveOnClose} />
       </Suspense>
     );
   }
@@ -62,10 +67,10 @@ export function Sidebar({ isOpen = true, onClose, onOpenUpload, onOpenSearch }: 
   return (
     <>
       {/* Mobile Backdrop Overlay */}
-      {isOpen && (
+      {effectiveIsOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
-          onClick={onClose}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs will-change-transform lg:hidden transition-opacity"
+          onClick={effectiveOnClose}
         />
       )}
 
@@ -74,19 +79,19 @@ export function Sidebar({ isOpen = true, onClose, onOpenUpload, onOpenSearch }: 
         className={cn(
           "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#07080c] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
           enableTransitions && "transition-[width] duration-200 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          effectiveIsOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "w-16" : "w-64",
         )}
       >
         {/* Ambient subtle light gradient inside sidebar matching reference image */}
-        <div className="absolute top-4 -left-10 w-44 h-44 bg-blue-600/8 rounded-full blur-3xl transform-gpu pointer-events-none -z-10" />
-        <div className="absolute bottom-10 right-0 w-44 h-80 bg-indigo-300/5 rounded-full blur-3xl transform-gpu pointer-events-none -z-10" />
+        <div className="absolute top-4 -left-10 w-44 h-44 bg-blue-600/8 rounded-full blur-3xl will-change-transform pointer-events-none -z-10" />
+        <div className="absolute bottom-10 right-0 w-44 h-80 bg-indigo-300/5 rounded-full blur-3xl will-change-transform pointer-events-none -z-10" />
 
         {/* Brand Header with Stylized D Logo */}
         <SidebarHeader isCollapsed={isCollapsed} onToggleCollapse={setSidebarCollapsed} />
 
         {/* Navigation Menu & Upgrade to Pro Card */}
-        <SidebarNavigation isCollapsed={isCollapsed} onClose={onClose} onOpenSearch={onOpenSearch} />
+        <SidebarNavigation isCollapsed={isCollapsed} onClose={effectiveOnClose} onOpenSearch={onOpenSearch} />
       </aside>
     </>
   );

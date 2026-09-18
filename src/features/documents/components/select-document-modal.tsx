@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Document } from "@/types";
 import { useDocumentStore } from "@/stores/document-store";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useUIStore } from "@/stores/ui-store";
 import { formatRelativeTime } from "@/lib/format-time";
 import {
   FileText,
@@ -22,8 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface SelectDocumentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   onSelectDocument?: (doc: Document) => void;
   onOpenUpload?: () => void;
 }
@@ -33,8 +34,19 @@ export function SelectDocumentModal({
   onClose,
   onSelectDocument,
   onOpenUpload,
-}: SelectDocumentModalProps) {
+}: SelectDocumentModalProps = {}) {
   const router = useRouter();
+  const storeIsOpen = useUIStore((state) => state.isSearchOpen);
+  const setSearchOpen = useUIStore((state) => state.setSearchOpen);
+  const openUpload = useUIStore((state) => state.openUpload);
+
+  const effectiveIsOpen = isOpen ?? storeIsOpen;
+  const effectiveOnClose = onClose ?? (() => setSearchOpen(false));
+  const effectiveOpenUpload = onOpenUpload ?? (() => {
+    setSearchOpen(false);
+    openUpload();
+  });
+
   const documents = useDocumentStore((state) => state.documents);
   const isLoadingDocs = useDocumentStore((state) => state.isLoading);
   const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
@@ -44,17 +56,17 @@ export function SelectDocumentModal({
 
   // Ensure documents are loaded when modal opens
   useEffect(() => {
-    if (isOpen && documents.length === 0) {
+    if (effectiveIsOpen && documents.length === 0) {
       fetchDocuments();
     }
-  }, [isOpen, documents.length, fetchDocuments]);
+  }, [effectiveIsOpen, documents.length, fetchDocuments]);
 
   // Reset search when modal opens/closes
   useEffect(() => {
-    if (!isOpen) {
+    if (!effectiveIsOpen) {
       setSearchQuery("");
     }
-  }, [isOpen]);
+  }, [effectiveIsOpen]);
 
   // Filter documents by title / filename
   const filteredDocuments = useMemo(() => {
@@ -82,7 +94,7 @@ export function SelectDocumentModal({
     } else {
       router.push(`/conversation?doc=${doc.id}`);
     }
-    onClose();
+    effectiveOnClose();
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -95,8 +107,8 @@ export function SelectDocumentModal({
 
   return (
     <Dialog
-      isOpen={isOpen}
-      onClose={onClose}
+      isOpen={effectiveIsOpen}
+      onClose={effectiveOnClose}
       title="Select a Document"
       description="Choose a document from your library to open in the conversation workspace."
       className="max-w-xl"
@@ -124,11 +136,11 @@ export function SelectDocumentModal({
             )}
           </div>
 
-          {onOpenUpload && (
+          {effectiveOpenUpload && (
             <Button
               onClick={() => {
-                onClose();
-                onOpenUpload();
+                effectiveOnClose();
+                effectiveOpenUpload();
               }}
               variant="outline"
               size="sm"
@@ -169,11 +181,11 @@ export function SelectDocumentModal({
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xs mx-auto">
                   Upload your first PDF document to begin chatting with Docsy AI.
                 </p>
-                {onOpenUpload && (
+                {effectiveOpenUpload && (
                   <Button
                     onClick={() => {
-                      onClose();
-                      onOpenUpload();
+                      effectiveOnClose();
+                      effectiveOpenUpload();
                     }}
                     variant="accent"
                     className="mt-4 gap-1.5"

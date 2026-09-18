@@ -81,16 +81,13 @@ export function HeaderUserMenu({ className }: HeaderUserMenuProps) {
         </span>
 
         <ChevronDown
-          className={cn(
-            "h-4 w-4 text-[#7e8ba6] transition-transform duration-200 stroke-[2]",
-            isOpen && "rotate-180"
-          )}
+          className={cn("h-4 w-4 text-[#7e8ba6] transition-transform duration-200 stroke-[2]", isOpen && "rotate-180")}
         />
       </button>
 
       {/* User Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 z-50 w-52 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute right-0 mt-2 z-50 w-52 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md will-change-transform animate-in fade-in zoom-in-95 duration-100">
           <div className="px-3 py-2 border-b border-white/5 mb-1">
             <p className="text-xs font-semibold text-white truncate">{displayName}</p>
             <p className="text-[11px] text-zinc-400 truncate">

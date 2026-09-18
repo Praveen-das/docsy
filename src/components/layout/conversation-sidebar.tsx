@@ -31,15 +31,20 @@ const QUICK_NAV = [
 ];
 
 export function ConversationSidebar({
-  isOpen = true,
+  isOpen,
   onClose,
   documentId,
   onToggleViewer,
-}: ConversationSidebarProps) {
+}: ConversationSidebarProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
+  const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
+  const setMobileSidebarOpen = useUIStore((state) => state.setMobileSidebarOpen);
+
+  const effectiveIsOpen = isOpen ?? isMobileSidebarOpen;
+  const effectiveOnClose = onClose ?? (() => setMobileSidebarOpen(false));
 
   const [mounted, setMounted] = useState(isAppHydrated);
   const [enableTransitions, setEnableTransitions] = useState(isAppHydrated);
@@ -71,16 +76,16 @@ export function ConversationSidebar({
     } else {
       router.push("/conversation");
     }
-    onClose?.();
+    effectiveOnClose();
   };
 
   return (
     <>
       {/* Mobile Backdrop Overlay */}
-      {isOpen && (
+      {effectiveIsOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
-          onClick={onClose}
+          onClick={effectiveOnClose}
         />
       )}
 
@@ -89,7 +94,7 @@ export function ConversationSidebar({
         className={cn(
           "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#08090d] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
           enableTransitions && "transition-[width] duration-200 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          effectiveIsOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "w-16" : "w-64"
         )}
       >
@@ -112,7 +117,7 @@ export function ConversationSidebar({
               <Link
                 key={nav.label}
                 href={nav.href}
-                onClick={onClose}
+                onClick={effectiveOnClose}
                 title={isCollapsed ? nav.label : undefined}
                 className={cn(
                   "flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors",
