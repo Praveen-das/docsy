@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { documents } from "@/db/schema";
+import { documents, favoriteDocuments } from "@/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { deletePdf, verifyFileExists } from "@/lib/storage";
 import { deleteDocumentVectors } from "@/lib/pinecone";
@@ -61,8 +61,22 @@ export async function createDocument(data: NewDocument): Promise<DocumentRecord>
 }
 
 /**
+ * Count the total number of documents owned by a user.
+ * Used to enforce per-plan document limits before allowing a new upload.
+ */
+export async function countDocuments(userId: string): Promise<number> {
+  const rows = await db
+    .select()
+    .from(documents)
+    .where(eq(documents.userId, userId));
+
+  return rows.length;
+}
+
+/**
  * List all documents for a user, ordered by most recently created.
  * Backed by Redis cache layer with TTL (120s) and automatic invalidation.
+
  */
 export async function listDocuments(userId: string): Promise<DocumentRecord[]> {
   const cacheKey = CACHE_KEYS.documentList(userId);
@@ -216,11 +230,12 @@ export async function deleteDocument(userId: string, documentId: string): Promis
   // Delete DB record (cascades to conversation_documents)
   await db.delete(documents).where(eq(documents.id, documentId));
 
-  // Invalidate Redis status, metadata, and list caches
+  // Invalidate Redis status, metadata, list, and favorite caches
   await invalidateCache(
     CACHE_KEYS.documentList(userId),
     CACHE_KEYS.documentMeta(documentId),
     CACHE_KEYS.documentStatus(documentId),
+    CACHE_KEYS.favoriteDocuments(userId),
   );
 
   logger.info("document.deleted", { documentId, userId });
@@ -472,3 +487,90 @@ export async function handleStorageObjectCreated(
     return { success: false, documentId: doc.id, reason: "workflow_trigger_failed" };
   }
 }
+
+/**
+ * List all favorite document IDs for a user.
+ * Cached in Redis with TTL (120s).
+ */
+export async function listFavoriteDocumentIds(userId: string): Promise<string[]> {
+  const cacheKey = CACHE_KEYS.favoriteDocuments(userId);
+  const cached = await getCached<string[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const rows = await db
+    .select({ documentId: favoriteDocuments.documentId })
+    .from(favoriteDocuments)
+    .where(eq(favoriteDocuments.userId, userId));
+
+  const ids = rows.map((r) => r.documentId);
+  await setCached(cacheKey, ids, CACHE_TTL.DOCUMENTS_LIST);
+  return ids;
+}
+
+/**
+ * Check if a document is favorited by a user.
+ */
+export async function isDocumentFavorite(userId: string, documentId: string): Promise<boolean> {
+  const favoriteIds = await listFavoriteDocumentIds(userId);
+  return favoriteIds.includes(documentId);
+}
+
+/**
+ * Toggle favorite status of a document for a user.
+ * Invalidates user's favorite document cache and document list cache.
+ */
+export async function toggleFavoriteDocument(
+  userId: string,
+  documentId: string
+): Promise<{ isFavorite: boolean }> {
+  // Check whether favorite record currently exists
+  const existing = await db
+    .select()
+    .from(favoriteDocuments)
+    .where(
+      and(
+        eq(favoriteDocuments.userId, userId),
+        eq(favoriteDocuments.documentId, documentId)
+      )
+    )
+    .limit(1);
+
+  let isFav = false;
+
+  if (existing.length > 0) {
+    // Remove from favorites
+    await db
+      .delete(favoriteDocuments)
+      .where(
+        and(
+          eq(favoriteDocuments.userId, userId),
+          eq(favoriteDocuments.documentId, documentId)
+        )
+      );
+    isFav = false;
+  } else {
+    // Add to favorites
+    await db.insert(favoriteDocuments).values({
+      userId,
+      documentId,
+    });
+    isFav = true;
+  }
+
+  // Invalidate Redis caches
+  await invalidateCache(
+    CACHE_KEYS.favoriteDocuments(userId),
+    CACHE_KEYS.documentList(userId)
+  );
+
+  logger.info("document.favorite_toggled", {
+    documentId,
+    userId,
+    isFavorite: isFav,
+  });
+
+  return { isFavorite: isFav };
+}
+

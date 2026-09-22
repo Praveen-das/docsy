@@ -7,6 +7,7 @@ import { useConversationStore } from "@/stores/conversation-store";
 import { ConversationItem } from "./conversation-item";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
 import { Search } from "lucide-react";
+import { RecentsRow } from "@/components/layout/sidebar-recents";
 
 export interface ConversationListProps {
   documentId?: string | null;
@@ -46,11 +47,10 @@ export function ConversationList({
       : storeConversations);
 
   const filteredConversations = rawConversations.filter((c) =>
-    c.title.toLowerCase().includes(searchQuery.toLowerCase())
+    c.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const activeId =
-    propActiveConversationId !== undefined ? propActiveConversationId : storeActiveId;
+  const activeId = propActiveConversationId !== undefined ? propActiveConversationId : storeActiveId;
 
   const handleSelect = (convId: string) => {
     if (onSelectConversation) {
@@ -82,26 +82,12 @@ export function ConversationList({
 
   return (
     <>
-      <div className="space-y-1.5 select-none">
+      <div className="space-y-1.5 mx-2 pt-4 select-none">
         {!isCollapsed && (
           <>
-            <div className="flex items-center justify-between px-1 text-[9.5px] font-bold tracking-widest text-zinc-500 uppercase">
+            <div className="flex items-center justify-between px-2.5 text-[9.5px] font-bold tracking-widest text-zinc-500 uppercase">
               <span>CONVERSATIONS</span>
-              <span className="font-mono text-zinc-500 text-[10px]">
-                {filteredConversations.length}
-              </span>
-            </div>
-
-            {/* Search conversations input matching Image 2 */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2 h-3 w-3 text-zinc-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search conversations..."
-                className="w-full rounded-lg border border-white/[0.06] bg-[#0c0e15] pl-7 pr-2.5 py-1 text-[11px] text-white placeholder:text-zinc-500 focus:border-indigo-500/40 focus:outline-none transition-colors"
-              />
+              <span className="font-mono text-zinc-500 text-[10px]">{filteredConversations.length}</span>
             </div>
           </>
         )}
@@ -120,11 +106,10 @@ export function ConversationList({
             </div>
           ) : (
             filteredConversations.map((conv) => (
-              <ConversationItem
+              <RecentsRow
+                isActive={conv.id === activeId}
                 key={conv.id}
                 conversation={conv}
-                isActive={activeId === conv.id}
-                isCollapsed={isCollapsed}
                 onSelect={() => handleSelect(conv.id)}
                 onDelete={() => setConvToDelete(conv)}
               />

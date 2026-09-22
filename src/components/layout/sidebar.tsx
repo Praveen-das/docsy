@@ -27,7 +27,6 @@ export interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: SidebarProps = {}) {
   const pathname = usePathname();
-  const router = useRouter();
   const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);

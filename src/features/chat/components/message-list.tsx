@@ -43,7 +43,7 @@ function MessageRow({
   onShareMessage?: (message: Message) => Promise<boolean> | boolean;
 }) {
   return (
-    <div className="mx-auto w-full max-w-3xl pb-6">
+    <div className="mx-auto w-full max-w-2xl pb-6">
       <ChatMessageItem
         message={message}
         isRegenerating={isRegenerating}
@@ -59,7 +59,7 @@ function MessageRow({
 
 const TypingIndicator = React.memo(function TypingIndicator() {
   return (
-    <div className="mx-auto w-full max-w-3xl flex items-center gap-2.5 text-sm justify-start pb-6">
+    <div className="mx-auto w-full max-w-2xl flex items-center gap-2.5 text-sm justify-start pb-6">
       <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white text-[10px] font-bold shrink-0 shadow-2xs">
         D
       </div>
@@ -83,7 +83,7 @@ function BounceDot({ delay }: { delay?: string }) {
 
 function HistoryBeginningMarker() {
   return (
-    <div className="mx-auto w-full max-w-3xl flex items-center justify-center gap-2 py-4 mb-2 text-xs text-zinc-400 dark:text-zinc-500 select-none">
+    <div className="mx-auto w-full max-w-2xl flex items-center justify-center gap-2 py-4 mb-2 text-xs text-zinc-400 dark:text-zinc-500 select-none">
       <div className="h-px w-12 bg-zinc-200 dark:bg-zinc-800" />
       <span>Beginning of conversation history</span>
       <div className="h-px w-12 bg-zinc-200 dark:bg-zinc-800" />
@@ -282,7 +282,7 @@ export function MessageList({
   if (messageCount === 0 && !showStreaming) {
     return (
       <div className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-6 sm:pb-40">
-        <div className="mx-auto w-full max-w-3xl h-full flex flex-col justify-center">
+        <div className="mx-auto w-full max-w-2xl h-full flex flex-col justify-center">
           <EmptyChatState onSelectQuestion={onSelectStarterQuestion} />
         </div>
       </div>
@@ -323,7 +323,7 @@ export function MessageList({
 
       <VList
         ref={listRef}
-        className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-6 sm:pb-40"
+        className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-4.5 sm:pb-40"
         shift={false}
         onScroll={handleScroll}
       >

@@ -2,6 +2,9 @@
 
 Authoritative CSS variables, Tailwind configurations, and token constants for Docsy.
 
+> [!IMPORTANT]
+> **Pre-Configured Tokens:** These tokens and CSS variables are already defined in the application environment. Do NOT inspect `globals.css`, `tailwind.config`, or directory trees to verify them.
+
 ---
 
 ## 1. CSS Custom Properties

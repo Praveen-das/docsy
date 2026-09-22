@@ -1,28 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/ui-store";
 
-import {
-  NavHomeIcon,
-  NavDocumentsIcon,
-  NavConversationsIcon,
-  NavSearchIcon,
-  NavSettingsIcon,
-} from "./sidebar-nav-icons";
+import { NavHomeIcon, NavDocumentsIcon } from "./sidebar-nav-icons";
 import { SidebarNavItem } from "./sidebar-nav-item";
-import { SidebarNavPills } from "./sidebar-nav-pills";
 import { SidebarUpgradeCard } from "./sidebar-upgrade-card";
+import { SidebarRecents } from "./sidebar-recents";
 import { useSlidingNav } from "./use-sliding-nav";
 import type { NavItem, SidebarNavigationProps } from "./sidebar-navigation.types";
-import Link from "next/link";
 
 export type { SidebarNavigationProps } from "./sidebar-navigation.types";
 
 const NAV_ITEMS: NavItem[] = [
   {
-    label: "Home",
+    label: "Start New",
     href: "/dashboard",
     icon: NavHomeIcon,
   },
@@ -30,22 +23,6 @@ const NAV_ITEMS: NavItem[] = [
     label: "Documents",
     href: "/documents",
     icon: NavDocumentsIcon,
-  },
-  {
-    label: "Conversations",
-    href: "/conversations",
-    icon: NavConversationsIcon,
-  },
-  {
-    label: "Search",
-    href: "#search",
-    icon: NavSearchIcon,
-    isSearch: true,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: NavSettingsIcon,
   },
 ];
 
@@ -68,7 +45,7 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
   const currentActiveHref = activeHref;
 
   // Hook managing sliding indicator metrics and resize observation
-  const { navRef, registerItemRef, activeRect, isReady, prefersReducedMotion } = useSlidingNav({
+  const { navRef, registerItemRef } = useSlidingNav({
     activeHref: currentActiveHref,
     isCollapsed,
   });
@@ -91,17 +68,17 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
   );
 
   return (
-    <div className="flex-1 flex flex-col justify-between overflow-y-auto px-3.5 pt-4 pb-5">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden  pt-4 pb-5 gap-3">
       {/* Primary Navigation Menu with Sliding Pill Indicator */}
-      <nav ref={navRef} className="relative space-y-2 select-none" aria-label="Sidebar Navigation">
+      <nav ref={navRef} className="relative px-2 space-y-2 select-none shrink-0" aria-label="Sidebar Navigation">
         {/* Hardware-Accelerated Sliding Indicator Pills */}
-        <SidebarNavPills
+        {/* <SidebarNavPills
           activeRect={activeRect}
           isReady={isReady}
           prefersReducedMotion={prefersReducedMotion}
           isCollapsed={isCollapsed}
           isActive={Boolean(currentActiveHref)}
-        />
+        /> */}
 
         {/* Navigation Items */}
         {NAV_ITEMS.map((item) => (
@@ -116,8 +93,13 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
         ))}
       </nav>
 
+      {/* Recents Section (scrollable) */}
+      <SidebarRecents isCollapsed={isCollapsed} onClose={onClose} />
+
       {/* Upgrade to Pro Card */}
-      <SidebarUpgradeCard isCollapsed={isCollapsed} onClose={onClose} />
+      <div className="shrink-0 px-3.5">
+        <SidebarUpgradeCard isCollapsed={isCollapsed} onClose={onClose} />
+      </div>
     </div>
   );
 }

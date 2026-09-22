@@ -16,6 +16,8 @@ import {
   RecentConversationsSection,
   DashboardConversationItem,
 } from "@/features/dashboard/components/recent-conversations-section";
+import { Document } from "@/types";
+import BottomGlow from "@/components/ui/BottomGlow";
 
 export { RedPdfBadge } from "@/features/dashboard/components/red-pdf-badge";
 
@@ -117,18 +119,6 @@ export default function DashboardPage() {
 
   useDocumentPolling();
 
-  const displayDocuments: DashboardDocumentItem[] =
-    documents.length > 0
-      ? documents.slice(0, 4).map((d) => ({
-          id: d.id,
-          originalName: d.originalName,
-          pageCount: d.pageCount || 1,
-          fileSize: d.fileSize || 1024 * 1024,
-          timeText: formatRelativeTime(d.createdAt),
-          isReal: true,
-        }))
-      : REFERENCE_DOCS;
-
   const displayConversations: DashboardConversationItem[] =
     conversations.length > 0
       ? conversations.slice(0, 4).map((c, idx) => {
@@ -173,19 +163,14 @@ export default function DashboardPage() {
         <DashboardHero onOpenUpload={openUpload} />
 
         {/* Recent Documents */}
-        <RecentDocumentsSection documents={displayDocuments} onOpenDoc={handleOpenDoc} />
+        <RecentDocumentsSection documents={documents} onOpenDoc={handleOpenDoc} />
 
         {/* Recent Conversations */}
         <RecentConversationsSection conversations={displayConversations} onOpenConv={handleOpenConv} />
       </div>
 
       {/* Subtle Atmospheric Bottom Glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-none h-1/2 select-none overflow-hidden z-0 transform-gpu"
-      >
-        <div className="w-full h-full hero-bottom-glow opacity-30" />
-      </div>
+      <BottomGlow />
     </div>
   );
 }

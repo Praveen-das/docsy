@@ -2,24 +2,27 @@
 
 Authoritative specifications for app shells, sidebars, headers, content containers, and responsive grids in Docsy.
 
+> [!IMPORTANT]
+> **Layout Specifications:** These rules govern container widths, sticky header heights, responsive breakpoints, and z-index layering across all pages. Do NOT search for or inspect specific page routes or shell components in the repository.
+
 ---
 
 ## 1. Application Shell Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│  Docsy App Shell Layout (`AppLayout`)                                                    │
+│  Docsy App Shell Layout Architecture                                                    │
 │  ┌───────────────────────┬────────────────────────────────────────────────────────────┐  │
-│  │ Sidebar (`w-64`/`w-16`)│  Top Header (`h-20`, sticky, ProgressiveBlur optical scrim)│  │
+│  │ Sidebar (`w-64`/`w-16`)│  Top Header (`h-20`, sticky, progressive optical scrim)    │  │
 │  │ - Logo Mark + Docsy   │  [MobileMenu]   [  Search Pill (Ctrl+K)  ]   [Sun] [UserAvatar]│  │
 │  │ - Sliding Nav Pills   ├────────────────────────────────────────────────────────────┤  │
 │  │ - Upgrade Pro Card    │  Main Viewport (`max-w-7xl mx-auto px-4 sm:px-8 py-7`)     │  │
 │  │                       │  ┌──────────────────────────────────────────────────────┐  │  │
 │  │                       │  │ Hero: 12-Col Grid (7 cols Headline / 5 cols 3D Orb)   │  │  │
 │  │                       │  ├──────────────────────────────────────────────────────┤  │  │
-│  │                       │  │ Recent Documents: 4-Col Grid (rounded-[22px] cards)   │  │  │
+│  │                       │  │ Document Cards: 4-Col Grid (rounded-[22px] cards)     │  │  │
 │  │                       │  ├──────────────────────────────────────────────────────┤  │  │
-│  │                       │  │ Recent Conversations: 1-Col Stack (interactive rows) │  │  │
+│  │                       │  │ Conversation Rows: 1-Col Stack (interactive rows)    │  │  │
 │  │                       │  └──────────────────────────────────────────────────────┘  │  │
 │  └───────────────────────┴────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
@@ -37,7 +40,7 @@ Authoritative specifications for app shells, sidebars, headers, content containe
 ### 2.2 Top Header Dimensions
 - **Height:** `80px` (`h-20`).
 - **Positioning:** `sticky top-0 -mb-10 z-30 flex shrink-0 w-full items-center justify-between px-6 sm:px-7 bg-transparent`.
-- **Optical Scrim:** Renders an 8-layer progressive backdrop blur via `<ProgressiveBlur height={100} />` to gently feather scrolling content without harsh cutoff lines.
+- **Optical Scrim:** Renders an 8-layer progressive backdrop blur to gently feather scrolling content without harsh cutoff lines.
 
 ### 2.3 Main Content Viewport
 - **Container Max Width:** `max-w-7xl` (`1280px`), horizontally centered with `mx-auto`.
@@ -75,5 +78,5 @@ Authoritative specifications for app shells, sidebars, headers, content containe
    - Top Sticky Header: `z-30`
    - Mobile Sidebar Drawer & Overlay: `z-40`
    - Modals & Global Dialogs: `z-50`
-2. **Horizontal Rhythm:** Ensure all section headers (`DashboardSectionHeader`) align flush with card edges.
-3. **Vertical Scroll Containment:** The main scroll container (`<main className="flex-1 overflow-y-auto min-w-0 relative">`) must contain all page scrolling. The outer app shell (`AppLayout`) remains strictly `overflow-hidden`.
+2. **Horizontal Rhythm:** Ensure all section headers align flush with card edges.
+3. **Vertical Scroll Containment:** The main scroll container (`overflow-y-auto min-w-0 relative`) must contain all page scrolling. The outer app shell container remains strictly `overflow-hidden`.

@@ -1,49 +1,48 @@
 ---
 name: docsy-design-system
-description: "Authoritative design system and UI engineering guidelines for Docsy AI. Use whenever building, styling, reviewing, or refactoring UI components, pages, layouts, motion, themes, or visual effects in the Docsy application."
+description: "Authoritative design system for Docsy AI. Use for styling, token lookup, layout rules, motion, and UI components."
 ---
 
 # Docsy Design System
 
-Authoritative design system and UI engineering standards for the Docsy application.
+Authoritative design system specifications for Docsy surfaces.
 
-## Purpose
+## Operating Constraints (STRICT)
 
-Maintain strict visual, structural, and interaction consistency across all Docsy surfaces. Docsy pairs an **Obsidian Ethereal** dark-first aesthetic with Apple-grade fluid spring motion and Emil Kowalski micro-interaction polish.
+1. **Zero Unrelated File Inspection:** Do NOT inspect or grep other components, layouts, or pages in the repository unless explicitly asked by the user.
+2. **Self-Contained Truth:** The tokens, Tailwind classes, and parameters in this skill are pre-configured. Do NOT inspect `globals.css`, `tailwind.config`, or directory trees to verify them.
+3. **Load Exactly One Reference File:** Identify the task and load ONLY the single matching reference file below. Do not load secondary files unless the single file is insufficient.
+4. **No Speculative Exploration:** Work strictly on the file(s) specified in the user request.
 
-## Core Rules
+## Core Rules (Applied Everywhere)
 
-1. **Obsidian Surface Hierarchy:** Ground views in deep cosmic darks (`#08090d` canvas, `#07080c` sidebar, `#0c1017` cards). Never use flat generic grays.
-2. **Depth Through Light:** Separate layers using diffuse radial glows, progressive backdrop blurs, and hairline specular rim highlights (`rgba(255, 255, 255, 0.06-0.08)`), not opaque borders.
-3. **Responsive Press Feedback:** Every interactive button and row must compress to `transform: scale(0.98)` over `120ms var(--ease-out)` on pointer press (`:active`).
-4. **Physical Spring Motion:** Use `@react-spring/web` or calibrated cubic-beziers (`--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`) for spatial movement. Zero delay on high-frequency actions.
-5. **Atmospheric AI, Not Cyberpunk:** AI lighting is organic, diffused, and cosmic (simplex noise orbs, ambient nebulas). Never use harsh neon grids or saturated lasers.
-6. **Tactile Micro-Anchors:** Use authentic skeuomorphic anchors (like the 3D folded-flap Red PDF badge) to ground digital assets.
-7. **Progressive Feathering:** Sticky headers and overlays must use multi-layer progressive backdrop blur with optical gradient scrims, never hard opaque cuts.
-8. **Strict Reduced Motion:** Honor `prefers-reduced-motion` by disabling ambient loops, continuous WebGL frameloops, and snapping spring transitions immediately.
+- **Obsidian Hierarchy:** Deep cosmic darks (`#08090d` canvas, `#07080c` sidebar, `#0c1017` cards).
+- **Depth via Light:** Hairline specular highlights (`border-white/[0.08]`) and diffuse glows; no heavy opaque borders.
+- **Tactile Press Feedback:** Every interactive button and row must use `active:scale-[0.98]` over `120ms var(--ease-out)`.
+- **Motion:** Fast actions (search, nav clicks) are 0ms instant; spatial movement uses spring physics or `var(--ease-out)`.
+- **Atmospheric AI:** Subtle, organic celestial glows; never harsh neon or cyberpunk grids.
 
-## Task-Oriented Reference Map
+## Selective Reference Map
 
-Load only the specific reference file(s) required for your current task to conserve context tokens:
+Load **only the single file** that directly matches your current task:
 
-| Task / Feature Area | Load Reference Files |
+| Task / Feature Area | Load Single File |
 |---|---|
-| **General UI task / New page** | `principles.md` + `layout.md` |
-| **New UI component / Element** | `components.md` + `tokens.md` |
-| **Color selection / Theming** | `colors.md` + `tokens.md` |
-| **Typography / Text hierarchy** | `typography.md` |
-| **Spacing / Padding / Radii / Sizing** | `spacing.md` + `tokens.md` |
-| **Containers / Grids / Page shell** | `layout.md` + `responsive.md` |
-| **AI lighting / Nebulas / Shaders / Glow** | `effects.md` |
-| **Animation / Transitions / Springs** | `motion.md` |
-| **Mobile / Tablet layout adaptation** | `responsive.md` |
-| **Accessibility / Contrast / Keyboard** | `accessibility.md` |
-| **Design review / Linting / QA** | `anti-patterns.md` + `principles.md` |
-| **CSS variables / Tailwind tokens** | `tokens.md` |
+| **Component styling / Anatomy / States** | `components.md` |
+| **CSS variables / Tailwind tokens / Colors** | `tokens.md` |
+| **Color palette & Dark/Light roles** | `colors.md` |
+| **Shell dimensions / Containers / Grids** | `layout.md` |
+| **Typography scale / Font rules** | `typography.md` |
+| **Spacing baseline / Radii scale / Shadows** | `spacing.md` |
+| **Spring parameters / Animation timing** | `motion.md` |
+| **Glows / Nebulas / Shaders / Blurs** | `effects.md` |
+| **Breakpoints / Mobile adaptation** | `responsive.md` |
+| **Keyboard / ARIA / Contrast / A11y** | `accessibility.md` |
+| **Explicit Design Review / QA only** | `anti-patterns.md` |
 
-## How to Use This Skill
+## Execution Workflow
 
-1. Identify the task category from the reference map above.
-2. Read the corresponding reference file(s) from this skill directory before writing or reviewing code.
-3. Apply the exact classes, tokens, dimensions, and motion parameters specified in the references.
-4. Verify your implementation against `anti-patterns.md` to avoid visual regressions.
+1. Read the user prompt and identify the single target file to modify.
+2. Load **one** relevant reference file from the map above.
+3. Apply the tokens and styling rules directly to the target file.
+4. Stop. Do not explore other repository files.

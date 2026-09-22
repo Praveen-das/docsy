@@ -17,13 +17,18 @@ import {
   Monitor,
   Check,
   Palette,
+  CreditCard,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/features/billing/use-subscription";
 
 export default function SettingsPage() {
   const { user } = useUser();
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
+  const { data: subscription } = useSubscription();
+  const isPro = subscription?.plan === "pro";
 
   const displayName = user?.fullName || user?.firstName || currentUser.name;
   const displayEmail = user?.primaryEmailAddress?.emailAddress || currentUser.email;
@@ -163,6 +168,47 @@ export default function SettingsPage() {
               <span>{dailyQueriesRemainingPercent}% remaining</span>
               <span>Resets daily at midnight UTC</span>
             </div>
+          </div>
+        </div>
+
+        {/* Billing & Subscription Card */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-2xs space-y-4 dark:border-white/5 dark:bg-[#121216]">
+          <div className="flex items-center justify-between border-b border-zinc-100 pb-4 dark:border-white/5">
+            <div className="flex items-center gap-2.5">
+              <CreditCard className="h-4 w-4 text-zinc-800 dark:text-zinc-200" />
+              <div>
+                <h3 className="text-base font-semibold text-zinc-900 dark:text-white">
+                  Billing &amp; Subscription
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Manage your plan and payment details.
+                </p>
+              </div>
+            </div>
+            <span
+              className={cn(
+                "text-[11px] font-semibold px-2.5 py-1 rounded-full border",
+                isPro
+                  ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-500/20"
+                  : "bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:border-white/5",
+              )}
+            >
+              {isPro ? "Pro" : "Free"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {isPro
+                ? "You're on the Pro plan — 200 queries/day, unlimited documents."
+                : "Free plan — 25 queries/day, up to 5 documents."}
+            </p>
+            <Link href="/billing">
+              <Button variant="outline" size="sm" className="text-xs gap-1.5 shrink-0" id="go-to-billing-btn">
+                Manage Billing
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
           </div>
         </div>
 

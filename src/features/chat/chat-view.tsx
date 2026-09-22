@@ -9,6 +9,7 @@ import { ChatProvider } from "./context/chat-context";
 import { useChatConversation } from "./hooks/use-chat-conversation";
 import { useChatDraft } from "./hooks/use-chat-draft";
 import { useDocumentStore } from "@/stores/document-store";
+import BottomGlow from "@/components/ui/BottomGlow";
 
 export interface ChatViewProps {
   conversationId?: string;
@@ -16,7 +17,6 @@ export interface ChatViewProps {
   documentId?: string;
   isViewerOpen?: boolean;
   onToggleViewer?: () => void;
-  onDeleteChat?: () => void;
   onCitationClick?: (pageNumber: number) => void;
   // Optional overrides for standalone usage and testing
   messages?: Message[];
@@ -30,7 +30,6 @@ export function ChatView({
   documentId: propDocumentId,
   isViewerOpen = true,
   onToggleViewer,
-  onDeleteChat,
   onCitationClick,
   messages: propMessages,
   isLoading: propIsLoading,
@@ -63,7 +62,6 @@ export function ChatView({
     propMessages,
     propIsLoading,
     propOnSendMessage,
-    onDeleteChat,
   });
 
   const { inputText, handleInputChange, clearInput } = useChatDraft(activeConvId);
@@ -81,32 +79,32 @@ export function ChatView({
     (question: string) => {
       handleSendMessage(question, clearInput);
     },
-    [handleSendMessage, clearInput]
+    [handleSendMessage, clearInput],
   );
 
   const chatContextValue = useMemo(
     () => ({
       onSelectStarterQuestion: handleSelectStarterQuestion,
     }),
-    [handleSelectStarterQuestion]
+    [handleSelectStarterQuestion],
   );
 
   return (
     <ChatProvider value={chatContextValue}>
-      <div className="flex h-full flex-col bg-[#08090d] text-white">
+      <div className="relative flex h-full flex-col bg-[#08090d] text-white">
         {/* Top Header matching Image 2 */}
         <ChatHeader
+          conversationId={activeConvId || ""}
           conversationTitle={title || "Summarize the key findings"}
           documentName={documentName}
           pageCount={pageCount}
           lastUpdated="2 hours ago"
           isViewerOpen={isViewerOpen}
           onToggleViewer={onToggleViewer}
-          onDeleteChat={handleDelete}
         />
 
         {/* Main Chat Body Container */}
-        <div className="relative flex flex-1 flex-col overflow-hidden min-h-0">
+        <div className="relative flex flex-1 flex-col overflow-hidden min-h-0 z-20">
           <MessageList
             messages={historyMessages}
             pendingMessages={pendingMessages}
@@ -125,7 +123,7 @@ export function ChatView({
           />
 
           {/* Floating Input Composer Bar matching Image 2 */}
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-[#08090d] via-[#08090d]/80 to-transparent pt-6">
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-[#08090d] via-[#08090d]/80 to-transparent pt-6">
             <div className="pointer-events-auto">
               <ChatComposer
                 inputText={inputText}
@@ -136,6 +134,7 @@ export function ChatView({
             </div>
           </div>
         </div>
+        <BottomGlow className="z-10" />
       </div>
     </ChatProvider>
   );

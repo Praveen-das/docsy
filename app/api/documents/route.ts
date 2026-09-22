@@ -1,10 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { listDocuments } from "@/services/document.service";
+import { listDocuments, listFavoriteDocumentIds } from "@/services/document.service";
 
 /**
  * GET /api/documents
- * List all documents for the authenticated user.
+ * List all documents for the authenticated user with favorite status.
  */
 export async function GET() {
   const { userId } = await auth();
@@ -12,7 +12,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const docs = await listDocuments(userId);
+  const [docs, favoriteIds] = await Promise.all([
+    listDocuments(userId),
+    listFavoriteDocumentIds(userId),
+  ]);
+
+  const favoriteSet = new Set(favoriteIds);
 
   return NextResponse.json(
     docs.map((d) => ({
@@ -27,6 +32,7 @@ export async function GET() {
       status: d.status,
       processingProgress: d.processingProgress,
       error: d.error,
+      isFavorite: favoriteSet.has(d.id),
       createdAt: d.createdAt.toISOString(),
       updatedAt: d.updatedAt.toISOString(),
     })),

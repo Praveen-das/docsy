@@ -33,13 +33,13 @@ export function UserMenu({ isCollapsed, onClose }: UserMenuProps) {
   }
 
   return (
-    <div className="px-3 py-2.5 border-t border-white/[0.06] bg-[#08090d] select-none flex items-center justify-between gap-2">
+    <div className="px-3 py-2.5 border-t border-white/[0.06] select-none flex items-center justify-between gap-2">
       {/* User profile link */}
       <Link
         href="/settings"
         onClick={onClose}
         title="View Account Settings"
-        className="flex items-center gap-2.5 rounded-xl transition-colors hover:bg-white/5 p-1 min-w-0 flex-1"
+        className="flex items-center gap-2.5 rounded-xl transition-colors min-w-0 flex-1"
       >
         {/* Avatar badge */}
         <div className="relative shrink-0">
@@ -66,11 +66,7 @@ export function UserMenu({ isCollapsed, onClose }: UserMenuProps) {
       </Link>
 
       {/* Sun / Theme Switcher on Right matching Image 2 */}
-      {!isCollapsed && (
-        <div className="shrink-0">
-          <ThemeToggle />
-        </div>
-      )}
+      {!isCollapsed && <div className="shrink-0">{/* <ThemeToggle /> */}</div>}
     </div>
   );
 }

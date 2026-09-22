@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getDocument,
   deleteDocument,
+  isDocumentFavorite,
 } from "@/services/document.service";
 
 /**
@@ -19,7 +20,10 @@ export async function GET(
   }
 
   const { id } = await params;
-  const doc = await getDocument(userId, id);
+  const [doc, isFav] = await Promise.all([
+    getDocument(userId, id),
+    isDocumentFavorite(userId, id),
+  ]);
 
   if (!doc) {
     return NextResponse.json(
@@ -40,6 +44,7 @@ export async function GET(
     status: doc.status,
     processingProgress: doc.processingProgress,
     error: doc.error,
+    isFavorite: isFav,
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   });

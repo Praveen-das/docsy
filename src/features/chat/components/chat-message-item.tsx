@@ -1,19 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { MessageEditBox } from "./message-edit-box";
 import { Message } from "@/types";
 import { cn } from "@/lib/utils";
-import {
-  Copy,
-  Check,
-  Pencil,
-  RotateCcw,
-  Share2,
-  AlertCircle,
-  Loader2,
-  ThumbsUp,
-  ThumbsDown,
-} from "lucide-react";
+import { Copy, Check, Pencil, RotateCcw, Share2, AlertCircle, Loader2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { formatTime } from "@/lib/format-time";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { DocsyIcon } from "@/components/ui/logo";
@@ -48,15 +39,11 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(message.content);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const formattedTime = formatTime(message.createdAt) || "10:24 AM";
-  const displayContent =
-    isRegenerating && streamingContent !== null ? streamingContent : message.content;
+  const displayContent = isRegenerating && streamingContent !== null ? streamingContent : message.content;
   const isErrorMessage =
-    !isUser &&
-    (message.content.startsWith("⚠️ **Request Notice**:") ||
-      message.content.startsWith("⚠️"));
+    !isUser && (message.content.startsWith("⚠️ **Request Notice**:") || message.content.startsWith("⚠️"));
 
   const displayName = user?.fullName || user?.firstName || "Praveen Das";
   const userInitials =
@@ -75,13 +62,6 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
       setDraftText(message.content);
     }
   }, [message.content, isEditing]);
-
-  // Autofocus when editing
-  useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isEditing]);
 
   const handleCopy = async () => {
     try {
@@ -117,37 +97,18 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
   if (isUser) {
     return (
       <div className="flex justify-end text-sm w-full py-2">
-        <div className="flex items-start gap-3 max-w-[85%] sm:max-w-[75%]">
+        <div className={isEditing ? "w-full" : "flex items-start gap-3 max-w-[85%] sm:max-w-[75%]"}>
           {isEditing ? (
-            <div className="w-full rounded-2xl border border-indigo-500/40 bg-[#121422] p-3 shadow-sm space-y-2">
-              <textarea
-                ref={textareaRef}
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                className="w-full text-xs text-white bg-transparent resize-none focus:outline-none"
-                rows={3}
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-2.5 py-1 text-xs text-zinc-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  className="px-3 py-1 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-500"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
+            <MessageEditBox
+              value={draftText}
+              onChange={setDraftText}
+              onSave={handleSaveEdit}
+              onCancel={() => setIsEditing(false)}
+            />
           ) : (
             <div className="flex flex-col items-end">
               {/* User Bubble matching Image 2 */}
-              <div className="rounded-2xl rounded-tr-xs bg-[#191b26] border border-white/[0.08] text-white px-4 py-3 text-[13.5px] leading-relaxed shadow-sm">
+              <div className="bg-indigo-600 rounded-2xl rounded-tr-xs! text-white px-4 py-3 text-[13.5px] leading-relaxed shadow-sm">
                 {message.content}
               </div>
 
@@ -157,30 +118,15 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="hover:text-zinc-300 transition-colors p-0.5"
+                    className="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400"
                     title="Edit prompt"
                   >
-                    <Pencil className="h-2.5 w-2.5" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
             </div>
           )}
-
-          {/* User Avatar Circle matching Image 2 */}
-          <div className="shrink-0 mt-0.5">
-            {user?.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt={displayName}
-                className="h-8 w-8 rounded-full object-cover ring-1 ring-white/10"
-              />
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-900/60 to-indigo-950/80 text-[11px] font-bold text-purple-200 border border-purple-500/30">
-                {userInitials}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -218,21 +164,10 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
   return (
     <div className="flex justify-start text-sm w-full py-3 group">
       <div className="flex items-start gap-3.5 w-full max-w-[95%] sm:max-w-[90%]">
-        {/* Glowing Docsy D Logo Avatar */}
-        <div className="shrink-0 mt-1">
-          <DocsyIcon className="h-7 w-7" />
-        </div>
-
         {/* Message Content Body */}
         <div className="flex-1 min-w-0 space-y-2.5">
           {/* Header Row: "Docsy AI" + Timestamp */}
           <div className="flex items-center gap-2 select-none">
-            <span className="font-bold text-white text-xs font-sans tracking-tight">
-              Docsy AI
-            </span>
-            <span className="text-[11px] text-zinc-500 font-mono">
-              {formattedTime}
-            </span>
             {isRegenerating && (
               <span className="flex items-center gap-1 text-[11px] text-indigo-400 font-medium">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -243,10 +178,7 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
 
           {/* Clean Markdown Rendering directly on canvas */}
           <div className="text-[13.5px] leading-relaxed text-zinc-200">
-            <MarkdownRenderer
-              content={displayContent}
-              onCitationClick={onCitationClick}
-            />
+            <MarkdownRenderer content={displayContent} onCitationClick={onCitationClick} />
           </div>
 
           {/* Message Action Toolbar matching Image 2: Copy, Regenerate, Thumbs */}
@@ -278,38 +210,10 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
                 disabled={isRegenerating}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400 disabled:opacity-40"
               >
-                <RotateCcw
-                  className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin text-indigo-400")}
-                />
+                <RotateCcw className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin text-indigo-400")} />
                 <span className="text-xs">Regenerate</span>
               </button>
             )}
-
-            {/* Thumbs Up / Down */}
-            <div className="flex items-center gap-1 pl-2 border-l border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => setFeedback(feedback === "up" ? null : "up")}
-                className={cn(
-                  "p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-                  feedback === "up" ? "text-indigo-400" : "text-zinc-500 hover:text-zinc-300"
-                )}
-                title="Helpful"
-              >
-                <ThumbsUp className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setFeedback(feedback === "down" ? null : "down")}
-                className={cn(
-                  "p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-                  feedback === "down" ? "text-rose-400" : "text-zinc-500 hover:text-zinc-300"
-                )}
-                title="Not helpful"
-              >
-                <ThumbsDown className="h-3.5 w-3.5" />
-              </button>
-            </div>
           </div>
         </div>
       </div>

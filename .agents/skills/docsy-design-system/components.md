@@ -2,9 +2,12 @@
 
 Authoritative component patterns, anatomy, styling, states, and usage rules for Docsy.
 
+> [!IMPORTANT]
+> **Pure Design Specifications:** The components below define visual tokens, anatomy, sizing, and interaction behavior. They are self-contained specifications. Do NOT search for or inspect existing component files in the repository.
+
 ---
 
-## 1. Buttons (`Button`)
+## 1. Buttons
 
 - **Purpose:** Primary, secondary, promotional, and destructive interactive triggers.
 - **Anatomy:** `[Optional Loader / Icon] + Label + [Optional Trailing Arrow]`
@@ -25,7 +28,7 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 2. Search Pill (`HeaderSearchBar`)
+## 2. Search Pill
 
 - **Purpose:** Instant global search opening without typing into a tiny header box.
 - **Anatomy:**
@@ -33,11 +36,11 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
   - Icon: `Search` icon (`h-4 w-4 text-[#727f9d] stroke-[1.8]`).
   - Label: `"Search documents, conversations..."` (`text-[13.5px] text-[#687593]`).
   - Shortcut Badge: `Ctrl K` (`px-2.5 py-1 text-[11px] font-sans rounded-lg border border-white/[0.08] bg-white/[0.03] text-[#727f9d]`).
-- **Interaction:** Global `Cmd+K` / `Ctrl+K` keydown opens `SelectDocumentModal`. Hover lifts background to `#111424`.
+- **Interaction:** Global `Cmd+K` / `Ctrl+K` keydown triggers modal search. Hover lifts background to `#111424`.
 
 ---
 
-## 3. Dropdowns & User Menus (`HeaderUserMenu`)
+## 3. Dropdowns & User Menus
 
 - **Purpose:** User profile navigation and account controls.
 - **Anatomy:**
@@ -47,7 +50,7 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 4. Segmented Tabs (`Tabs`)
+## 4. Segmented Tabs
 
 - **Purpose:** View-switching (e.g. List vs Grid) and category filtering.
 - **Anatomy:** Outer container (`h-8 rounded-lg bg-[#121216] border border-white/5 p-0.5`).
@@ -55,18 +58,18 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 5. Sidebar Navigation & Sliding Pill (`SidebarNavPills`)
+## 5. Sidebar Navigation & Sliding Pill
 
 - **Purpose:** Persistent route navigation without layout jumps or flash-of-null.
 - **Anatomy:**
-  - Background Sliding Pill: Driven by `@react-spring/web` on the GPU (`tension: 420, friction: 34, mass: 0.9, precision: 0.005`).
+  - Background Sliding Pill: Driven by spring physics (`tension: 420, friction: 34, mass: 0.9, precision: 0.005`).
   - Measures item geometry on mount and container resize, sliding smoothly between items.
   - Nav Item: `h-10 rounded-2xl px-3.5 gap-3 text-[13.5px] font-medium text-[#8b95a8] hover:text-[#d1d5e5]`. Active text: `#f1f3f9`.
   - Upgrade Card: `rounded-[22px] border border-[#1e2336]/60 bg-(--surface-card) p-4.5` with glowing `Zap` icon and circular arrow button.
 
 ---
 
-## 6. Document Cards (`RecentDocumentsSection`)
+## 6. Document Cards
 
 - **Purpose:** Primary grid presentation of uploaded documents.
 - **Dimensions:** `rounded-[22px] border border-white/[0.07] bg-(--surface-card) px-5 py-4`.
@@ -78,7 +81,7 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 7. Photorealistic 3D Red PDF Badge (`RedPdfBadge`)
+## 7. Photorealistic 3D Red PDF Badge
 
 - **Purpose:** Authentic skeuomorphic anchor for PDF documents.
 - **Dimensions:** `40px × 50px`.
@@ -92,7 +95,7 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 8. Conversation Rows (`RecentConversationsSection`)
+## 8. Conversation Rows
 
 - **Purpose:** High-density horizontal list of past conversations.
 - **Anatomy:** Full-width flex row (`rounded-2xl p-2.5 border border-white/[0.06] hover:active-row-glow hover:border-indigo-400/35`):
@@ -104,7 +107,7 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 9. Modals & Dialogs (`Dialog`)
+## 9. Modals & Dialogs
 
 - **Purpose:** Ingestion workflows and document selectors.
 - **Anatomy:**
@@ -115,7 +118,7 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 10. Badges & Status Indicators (`Badge`, `StatusBadge`)
+## 10. Badges & Status Indicators
 
 - **`Ready`:** `bg-emerald-500/10 text-emerald-400 border border-emerald-500/15` + check icon.
 - **`Analyzing` (Extracting/Chunking/Embedding):** `bg-amber-500/10 text-amber-400 border border-amber-500/20` + spinning `Loader2`.
@@ -124,11 +127,11 @@ Authoritative component patterns, anatomy, styling, states, and usage rules for 
 
 ---
 
-## 11. Upload Dropzone & Gradient Orb Canvas (`GradientOrb`)
+## 11. Upload Dropzone & Gradient Orb Canvas
 
 - **Purpose:** Hero section drag-and-drop document upload.
 - **Anatomy:**
-  - 3D WebGL Canvas with react-spring hover scale (`1.0` → `1.15`).
+  - 3D WebGL Canvas with spring hover scale (`1.0` → `1.15`).
   - Glowing upload cloud icon (`text-[#b7a6fd] drop-shadow-[0_0_20px_rgba(167,139,250,0.55)]`).
   - Primary text: `"Drop your PDF here"` (`text-indigo-300 font-medium`).
   - Subtext: `"or click to upload"` (`text-[#94a3b8]`).

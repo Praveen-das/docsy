@@ -42,6 +42,7 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
   hasOpened?: boolean;
+  isFavorite?: boolean;
 }
 
 export interface Message {

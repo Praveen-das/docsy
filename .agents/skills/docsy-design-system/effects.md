@@ -108,7 +108,7 @@ Interactive cards and rows feature a dynamic radial spotlight that follows point
 
 ---
 
-## 4. 3D WebGL Simplex Gradient Orb (`GradientOrb`)
+## 4. 3D WebGL Simplex Gradient Orb
 
 Rendered via a GPU GLSL shader on a fullscreen triangle in Normalized Device Coordinates (NDC):
 - **Domain Warping:** 3D Simplex noise with domain distortion.
@@ -119,7 +119,7 @@ Rendered via a GPU GLSL shader on a fullscreen triangle in Normalized Device Coo
 
 ---
 
-## 5. Progressive Backdrop Blur (`ProgressiveBlur`)
+## 5. Progressive Backdrop Blur
 
 Prevents harsh cutoffs under sticky headers by layering 4 GPU-friendly blur steps over an optical gradient scrim:
 

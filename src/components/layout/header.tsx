@@ -3,10 +3,10 @@
 import React from "react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { HeaderSearchBar } from "./header-search-bar";
-import { HeaderUserMenu } from "./header-user-menu";
 import { HeaderMobileNavToggle } from "./header-mobile-nav-toggle";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { cn } from "@/lib/utils";
+import { HeaderUserMenu } from "./header-user-menu";
 
 export interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -48,7 +48,7 @@ export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps
 
       {/* Right Controls: Theme Switcher & User Profile Pill */}
       <div className="flex items-center gap-5 sm:gap-6 shrink-0">
-        <ThemeToggle variant="minimal" className="text-[#94a3b8] hover:text-white" />
+        {/* <ThemeToggle variant="minimal" className="text-[#94a3b8] hover:text-white" /> */}
         <HeaderUserMenu />
       </div>
     </header>

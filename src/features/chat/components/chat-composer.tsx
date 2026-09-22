@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Send, Paperclip, ChevronDown } from "lucide-react";
-import { DocsyIcon } from "@/components/ui/logo";
-import { cn } from "@/lib/utils";
+import { ArrowUp } from "lucide-react";
 
 export interface ChatComposerProps {
   inputText: string;
@@ -12,16 +10,8 @@ export interface ChatComposerProps {
   isLoading?: boolean;
 }
 
-export function ChatComposer({
-  inputText,
-  onInputChange,
-  onSubmit,
-  isLoading = false,
-}: ChatComposerProps) {
+export function ChatComposer({ inputText, onInputChange, onSubmit, isLoading = false }: ChatComposerProps) {
   const [model, setModel] = useState("Docsy AI");
-  const [mode, setMode] = useState("Standard");
-  const [modelMenuOpen, setModelMenuOpen] = useState(false);
-  const [modeMenuOpen, setModeMenuOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,127 +28,45 @@ export function ChatComposer({
 
   return (
     <form onSubmit={handleSubmit} className="w-full px-4 sm:px-6 pb-6 pt-2">
-      {/* Floating Pill-Card matching Image 2 */}
-      <div className="mx-auto w-full max-w-3xl relative flex flex-col rounded-3xl border border-indigo-500/25 bg-[#0f111a]/95 shadow-[0_0_35px_rgba(99,102,241,0.15)] backdrop-blur-md transition-[border-color,box-shadow] duration-200 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_40px_rgba(99,102,241,0.22)] p-3 sm:p-3.5">
+      {/* Floating Pill-Card */}
+      <div className="composer-glow mx-auto w-full max-w-2xl relative flex flex-col rounded-3xl transform-gpu transition-[border-color,box-shadow] duration-200 bg-(--surface-card) p-3 sm:p-3.5">
         <textarea
           value={inputText}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask anything about this document..."
           rows={2}
-          className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm text-white placeholder:text-zinc-500 focus:outline-none leading-relaxed"
+          className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm text-[#f1f5f9] placeholder:text-[#6b7794] focus:outline-none leading-relaxed"
         />
 
         {/* Bottom Control Bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
-          {/* Left: Attachment + Model Pill + Mode Pill */}
-          <div className="flex items-center gap-2">
-            {/* Attachment Button */}
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-              title="Attach document or citation"
+        <div className="flex items-center justify-between pt-2 border-t border-white/[0.07]">
+          <div className="flex items-center gap-1.5 text-[11px] text-[#6b7794] select-none">
+            <svg
+              className="h-3 w-3 text-indigo-400/60"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <Paperclip className="h-4 w-4" />
-            </button>
-
-            {/* Model Selector Pill matching Image 2: [D logo] Docsy AI ▾ */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setModelMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/8 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/8 transition-colors cursor-pointer"
-              >
-                <DocsyIcon className="h-3.5 w-3.5" />
-                <span>{model}</span>
-                <ChevronDown className="h-3 w-3 text-zinc-500" />
-              </button>
-
-              {modelMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setModelMenuOpen(false)}
-                  />
-                  <div className="absolute left-0 bottom-full mb-2 z-50 w-36 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md">
-                    {["Docsy AI", "Docsy Pro", "Fast Scan"].map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => {
-                          setModel(m);
-                          setModelMenuOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer",
-                          model === m
-                            ? "bg-indigo-950/60 text-indigo-300 font-semibold"
-                            : "text-zinc-300 hover:bg-white/5 hover:text-white"
-                        )}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Mode Selector Pill matching Image 2: Standard ▾ */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setModeMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/8 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/8 transition-colors cursor-pointer"
-              >
-                <span>{mode}</span>
-                <ChevronDown className="h-3 w-3 text-zinc-500" />
-              </button>
-
-              {modeMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setModeMenuOpen(false)}
-                  />
-                  <div className="absolute left-0 bottom-full mb-2 z-50 w-36 rounded-xl border border-white/10 bg-[#12141e]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md">
-                    {["Standard", "Deep Analysis", "Concise"].map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => {
-                          setMode(m);
-                          setModeMenuOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer",
-                          mode === m
-                            ? "bg-indigo-950/60 text-indigo-300 font-semibold"
-                            : "text-zinc-300 hover:bg-white/5 hover:text-white"
-                        )}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+              <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+            </svg>
+            <span>{model}</span>
           </div>
-
-          {/* Right: Hint + Radiant Gradient Send Button */}
+          {/* Right: Hint + Send Button */}
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-[11px] text-zinc-500 font-sans select-none">
-              Press <kbd className="font-sans px-1 rounded bg-white/5 text-zinc-400">Enter</kbd> to send
+            <span className="hidden sm:inline text-[11px] text-[#818ea8] font-sans select-none">
+              Press <kbd className="font-sans px-1 rounded bg-white/5 text-[#818ea8]">Enter</kbd> to send
             </span>
 
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isLoading}
-              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer border border-white/10"
-              title="Send question"
-            >
-              <Send className="h-4 w-4" />
+            <button type="submit" disabled={!inputText.trim() || isLoading} className="send-btn" title="Send question">
+              {isLoading ? (
+                <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              ) : (
+                <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
+              )}
             </button>
           </div>
         </div>

@@ -11,11 +11,16 @@ const isProtectedRoute = createRouteMatcher([
   "/conversations(.*)",
   "/conversation(.*)",
   "/settings(.*)",
+  "/billing(.*)",
   "/chat(.*)",
   "/api/documents(.*)",
   "/api/conversations(.*)",
   "/api/auth/me(.*)",
-  // Note: /api/webhooks/clerk and /api/workflows are unauthenticated endpoints verified via signatures
+  "/api/stripe/checkout(.*)",
+  "/api/stripe/cancel(.*)",
+  "/api/stripe/reactivate(.*)",
+  "/api/stripe/subscription(.*)",
+  // Note: /api/webhooks/clerk, /api/webhooks/stripe, and /api/workflows are unauthenticated endpoints verified via signatures
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -24,6 +29,10 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
+  // Allow Stripe webhooks to pass through to signature verification
+  if (req.nextUrl.pathname === "/api/webhooks/stripe") {
+    return;
+  }
   if (isProtectedRoute(req)) {
     // For API requests, return explicit 401 JSON when unauthenticated instead of Clerk's default 404
     if (req.nextUrl.pathname.startsWith("/api")) {

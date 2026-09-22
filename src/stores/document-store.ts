@@ -9,6 +9,7 @@ interface DocumentState {
   isLoading: boolean;
   error: string | null;
   openedDocumentIds: string[];
+  favoriteDocumentIds: string[];
 
   // Actions
   fetchDocuments: () => Promise<void>;
@@ -19,6 +20,8 @@ interface DocumentState {
   checkDocumentStatus: (id: string) => Promise<DocumentStatusDto | null>;
   markDocumentAsOpened: (docId: string) => void;
   isDocumentOpened: (docId: string) => boolean;
+  toggleFavoriteDocument: (docId: string) => void;
+  isDocumentFavorite: (docId: string) => boolean;
 }
 
 export const useDocumentStore = create<DocumentState>()(
@@ -28,6 +31,7 @@ export const useDocumentStore = create<DocumentState>()(
       isLoading: false,
       error: null,
       openedDocumentIds: [],
+      favoriteDocumentIds: [],
 
       fetchDocuments: async () => {
         set({ isLoading: true, error: null });
@@ -41,7 +45,13 @@ export const useDocumentStore = create<DocumentState>()(
             throw new Error(`Failed to fetch documents (${res.status})`);
           }
           const data: Document[] = await res.json();
-          set({ documents: data, isLoading: false });
+          // Synchronize favoriteDocumentIds from server data
+          const serverFavIds = data.filter((d) => d.isFavorite).map((d) => d.id);
+          set({
+            documents: data,
+            isLoading: false,
+            favoriteDocumentIds: serverFavIds,
+          });
         } catch (err) {
           set({
             error:
@@ -150,11 +160,70 @@ export const useDocumentStore = create<DocumentState>()(
       isDocumentOpened: (docId: string) => {
         return get().openedDocumentIds.includes(docId);
       },
+
+      toggleFavoriteDocument: async (docId: string) => {
+        const { favoriteDocumentIds, documents } = get();
+        const wasFavorite = favoriteDocumentIds.includes(docId);
+        const nextFavorite = !wasFavorite;
+
+        // Optimistic UI state update
+        set({
+          favoriteDocumentIds: nextFavorite
+            ? [...favoriteDocumentIds, docId]
+            : favoriteDocumentIds.filter((id) => id !== docId),
+          documents: documents.map((d) =>
+            d.id === docId ? { ...d, isFavorite: nextFavorite } : d
+          ),
+        });
+
+        try {
+          const res = await fetch(`/api/documents/${docId}/favorite`, {
+            method: "POST",
+          });
+
+          if (!res.ok) {
+            throw new Error(`Failed to toggle favorite (${res.status})`);
+          }
+
+          const data = await res.json();
+          if (data.isFavorite !== undefined && data.isFavorite !== nextFavorite) {
+            // Reconcile with actual server status if different
+            set((state) => ({
+              favoriteDocumentIds: data.isFavorite
+                ? [...state.favoriteDocumentIds.filter((id) => id !== docId), docId]
+                : state.favoriteDocumentIds.filter((id) => id !== docId),
+              documents: state.documents.map((d) =>
+                d.id === docId ? { ...d, isFavorite: data.isFavorite } : d
+              ),
+            }));
+          }
+        } catch (err) {
+          console.error("Error toggling favorite on server:", err);
+          // Revert optimistic update on failure
+          set((state) => ({
+            favoriteDocumentIds: wasFavorite
+              ? [...state.favoriteDocumentIds.filter((id) => id !== docId), docId]
+              : state.favoriteDocumentIds.filter((id) => id !== docId),
+            documents: state.documents.map((d) =>
+              d.id === docId ? { ...d, isFavorite: wasFavorite } : d
+            ),
+          }));
+        }
+      },
+
+      isDocumentFavorite: (docId: string) => {
+        const doc = get().documents.find((d) => d.id === docId);
+        if (doc?.isFavorite !== undefined) {
+          return doc.isFavorite;
+        }
+        return get().favoriteDocumentIds.includes(docId);
+      },
     }),
     {
-      name: "docsy-document-store-v4",
+      name: "docsy-document-store-v5",
       partialize: (state) => ({
         openedDocumentIds: state.openedDocumentIds,
+        favoriteDocumentIds: state.favoriteDocumentIds,
       }),
     }
   )

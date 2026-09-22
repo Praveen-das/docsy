@@ -31,6 +31,12 @@
       "skillPath": "plugins/llm-application-dev/skills/rag-implementation/SKILL.md",
       "computedHash": "305766e72769b5531ec77e3653f9546d04e4be7d6e170580f1fb32ba6b843743"
     },
+    "stripe-best-practices": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-best-practices/SKILL.md",
+      "computedHash": "9b7203299b22a8c623b15cfdc65bfe41a8f88b5eaa4a720aafc922b4578f72b8"
+    },
     "supabase-postgres-best-practices": {
       "source": "supabase/agent-skills",
       "sourceType": "github",

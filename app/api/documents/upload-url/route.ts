@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSignedUploadUrl, getPublicUrl } from "@/lib/storage";
-import { createDocument } from "@/services/document.service";
+import { createDocument, countDocuments } from "@/services/document.service";
+import { getSubscriptionByUserId } from "@/services/subscription.service";
+import { PLANS } from "@/lib/stripe-plans";
 import { logger } from "@/lib/logger";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -19,6 +21,27 @@ export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Enforce per-plan document limit before accepting the upload
+  const [sub, docCount] = await Promise.all([
+    getSubscriptionByUserId(userId),
+    countDocuments(userId),
+  ]);
+  const plan = sub?.plan ?? "free";
+  const limit = PLANS[plan].maxDocuments;
+
+  if (limit !== null && docCount >= limit) {
+    logger.info("document.upload_limit_reached", { userId, plan, docCount, limit });
+    return NextResponse.json(
+      {
+        error: `Document limit reached. Your ${plan === "pro" ? "Pro" : "Free"} plan allows up to ${limit} documents. Delete an existing document to upload a new one${plan === "free" ? ", or upgrade to Pro for up to 200 documents" : ""}.`,
+        code: "DOCUMENT_LIMIT_REACHED",
+        limit,
+        current: docCount,
+      },
+      { status: 403 },
+    );
   }
 
   try {

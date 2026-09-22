@@ -21,12 +21,8 @@ function ConversationWorkspace() {
 
   const documents = useDocumentStore((state) => state.documents);
   const conversations = useConversationStore((state) => state.conversations);
-  const setActiveConversation = useConversationStore(
-    (state) => state.setActiveConversation
-  );
-  const markDocumentAsOpened = useDocumentStore(
-    (state) => state.markDocumentAsOpened
-  );
+  const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
+  const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
   const [isViewerOpen, setIsViewerOpen] = useState(true);
   const [selectDocOpen, setSelectDocOpen] = useState(false);
@@ -86,12 +82,12 @@ function ConversationWorkspace() {
               onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
             />
           }
-          pdfViewer={
-            <PdfViewer
-              activeDocumentId={effectiveDocId}
-              onClose={() => setIsViewerOpen(false)}
-            />
-          }
+          // pdfViewer={
+          //   <PdfViewer
+          //     activeDocumentId={effectiveDocId}
+          //     onClose={() => setIsViewerOpen(false)}
+          //   />
+          // }
           isViewerOpen={isViewerOpen}
           onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
         />
@@ -101,9 +97,7 @@ function ConversationWorkspace() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-indigo-400 border border-white/10 mb-4 shadow-inner">
             <FileText className="h-6 w-6" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-            Select a Document to Start
-          </h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Select a Document to Start</h2>
           <p className="mt-2 max-w-md text-xs sm:text-sm text-zinc-400 leading-relaxed">
             Choose a document from your library to view its PDF pages and start an AI-grounded conversation.
           </p>
@@ -116,11 +110,7 @@ function ConversationWorkspace() {
               <FileText className="h-4 w-4" />
               <span>Select Document</span>
             </Button>
-            <Button
-              onClick={openUpload}
-              variant="outline"
-              className="gap-2 h-10 px-5 text-xs font-medium"
-            >
+            <Button onClick={openUpload} variant="outline" className="gap-2 h-10 px-5 text-xs font-medium">
               <UploadCloud className="h-4 w-4" />
               <span>Upload New PDF</span>
             </Button>

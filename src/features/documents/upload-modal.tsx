@@ -1,11 +1,10 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog } from "@/components/ui/dialog";
+import { GlowContainer } from "@/components/ui/glow-container";
 import { Button } from "@/components/ui/button";
 import {
   UploadCloud,
-  FileText,
   AlertCircle,
   Loader2,
   ArrowRight,
@@ -19,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useDocumentStore } from "@/stores/document-store";
 import { useUIStore } from "@/stores/ui-store";
+import { GlowCard } from "@/components/ui/glow-card";
 
 export interface UploadModalProps {
   isOpen?: boolean;
@@ -54,6 +54,24 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
     resetState();
     effectiveOnClose();
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && effectiveIsOpen) {
+        handleClose();
+      }
+    };
+
+    if (effectiveIsOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [effectiveIsOpen]);
 
   const validateAndSetFile = (file: File) => {
     setErrorMessage(null);
@@ -182,205 +200,233 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
     }
   };
 
+  if (!effectiveIsOpen) return null;
+
   return (
-    <Dialog
-      isOpen={effectiveIsOpen}
-      onClose={handleClose}
-      className="max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#121216] transition-all"
-    >
-      {/* Modern Clean Header */}
-      <div className="flex items-start justify-between border-b border-zinc-200 dark:border-white/5 pb-4 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900 border border-zinc-200 dark:bg-[#1c1c22] dark:text-white dark:border-white/10 shadow-2xs">
-            <FileUp className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-base tracking-tight">Upload Document</h3>
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold text-zinc-600 border border-zinc-200 dark:bg-[#1c1c22] dark:text-zinc-400 dark:border-white/10">
-                PDF up to 10 MB
-              </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 select-none">
+      {/* Obsidian Backdrop with subtle blur */}
+      <div
+        aria-hidden="true"
+        onClick={handleClose}
+        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in"
+      />
+
+      {/* Modal Container: Cosmic glassmorphic card with ambient glow & specular horizon */}
+      <GlowContainer
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upload-modal-title"
+        className="relative z-10 w-full max-w-lg rounded-[28px] p-5 sm:p-6 transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/[0.06] relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-[#b8c3ee] border border-white/[0.08] shadow-sm">
+              <FileUp className="h-5 w-5" />
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Add a document to explore and ask questions with verified page citations.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2
+                  id="upload-modal-title"
+                  className="text-[17px] sm:text-lg font-semibold tracking-tight text-[#f1f3f9]"
+                >
+                  Upload Document
+                </h2>
+                <span className="rounded-full bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium text-[#818ea8] border border-white/[0.08]">
+                  PDF up to 10 MB
+                </span>
+              </div>
+              <p className="text-[13px] text-[#7d879d] mt-1 font-normal leading-relaxed">
+                Add a document to explore and ask questions with verified page citations.
+              </p>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close dialog"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[#7d879d] hover:text-white hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/10 active:scale-[0.98]"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {step === "idle" ? (
-          <>
-            {/* Dropzone Container */}
-            {!selectedFile ? (
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={cn(
-                  "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer group select-none",
-                  isDragging
-                    ? "border-indigo-400 bg-indigo-950/20 scale-[0.99] shadow-[0_0_30px_rgba(99,102,241,0.25)]"
-                    : "border-zinc-300 bg-zinc-50/50 hover:border-zinc-400 hover:bg-zinc-100/60 dark:border-white/10 dark:bg-[#0c0e18]/80 dark:hover:border-indigo-500/30 dark:hover:bg-[#101322]",
-                )}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+        {/* Content Body */}
+        <div className="mt-4 space-y-4 relative z-10">
+          {step === "idle" ? (
+            <>
+              {/* Dropzone Container */}
+              {!selectedFile ? (
+                <GlowCard
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={cn(
+                    "relative flex flex-col items-center justify-center rounded-[22px] p-10 text-center transition-all cursor-pointer group select-none",
+                    isDragging
+                      ? "border-indigo-400/80 bg-indigo-950/25 scale-[0.99] shadow-[0_0_35px_rgba(99,102,241,0.25)]"
+                      : "border-white/[0.09] bg-[#0c1017]/60 hover:border-indigo-400/35 hover:bg-[#10141f]/80 active:scale-[0.995]",
+                  )}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
 
-                {/* Minimalist Floating Icon */}
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-zinc-800 border border-zinc-200 shadow-2xs group-hover:scale-105 group-hover:border-zinc-300 group-hover:bg-zinc-50 dark:bg-[#141829] dark:text-zinc-200 dark:border-[#2e375e] dark:shadow-md dark:group-hover:border-indigo-500/40 transition-all mb-3.5">
-                  <UploadCloud className="h-6 w-6 stroke-[2]" />
-                </div>
-
-                <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    Drop your PDF here, or{" "}
-                    <span className="text-zinc-900 dark:text-white underline underline-offset-2 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 font-semibold">
-                      browse files
-                    </span>
-                  </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Searchable PDF documents up to 10 MB</p>
-                </div>
-
-                {/* Feature Tags */}
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-zinc-700 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/10 shadow-2xs">
-                    <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                    Private & Secure
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-zinc-700 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/10 shadow-2xs">
-                    <Bookmark className="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
-                    Page-Level Citations
-                  </span>
-                </div>
-              </div>
-            ) : (
-              /* Selected Document Preview Card */
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 space-y-3.5 dark:border-white/5 dark:bg-[#16161b]">
-                <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                  <span>Selected Document</span>
-                  <button
-                    onClick={() => setSelectedFile(null)}
-                    className="text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    <span>Remove</span>
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3.5 rounded-lg bg-white p-3 border border-zinc-200 dark:bg-[#121216] dark:border-white/5 shadow-2xs">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:border-white/5 font-mono text-[10px] font-semibold">
-                    PDF
+                  {/* Icon with subtle halo */}
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.15)] group-hover:scale-105 group-hover:border-indigo-400/40 group-hover:bg-indigo-500/15 transition-all mb-3.5">
+                    <UploadCloud className="h-6 w-6 stroke-[2]" />
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-zinc-900 dark:text-white text-xs sm:text-sm truncate">
-                      {selectedFile.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
-                      <span>•</span>
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                        <Check className="h-3 w-3" />
-                        Verified format
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-[#f1f3f9]">
+                      Drop your PDF here, or{" "}
+                      <span className="text-indigo-400 underline underline-offset-2 group-hover:text-indigo-300 font-semibold transition-colors">
+                        browse files
                       </span>
-                    </div>
+                    </h3>
+                    <p className="text-xs text-[#818ea8]">Searchable PDF documents up to 10 MB</p>
                   </div>
 
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:bg-transparent dark:text-zinc-300 dark:hover:bg-white/5 transition-colors shrink-0 cursor-pointer"
-                  >
-                    Replace
-                  </button>
-                </div>
+                  {/* Feature Tags */}
+                  <div className="mt-4.5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#818ea8] font-medium">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.03] px-2.5 py-1 text-[#8fa2d4] border border-white/[0.08]">
+                      <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                      Private & Secure
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.03] px-2.5 py-1 text-[#8fa2d4] border border-white/[0.08]">
+                      <Bookmark className="h-3 w-3 text-indigo-400" />
+                      Page-Level Citations
+                    </span>
+                  </div>
+                </GlowCard>
+              ) : (
+                /* Selected Document Preview Card */
+                <GlowCard className="rounded-[22px] border border-white/[0.08] bg-[#0c1017]/80 p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs font-medium text-[#818ea8]">
+                    <span>Selected Document</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFile(null)}
+                      className="text-[#7d879d] hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer active:scale-[0.98]"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
 
-                <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Your document is confidential and accessible only inside your account.</span>
+                  <div className="flex items-center gap-3.5 rounded-xl bg-white/[0.03] p-3 border border-white/[0.06]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 font-mono text-[10px] font-bold tracking-wider">
+                      PDF
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-[#f1f3f9] text-xs sm:text-sm truncate">{selectedFile.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-[#818ea8]">
+                        <span>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+                        <span className="text-white/20">•</span>
+                        <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
+                          <Check className="h-3 w-3" />
+                          Verified format
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-[#c4cbdd] hover:text-white hover:bg-white/[0.08] transition-colors shrink-0 cursor-pointer active:scale-[0.98]"
+                    >
+                      Replace
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-[#7d879d] pt-0.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>Your document is confidential and accessible only inside your account.</span>
+                  </div>
+                </GlowCard>
+              )}
+
+              {/* Error Message Notice */}
+              {errorMessage && (
+                <div className="flex items-start gap-2.5 rounded-xl bg-rose-500/10 p-3 text-xs text-rose-300 border border-rose-500/20 animate-in fade-in">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-rose-200">Unable to accept file</p>
+                    <p className="text-rose-400 mt-0.5">{errorMessage}</p>
+                  </div>
                 </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.06]">
+                <Button variant="outline" size="sm" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button variant="accent" size="sm" disabled={!selectedFile} onClick={handleStartUpload}>
+                  <span>Analyze Document</span>
+                  <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
               </div>
-            )}
-
-            {/* Error Message Notice */}
-            {errorMessage && (
-              <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20 animate-in fade-in">
-                <AlertCircle className="h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-semibold">Unable to accept file</p>
-                  <p className="text-rose-600 dark:text-rose-400 mt-0.5">{errorMessage}</p>
-                </div>
+            </>
+          ) : step === "uploading" ? (
+            /* Brief uploading state — shown only during XHR transfer */
+            <div className="py-8 text-center space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_25px_rgba(99,102,241,0.2)]">
+                <Loader2 className="h-7 w-7 stroke-[2.2] animate-spin text-indigo-400" />
               </div>
-            )}
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-100 dark:border-white/5">
-              <Button variant="outline" size="sm" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button variant="accent" size="sm" disabled={!selectedFile} onClick={handleStartUpload}>
-                <span>Analyze Document</span>
-                <ArrowRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </div>
-          </>
-        ) : step === "uploading" ? (
-          /* Brief uploading state — shown only during XHR transfer */
-          <div className="py-8 text-center space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 shadow-sm">
-              <Loader2 className="h-8 w-8 stroke-[2.2] animate-spin" />
-            </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold text-[#f1f3f9]">Uploading Document...</h3>
+                <p className="max-w-sm mx-auto text-xs text-[#818ea8] leading-relaxed">
+                  Transferring file securely to your private workspace.
+                </p>
+              </div>
 
-            <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Uploading Document...</h4>
-              <p className="max-w-sm mx-auto text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Transferring file securely to your private workspace.
-              </p>
+              <div className="w-full max-w-xs mx-auto bg-white/[0.06] rounded-full h-1.5 overflow-hidden border border-white/[0.05]">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full transition-all duration-300 shadow-[0_0_12px_rgba(99,102,241,0.5)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-xs font-mono text-indigo-400">{progress}%</p>
             </div>
+          ) : (
+            /* Failed Error State with Retry */
+            <div className="py-6 text-center space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
+                <AlertCircle className="h-7 w-7 stroke-[2.2]" />
+              </div>
 
-            <div className="w-full max-w-xs mx-auto bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <p className="text-xs font-mono text-blue-600 dark:text-blue-400">{progress}%</p>
-          </div>
-        ) : (
-          /* Failed Error State with Retry */
-          <div className="py-5 text-center space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 shadow-sm">
-              <AlertCircle className="h-8 w-8 stroke-[2.2]" />
-            </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold text-[#f1f3f9]">Upload Failed</h3>
+                <p className="max-w-sm mx-auto text-xs text-rose-400 leading-relaxed px-4">
+                  {errorMessage || "Unable to process this document. Please check the file and try again."}
+                </p>
+              </div>
 
-            <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Upload Failed</h4>
-              <p className="max-w-sm mx-auto text-xs text-rose-600 dark:text-rose-400 leading-relaxed px-4">
-                {errorMessage || "Unable to process this document. Please check the file and try again."}
-              </p>
+              <div className="flex items-center justify-center gap-2.5 pt-3 border-t border-white/[0.06]">
+                <Button variant="outline" size="sm" onClick={resetState}>
+                  Select Another File
+                </Button>
+                <Button variant="accent" size="sm" onClick={handleStartUpload}>
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                  <span>Retry Upload</span>
+                </Button>
+              </div>
             </div>
-
-            <div className="flex items-center justify-center gap-2.5 pt-4 border-t border-zinc-100 dark:border-white/5">
-              <Button variant="outline" size="sm" onClick={resetState}>
-                Select Another File
-              </Button>
-              <Button variant="accent" size="sm" onClick={handleStartUpload}>
-                <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                <span>Retry Upload</span>
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    </Dialog>
+          )}
+        </div>
+      </GlowContainer>
+    </div>
   );
 }

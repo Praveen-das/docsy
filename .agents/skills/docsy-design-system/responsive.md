@@ -20,11 +20,11 @@ Docsy uses three primary responsive tiers:
 
 ### 2.1 Sidebar Restructuring
 - **Desktop (`≥ 1024px`):** Persistent static sidebar. Supports expanded (`256px` / `w-64`) and collapsed (`64px` / `w-16`) states.
-- **Mobile / Tablet (`< 1024px`):** The sidebar is hidden from static flow (`-translate-x-full lg:translate-x-0`). It becomes an off-canvas slide-over drawer triggered by `HeaderMobileNavToggle`. Tapping outside the drawer on the backdrop overlay (`bg-black/60 backdrop-blur-xs`) dismisses it.
+- **Mobile / Tablet (`< 1024px`):** The sidebar is hidden from static flow (`-translate-x-full lg:translate-x-0`). It becomes an off-canvas slide-over drawer triggered by the mobile navigation toggle button. Tapping outside the drawer on the backdrop overlay (`bg-black/60 backdrop-blur-xs`) dismisses it.
 
 ### 2.2 Top Header Restructuring
 - **Mobile (`< 640px`):**
-  - Displays hamburger menu button (`HeaderMobileNavToggle`) and small brand logo.
+  - Displays hamburger menu button and small brand logo.
   - Search pill shrinks to fit remaining space; hides `Ctrl K` shortcut badge.
   - User menu displays circle avatar initials only; hides display name.
 - **Desktop (`≥ 1024px`):**

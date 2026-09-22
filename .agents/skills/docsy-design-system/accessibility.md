@@ -36,7 +36,7 @@ dark:focus-visible:ring-offset-[#08090d]
 
 ## 3. Keyboard Navigation & Shortcuts
 
-- **`Cmd+K` / `Ctrl+K`:** Global shortcut that immediately opens `SelectDocumentModal`.
+- **`Cmd+K` / `Ctrl+K`:** Global shortcut that immediately opens the document search modal.
 - **`Escape` Key:** Instantly dismisses active modals, search dialogs, mobile drawers, and user menus.
 - **`Tab` / `Shift+Tab` Trapping:** When any modal dialog opens, tab focus MUST be trapped inside the modal container. Upon closing, focus MUST return to the trigger element.
 - **`Space` & `Enter` Activation:** Any custom interactive card with `role="button"` must handle both keys:

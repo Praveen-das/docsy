@@ -31,11 +31,11 @@ export const SidebarUpgradeCard = React.memo(function SidebarUpgradeCard({
       {/* Subtle Ambient indigo/lavender glow consistent with the app theme */}
       <div
         aria-hidden="true"
-        className="absolute -top-6 -left-6 w-28 h-28 bg-[#818cf8]/10 rounded-full blur-2xl pointer-events-none transform-gpu"
+        className="absolute -top-6 -left-6 w-28 h-28 bg-[#818cf8]/10 rounded-full blur-2xl pointer-events-none will-change-transform"
       />
       <div
         aria-hidden="true"
-        className="absolute -bottom-6 -right-6 w-28 h-28 bg-[#6366f1]/10 rounded-full blur-2xl pointer-events-none transform-gpu"
+        className="absolute -bottom-6 -right-6 w-28 h-28 bg-[#6366f1]/10 rounded-full blur-2xl pointer-events-none will-change-transform"
       />
 
       {/* Glowing Lavender/Indigo Lightning Bolt Icon */}

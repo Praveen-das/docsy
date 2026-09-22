@@ -13,14 +13,7 @@ export interface DialogProps {
   className?: string;
 }
 
-export function Dialog({
-  isOpen,
-  onClose,
-  title,
-  description,
-  children,
-  className,
-}: DialogProps) {
+export function Dialog({ isOpen, onClose, title, description, children, className }: DialogProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -45,7 +38,7 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-xs transition-opacity duration-150"
+        className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-xs will-change-transform transition-opacity duration-150"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -59,7 +52,7 @@ export function Dialog({
         className={cn(
           "relative z-50 w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-2xl text-zinc-900 dark:border-white/5 dark:bg-[#121216] dark:text-zinc-100 transition-all duration-150 ease-out transform",
           "scale-100 opacity-100 animate-in fade-in zoom-in-95",
-          className
+          className,
         )}
       >
         <button
@@ -71,19 +64,13 @@ export function Dialog({
         </button>
 
         {title && (
-          <h2
-            id="dialog-title"
-            className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white pr-6"
-          >
+          <h2 id="dialog-title" className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white pr-6">
             {title}
           </h2>
         )}
 
         {description && (
-          <p
-            id="dialog-description"
-            className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed"
-          >
+          <p id="dialog-description" className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
             {description}
           </p>
         )}

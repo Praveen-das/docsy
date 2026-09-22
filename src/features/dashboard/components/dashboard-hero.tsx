@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { FileText, MessageCircle, ShieldCheck, Upload } from "lucide-react";
 import { useSpring } from "react-spring";
 import { GradientOrb } from "@/components/ui/gradient-orb";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 export interface DashboardHeroProps {
   onOpenUpload: () => void;
@@ -45,7 +46,7 @@ export function DashboardHero({ onOpenUpload }: DashboardHeroProps) {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 right-0 flex h-1/2 z-0 select-none overflow-hidden"
       >
-        <div className="w-full h-full hero-bottom-glow opacity-30 mx-auto transform-gpu" />
+        <div className="w-full h-full hero-bottom-glow opacity-30 mx-auto will-change-transform" />
       </div>
 
       {/* Sharp razor edge glow at the bottom */}
@@ -59,16 +60,12 @@ export function DashboardHero({ onOpenUpload }: DashboardHeroProps) {
         {/* Soft atmospheric ambient aura to balance right column luminance */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-10 -right-1/2 w-72 h-72 rounded-full bg-purple-200/10 blur-[80px] -z-10 transform-gpu"
+          className="pointer-events-none absolute -top-10 -right-1/2 w-72 h-72 rounded-full bg-purple-200/10 blur-[80px] -z-10 will-change-transform"
         />
 
         {/* Title Group: Eyebrow + Heading tightly clustered */}
         <div className="space-y-3">
-          <div className="inline-block">
-            <span className="text-xs sm:text-[13px] font-bold tracking-[0.22em] text-[#818cf8] uppercase select-none">
-              YOUR KNOWLEDGE. AMPLIFIED.
-            </span>
-          </div>
+          <Eyebrow>YOUR KNOWLEDGE. AMPLIFIED.</Eyebrow>
 
           <h1 className="text-3xl sm:text-4xl lg:text-[46px] xl:text-[52px] font-extrabold tracking-tight text-white leading-[1.08]">
             Chat with <br />

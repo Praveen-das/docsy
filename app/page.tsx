@@ -20,6 +20,7 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PricingSection } from "@/features/billing/pricing-section";
 
 interface DemoQuery {
   question: string;
@@ -47,8 +48,7 @@ const DEMO_QUERIES: DemoQuery[] = [
     page: 14,
     highlightText:
       "Tesla projects 2026 capital expenditures to be between $10.5B and $11.5B, focused on scaling autonomous compute clusters and energy storage factories.",
-    answerLead:
-      "As detailed on page 14 under Capital Allocation Guidance, spending targets are specified as:",
+    answerLead: "As detailed on page 14 under Capital Allocation Guidance, spending targets are specified as:",
     bulletPoints: [
       "Capital expenditures planned between $10.5B and $11.5B.",
       "Dedicated compute cluster expansion in Austin and energy production in Lathrop.",
@@ -92,15 +92,22 @@ export default function LandingPage() {
             <a href="#use-cases" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
               Who It&apos;s For
             </a>
+            <a href="#pricing" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+              Pricing
+            </a>
             <a href="#faq" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
               FAQ
             </a>
           </nav>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
             <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              >
                 Dashboard
               </Button>
             </Link>
@@ -131,7 +138,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Docsy analyzes complex PDFs, financial reports, and technical agreements—giving you clear answers where every statement is grounded in clickable, page-level citations.
+            Docsy analyzes complex PDFs, financial reports, and technical agreements—giving you clear answers where
+            every statement is grounded in clickable, page-level citations.
           </p>
 
           {/* CTAs */}
@@ -170,9 +178,7 @@ export default function LandingPage() {
             {/* Top Interactive Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/80 rounded-t-xl text-xs dark:border-white/5 dark:bg-[#0e0e12]">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                  Interactive Preview:
-                </span>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Interactive Preview:</span>
                 <div className="flex items-center gap-1.5">
                   {DEMO_QUERIES.map((q, idx) => (
                     <button
@@ -182,7 +188,7 @@ export default function LandingPage() {
                         "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer",
                         activeQueryIdx === idx
                           ? "bg-zinc-900 text-white border border-zinc-800 shadow-xs font-semibold dark:bg-[#24242b] dark:border-white/10"
-                          : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900 dark:bg-[#141418] dark:text-zinc-400 dark:border-white/10 dark:hover:bg-[#1a1a22] dark:hover:text-zinc-200"
+                          : "bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900 dark:bg-[#141418] dark:text-zinc-400 dark:border-white/10 dark:hover:bg-[#1a1a22] dark:hover:text-zinc-200",
                       )}
                     >
                       Question {idx + 1}
@@ -217,7 +223,8 @@ export default function LandingPage() {
                   </h4>
 
                   <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed font-serif text-[12px]">
-                    During the fourth quarter of 2025, vehicle production and energy deployment trends continued to stabilize following automated line improvements across our primary facilities...
+                    During the fourth quarter of 2025, vehicle production and energy deployment trends continued to
+                    stabilize following automated line improvements across our primary facilities...
                   </p>
 
                   {/* Spotlight Citation Box */}
@@ -226,7 +233,7 @@ export default function LandingPage() {
                       "rounded-lg p-3.5 border transition-all duration-300",
                       spotlightPulse
                         ? "citation-target-active bg-amber-50 border-amber-400 shadow-md dark:bg-amber-950/40 dark:border-amber-500/40"
-                        : "bg-amber-50/60 border-amber-200 text-zinc-800 dark:bg-amber-950/20 dark:border-amber-500/20 dark:text-zinc-200"
+                        : "bg-amber-50/60 border-amber-200 text-zinc-800 dark:bg-amber-950/20 dark:border-amber-500/20 dark:text-zinc-200",
                     )}
                   >
                     <span className="font-bold text-amber-700 dark:text-amber-400 text-[11px] flex items-center gap-1">
@@ -257,9 +264,7 @@ export default function LandingPage() {
                   </div>
 
                   <div className="rounded-xl border border-zinc-200 bg-white p-3.5 space-y-2 text-xs text-zinc-800 dark:border-white/10 dark:bg-[#121216] dark:text-zinc-200">
-                    <p className="leading-relaxed">
-                      {activeQuery.answerLead}
-                    </p>
+                    <p className="leading-relaxed">{activeQuery.answerLead}</p>
                     <ul className="list-disc pl-4 space-y-1 text-[11px] text-zinc-600 dark:text-zinc-300">
                       {activeQuery.bulletPoints.map((pt, i) => (
                         <li key={i}>{pt}</li>
@@ -268,9 +273,7 @@ export default function LandingPage() {
 
                     {/* Interactive Citation Pill */}
                     <div className="pt-2 border-t border-zinc-100 dark:border-white/5 flex items-center gap-2">
-                      <span className="text-[10px] text-zinc-500 font-semibold">
-                        Sources:
-                      </span>
+                      <span className="text-[10px] text-zinc-500 font-semibold">Sources:</span>
                       <button
                         onClick={handleCitationClick}
                         className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 text-amber-900 px-2.5 py-1 text-[11px] font-semibold border border-amber-300 hover:bg-amber-100 transition-colors cursor-pointer shadow-2xs dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-900/40"
@@ -300,7 +303,10 @@ export default function LandingPage() {
       </section>
 
       {/* The Difference Section */}
-      <section id="how-it-works" className="py-16 bg-zinc-50 border-y border-zinc-200 dark:bg-[#0e0e12] dark:border-white/5">
+      <section
+        id="how-it-works"
+        className="py-16 bg-zinc-50 border-y border-zinc-200 dark:bg-[#0e0e12] dark:border-white/5"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -316,9 +322,7 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
                 The Old Way
               </div>
-              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                Manual Searching & Unverifiable AI
-              </h3>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Manual Searching & Unverifiable AI</h3>
               <ul className="space-y-3 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
                 <li className="flex items-start gap-2.5">
                   <span className="text-rose-600 dark:text-rose-400 font-bold shrink-0">✕</span>
@@ -378,11 +382,10 @@ export default function LandingPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                 <Bookmark className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Clickable Page Citations
-              </h3>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Clickable Page Citations</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Click any citation tag in your conversation and watch the document reader navigate to that page with the referenced paragraph highlighted.
+                Click any citation tag in your conversation and watch the document reader navigate to that page with the
+                referenced paragraph highlighted.
               </p>
             </div>
 
@@ -390,11 +393,10 @@ export default function LandingPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-600/10 dark:text-blue-400 dark:border-blue-500/20">
                 <Layers className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Multi-Document Analysis
-              </h3>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Multi-Document Analysis</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Query across several files simultaneously to compare quarterly earnings, verify contract clauses, or synthesize related papers.
+                Query across several files simultaneously to compare quarterly earnings, verify contract clauses, or
+                synthesize related papers.
               </p>
             </div>
 
@@ -402,11 +404,10 @@ export default function LandingPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Confidential & Isolated
-              </h3>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Confidential & Isolated</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Your documents stay strictly within your private account. Files are confidential, isolated, and never used to train public tools.
+                Your documents stay strictly within your private account. Files are confidential, isolated, and never
+                used to train public tools.
               </p>
             </div>
           </div>
@@ -414,7 +415,10 @@ export default function LandingPage() {
       </section>
 
       {/* Use Cases Section */}
-      <section id="use-cases" className="py-16 bg-zinc-50 border-y border-zinc-200 dark:bg-[#0e0e12] dark:border-white/5">
+      <section
+        id="use-cases"
+        className="py-16 bg-zinc-50 border-y border-zinc-200 dark:bg-[#0e0e12] dark:border-white/5"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -430,11 +434,10 @@ export default function LandingPage() {
               <span className="text-xs font-semibold text-[#0071e3] dark:text-blue-400 uppercase tracking-wider">
                 Finance & Strategy
               </span>
-              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">
-                Earnings & Annual Filings
-              </h4>
+              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">Earnings & Annual Filings</h4>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Locate expenditure figures, review margin breakdowns, and compare quarterly remarks without manual page hunting.
+                Locate expenditure figures, review margin breakdowns, and compare quarterly remarks without manual page
+                hunting.
               </p>
             </div>
 
@@ -442,11 +445,10 @@ export default function LandingPage() {
               <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                 Legal & Operations
               </span>
-              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">
-                Contracts & Policy Documents
-              </h4>
+              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">Contracts & Policy Documents</h4>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Identify indemnification clauses, renewal deadlines, and governance obligations with immediate page verification.
+                Identify indemnification clauses, renewal deadlines, and governance obligations with immediate page
+                verification.
               </p>
             </div>
 
@@ -454,14 +456,20 @@ export default function LandingPage() {
               <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                 Research & Technical
               </span>
-              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">
-                Studies & Whitepapers
-              </h4>
+              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base">Studies & Whitepapers</h4>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Review experimental methods, check statistical citations, and extract key findings across scientific literature.
+                Review experimental methods, check statistical citations, and extract key findings across scientific
+                literature.
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 bg-white dark:bg-[#09090b]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PricingSection />
         </div>
       </section>
 
@@ -479,29 +487,26 @@ export default function LandingPage() {
 
           <div className="space-y-4 text-xs sm:text-sm">
             <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-5 space-y-1.5 shadow-2xs dark:border-white/10 dark:bg-[#141418]">
-              <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">
-                How accurate are the answers?
-              </h4>
+              <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">How accurate are the answers?</h4>
               <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Docsy AI answers strictly using the text from your uploaded document. If an answer cannot be found in your file, it clearly lets you know instead of guessing or inventing information.
+                Docsy AI answers strictly using the text from your uploaded document. If an answer cannot be found in
+                your file, it clearly lets you know instead of guessing or inventing information.
               </p>
             </div>
 
             <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-5 space-y-1.5 shadow-2xs dark:border-white/10 dark:bg-[#141418]">
-              <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">
-                How do page citations work?
-              </h4>
+              <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">How do page citations work?</h4>
               <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Every generated answer includes small source tags with page numbers. Clicking any tag opens the built-in reader right to that page and highlights the exact paragraph referenced.
+                Every generated answer includes small source tags with page numbers. Clicking any tag opens the built-in
+                reader right to that page and highlights the exact paragraph referenced.
               </p>
             </div>
 
             <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-5 space-y-1.5 shadow-2xs dark:border-white/10 dark:bg-[#141418]">
-              <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">
-                Are my documents kept private?
-              </h4>
+              <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">Are my documents kept private?</h4>
               <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Yes, completely. Your uploaded files are tied exclusively to your private account and cannot be accessed by anyone else.
+                Yes, completely. Your uploaded files are tied exclusively to your private account and cannot be accessed
+                by anyone else.
               </p>
             </div>
           </div>
@@ -525,7 +530,11 @@ export default function LandingPage() {
               </Button>
             </Link>
             <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/10 text-white hover:bg-white/20 border-0 dark:bg-white/10 dark:text-zinc-200 dark:hover:bg-white/15">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto bg-white/10 text-white hover:bg-white/20 border-0 dark:bg-white/10 dark:text-zinc-200 dark:hover:bg-white/15"
+              >
                 <span>Open Dashboard</span>
               </Button>
             </Link>

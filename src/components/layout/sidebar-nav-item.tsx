@@ -65,10 +65,10 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
 
   const itemClassName = cn(
     "group relative z-10 flex items-center select-none cursor-pointer overflow-hidden bg-transparent",
-    "border-0 border-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none ring-0",
+    "border-0 border-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none ring-0 active:scale-[0.98]",
     "transition-colors duration-150",
-    isCollapsed ? "h-10 w-10 justify-center rounded-xl mx-auto" : "h-10 w-full px-3.5 gap-3 rounded-2xl",
-    isActive ? "text-[#f1f3f9]" : cn(NAV_MUTED_COLOR, "hover:text-[#d1d5e5]"),
+    isCollapsed ? "h-8 w-8 justify-center rounded-xl mx-auto" : "h-8 w-full px-2.5 gap-2 rounded-xl",
+    isActive ? "text-[#f1f3f9]" : cn(NAV_MUTED_COLOR, "hover:text-[#d1d5e5] hover:bg-(--card-spotlight-mid)"),
   );
 
   if (item.isSearch) {
@@ -85,14 +85,14 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
       >
         <Icon
           className={cn(
-            "w-[18px] h-[18px] shrink-0 group-hover:text-[#c4cbdd] transition-colors stroke-[1.9] relative z-10",
+            "w-4 h-4 shrink-0 group-hover:text-[#c4cbdd] transition-colors stroke-[1.8] relative z-10",
             NAV_MUTED_COLOR,
           )}
         />
         {!isCollapsed && (
           <span
             className={cn(
-              "truncate text-[13.5px] font-medium group-hover:text-[#d1d5e5] relative z-10",
+              "truncate text-[12.5px] font-medium leading-none group-hover:text-[#d1d5e5] relative z-10",
               NAV_MUTED_COLOR,
             )}
           >
@@ -116,7 +116,7 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
     >
       <Icon
         className={cn(
-          "w-[18px] h-[18px] shrink-0 transition-all duration-150 stroke-[1.85] relative z-10",
+          "w-4 h-4 shrink-0 transition-all duration-150 stroke-[1.8] relative z-10",
           isActive
             ? "text-[#a3b8fc] drop-shadow-[0_0_6px_rgba(163,184,252,0.6)]"
             : cn(NAV_MUTED_COLOR, "group-hover:text-[#c4cbdd]"),
@@ -126,7 +126,7 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
       {!isCollapsed && (
         <span
           className={cn(
-            "truncate text-[13.5px] tracking-normal font-medium transition-colors duration-150 relative z-10",
+            "truncate text-[12.5px] tracking-normal font-medium leading-none transition-colors duration-150 relative z-10",
             isActive ? "text-[#f1f3f9]" : cn(NAV_MUTED_COLOR, "group-hover:text-[#d1d5e5]"),
           )}
         >
