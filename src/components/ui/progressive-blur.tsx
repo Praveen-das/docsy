@@ -19,10 +19,11 @@ export interface ProgressiveBlurProps {
  */
 export function ProgressiveBlur({
   className,
-  height = 150,
+  height,
   direction = "top",
 }: ProgressiveBlurProps) {
-  const heightStyle = typeof height === "number" ? `${height}px` : height;
+  const heightStyle =
+    height !== undefined ? (typeof height === "number" ? `${height}px` : height) : undefined;
 
   return (
     <div
@@ -30,10 +31,11 @@ export function ProgressiveBlur({
       className={cn(
         "progressive-blur pointer-events-none absolute left-0 right-0 top-0 overflow-hidden select-none -z-10",
         direction === "bottom" && "top-auto bottom-0 rotate-180",
+        height === undefined && "h-[150px]",
         className,
       )}
       style={{
-        height: heightStyle,
+        ...(heightStyle ? { height: heightStyle } : {}),
         contain: "strict",
         transform: "translate3d(0, 0, 0)",
       }}

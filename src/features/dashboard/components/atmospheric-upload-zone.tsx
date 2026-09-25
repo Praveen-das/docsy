@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSpring } from "react-spring";
+import { useSpring } from "@react-spring/web";
 import { useDocumentStore } from "@/stores/document-store";
 import { UploadOrbitRing } from "./upload-zone/upload-orbit-ring";
 import { UploadBackgroundOrb } from "./upload-zone/upload-background-orb";
@@ -294,12 +294,8 @@ export function AtmosphericUploadZone() {
         style={{
           transform: reducedMotionRef.current
             ? "none"
-            : `translate3d(${mousePos.x}px, ${mousePos.y}px, 0) scale(${
-                isDragging ? 1.025 : isHovered ? 1.01 : 1
-              })`,
-          transition: reducedMotionRef.current
-            ? "none"
-            : "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+            : `translate3d(${mousePos.x}px, ${mousePos.y}px, 0) scale(${isDragging ? 1.025 : isHovered ? 1.01 : 1})`,
+          transition: reducedMotionRef.current ? "none" : "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
           willChange: (isHovered || isDragging) && !reducedMotionRef.current ? "transform" : "auto",
         }}
         className={`relative z-10 w-[92%] sm:w-[94%] aspect-[460/390] flex items-center justify-center cursor-pointer transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 rounded-[42px] ${

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserMenuProfileInfo } from "./types";
 
@@ -16,12 +15,7 @@ export interface UserMenuTriggerProps {
  * Header avatar pill trigger that toggles the user menu dropdown / mobile drawer.
  * Supports image avatar with fallback stylized initials.
  */
-export function UserMenuTrigger({
-  profile,
-  isOpen,
-  onToggle,
-  className,
-}: UserMenuTriggerProps) {
+export function UserMenuTrigger({ profile, isOpen, onToggle, className }: UserMenuTriggerProps) {
   const { displayName, imageUrl, userInitials, planName = "Pro Plan" } = profile;
 
   return (
@@ -32,21 +26,21 @@ export function UserMenuTrigger({
       aria-haspopup="true"
       aria-label="User Account Menu"
       className={cn(
-        "group flex items-center gap-2.5 sm:gap-3 rounded-full py-1.5 pl-1.5 pr-2 sm:pr-2.5 transition-all duration-150 cursor-pointer select-none",
-        "active:scale-[0.98] min-h-[44px]",
+        "group flex items-center gap-2.5 sm:gap-3 rounded-full p-1 sm:py-1.5 sm:pl-1.5 sm:pr-2.5 transition-all duration-150 cursor-pointer select-none",
+        "active:scale-[0.98] min-h-[36px] sm:min-h-[44px]",
         isOpen && "bg-white/[0.06] border-white/[0.1]",
         className,
       )}
     >
-      {/* Minimalist Avatar */}
+      {/* Minimalist Avatar - Responsive sizing for small screens */}
       {imageUrl ? (
         <img
           src={imageUrl}
           alt={displayName}
-          className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10"
+          className="h-7.5 w-7.5 sm:h-9 sm:w-9 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-b from-[#171a2a] to-[#0f121d] text-[12.5px] font-semibold text-[#c7d2fe] shadow-inner select-none">
+        <div className="flex h-7.5 w-7.5 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-b from-[#171a2a] to-[#0f121d] text-[11px] sm:text-[12.5px] font-semibold text-[#c7d2fe] shadow-inner select-none">
           {userInitials}
         </div>
       )}
@@ -60,14 +54,6 @@ export function UserMenuTrigger({
           {planName}
         </span>
       </div>
-
-      {/* Subtle Chevron */}
-      <ChevronDown
-        className={cn(
-          "h-3.5 w-3.5 text-[#7e8ba6] group-hover:text-zinc-200 transition-transform duration-200 stroke-[2] ml-0.5",
-          isOpen && "rotate-180 text-white",
-        )}
-      />
     </button>
   );
 }

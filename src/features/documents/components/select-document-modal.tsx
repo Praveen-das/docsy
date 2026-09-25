@@ -7,20 +7,11 @@ import { useDocumentStore } from "@/stores/document-store";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useUIStore } from "@/stores/ui-store";
 import { formatRelativeTime } from "@/lib/format-time";
-import {
-  FileText,
-  Search,
-  UploadCloud,
-  ArrowRight,
-  Plus,
-  X,
-  MessageSquare,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+import { FileText, Search, UploadCloud, ArrowRight, Plus, X, MessageSquare, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlowContainer } from "@/components/ui/glow-container";
 import { GlowCard } from "@/components/ui/glow-card";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 
 export interface SelectDocumentModalProps {
   isOpen?: boolean;
@@ -123,19 +114,14 @@ export function SelectDocumentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-4 sm:p-6 select-none">
-      {/* Backdrop */}
-      <div
-        aria-hidden="true"
-        onClick={effectiveOnClose}
-        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in"
-      />
+      <ModalBackdrop onClose={effectiveOnClose} />
 
       {/* Modal Container */}
       <GlowContainer
         role="dialog"
         aria-modal="true"
         aria-labelledby="select-doc-title"
-        className="w-full max-w-xl rounded-[24px] sm:rounded-[28px] p-4 xs:p-5 sm:p-6 max-h-[calc(100dvh-1.5rem)] overflow-y-auto custom-scrollbar transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95"
+        className="w-full h-full max-w-xl rounded-[24px] sm:rounded-[28px] p-4 xs:p-5 sm:p-6 transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95"
       >
         {/* Modal Header */}
         <div className="flex items-start justify-between gap-3 pb-3.5 sm:pb-4 border-b border-white/[0.06] relative z-10">

@@ -7,6 +7,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarNavigation } from "./sidebar-navigation";
 import { ConversationSidebar } from "./conversation-sidebar";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 
 // Module-scoped hydration flag: persists across client-side Next.js route transitions
 let isAppHydrated = false;
@@ -67,10 +68,7 @@ export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: Sidebar
     <>
       {/* Mobile Backdrop Overlay */}
       {effectiveIsOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs will-change-transform lg:hidden transition-opacity"
-          onClick={effectiveOnClose}
-        />
+        <ModalBackdrop className="z-40 lg:hidden" onClose={effectiveOnClose} />
       )}
 
       {/* Sidebar Container matching Image 1: Deep obsidian surface without right border */}

@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { X, Upload, Loader2, CheckCircle2, ChevronDown, AlertCircle, FileText, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlowContainer } from "@/components/ui/glow-container";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 import { useSubmitFeedback } from "@/features/feedback/hooks/use-feedback";
 import type { FeedbackCategory } from "@/features/feedback/types";
 
@@ -107,12 +108,7 @@ export function FeedbackModal({ isOpen = true, onClose }: FeedbackModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-4 sm:p-6 select-none">
-      {/* Obsidian Backdrop matching SettingsModal */}
-      <div
-        aria-hidden="true"
-        onClick={onClose}
-        className="fixed inset-0 bg-black/70 dark:bg-black/85 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in will-change-[opacity]"
-      />
+      <ModalBackdrop onClose={onClose} />
 
       {/* Docsy Cosmic Obsidian Modal Card matching SettingsModal */}
       <GlowContainer

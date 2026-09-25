@@ -186,7 +186,7 @@ export function SubscriptionStatus({ subscription }: SubscriptionStatusProps) {
             <button
               onClick={() => setShowCancelConfirm(true)}
               id="cancel-subscription-btn"
-              className="text-xs text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 transition-colors underline underline-offset-2"
+              className="text-xs text-zinc-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 transition-colors underline underline-offset-2 cursor-pointer"
             >
               Cancel subscription
             </button>

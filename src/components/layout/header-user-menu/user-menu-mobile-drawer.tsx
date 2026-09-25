@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserMenuContent } from "./user-menu-content";
 import type { UserMenuProfileInfo } from "./types";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 
 export interface UserMenuMobileDrawerProps {
   isOpen: boolean;
@@ -26,12 +27,7 @@ export function UserMenuMobileDrawer({ isOpen, mounted, drawerRef, profile, onCl
 
   return createPortal(
     <div className="sm:hidden fixed inset-0 z-50 select-none">
-      {/* Darkened Backdrop Overlay */}
-      <div
-        aria-hidden="true"
-        onClick={onClose}
-        className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in"
-      />
+      <ModalBackdrop onClose={onClose} />
 
       {/* Right Sidebar Slide-Over Drawer Panel */}
       <aside

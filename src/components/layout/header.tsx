@@ -37,8 +37,8 @@ export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps
         className,
       )}
     >
-      {/* 8-layer Progressive Backdrop Blur */}
-      <ProgressiveBlur height={100} />
+      {/* Progressive Backdrop Blur: Compact on mobile (h-16 / 64px), expanded on desktop (sm:h-[100px]) */}
+      <ProgressiveBlur className="h-16 sm:h-[100px]" />
 
       {/* Mobile Navigation Toggle */}
       <HeaderMobileNavToggle onToggle={onToggleSidebar} />

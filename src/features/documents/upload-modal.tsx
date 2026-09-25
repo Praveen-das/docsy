@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { useDocumentStore } from "@/stores/document-store";
 import { useUIStore } from "@/stores/ui-store";
 import { GlowCard } from "@/components/ui/glow-card";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 
 export interface UploadModalProps {
   isOpen?: boolean;
@@ -196,12 +197,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-4 sm:p-6 select-none">
-      {/* Obsidian Backdrop with subtle blur */}
-      <div
-        aria-hidden="true"
-        onClick={handleClose}
-        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in"
-      />
+      <ModalBackdrop onClose={handleClose} />
 
       {/* Modal Container */}
       <GlowContainer

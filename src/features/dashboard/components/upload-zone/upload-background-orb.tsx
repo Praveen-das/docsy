@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SpringValue } from "react-spring";
+import { SpringValue } from "@react-spring/web";
 import { GradientOrb } from "@/components/ui/gradient-orb";
 
 export interface UploadBackgroundOrbProps {

@@ -16,7 +16,7 @@ export function NewConversationButton({ isCollapsed, onClick, className }: NewCo
     <div className={cn("px-2.5 mt-3 pb-2", className)}>
       <Button
         type="submit"
-        variant="accent"
+        variant="gradient"
         size="md"
         onClick={onClick}
         title={isCollapsed ? "New conversation" : undefined}

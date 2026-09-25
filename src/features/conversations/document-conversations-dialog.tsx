@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { GlowContainer } from "@/components/ui/glow-container";
 import { GlowRow } from "@/components/ui/glow-row";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 
 interface DocumentConversationsDialogProps {
   isOpen: boolean;
@@ -122,12 +123,7 @@ export function DocumentConversationsDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-4 sm:p-6 select-none">
-      {/* Backdrop */}
-      <div
-        aria-hidden="true"
-        onClick={onClose}
-        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in"
-      />
+      <ModalBackdrop onClose={onClose} />
 
       {/* Modal Container */}
       <GlowContainer

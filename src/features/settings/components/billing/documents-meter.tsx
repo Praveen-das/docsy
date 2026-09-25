@@ -38,7 +38,7 @@ export function DocumentsMeter({ documentsCount, documentsLimit }: DocumentsMete
                 ? "bg-gradient-to-r from-amber-500 to-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
                 : "bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_6px_rgba(6,182,212,0.35)]",
             )}
-            style={{ width: `${Math.max(3, docPercent)}%` }}
+            style={{ width: `${docPercent}%` }}
           />
         </div>
       )}

@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useDocumentStore } from "@/stores/document-store";
 import { useUIStore } from "@/stores/ui-store";
-import { UserMenu } from "./user-menu";
 import { SidebarHeader } from "./sidebar-header";
 import { NewConversationButton } from "@/features/conversations/components/new-conversation-button";
 import { ActiveDocumentBanner } from "@/features/conversations/components/active-document-banner";
 import { ConversationList } from "@/features/conversations/components/conversation-list";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 import { Home, FileText, MessageSquare, Settings } from "lucide-react";
 
 let isAppHydrated = false;
@@ -76,10 +76,7 @@ export function ConversationSidebar({ isOpen, onClose, documentId, onToggleViewe
     <>
       {/* Mobile Backdrop Overlay */}
       {effectiveIsOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
-          onClick={effectiveOnClose}
-        />
+        <ModalBackdrop className="z-40 lg:hidden" onClose={effectiveOnClose} />
       )}
 
       {/* Sidebar Container matching Image 2 */}
@@ -104,9 +101,6 @@ export function ConversationSidebar({ isOpen, onClose, documentId, onToggleViewe
           <ActiveDocumentBanner document={activeDocument} documentName={documentName} isCollapsed={isCollapsed} />
           <ConversationList documentId={documentId} isCollapsed={isCollapsed} onClose={onClose} />
         </div>
-
-        {/* Shared User Profile & Theme Toggle Footer matching Image 2 */}
-        <UserMenu isCollapsed={isCollapsed} onClose={onClose} />
       </aside>
     </>
   );

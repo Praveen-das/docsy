@@ -3,6 +3,7 @@
 import React, { useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { GlowContainer } from "@/components/ui/glow-container";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 import { X, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TabProfile } from "./tab-profile";
@@ -128,12 +129,7 @@ export function SettingsModal() {
       {/* DESKTOP MODAL (sm and above): 100% UNTOUCHED ORIGINAL MODAL   */}
       {/* ------------------------------------------------------------- */}
       <div className="hidden sm:flex fixed inset-0 z-50 items-center justify-center p-6 select-none">
-        {/* Obsidian Backdrop */}
-        <div
-          aria-hidden="true"
-          onClick={handleClose}
-          className="fixed inset-0 bg-black/70 dark:bg-black/85 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in will-change-[opacity]"
-        />
+        <ModalBackdrop onClose={handleClose} />
 
         {/* Docsy Cosmic Obsidian Glassmorphic Modal Card */}
         <GlowContainer

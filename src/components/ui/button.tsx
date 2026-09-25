@@ -32,9 +32,9 @@ const variants = {
   // Accent: Electric indigo — primary CTA
   accent:
     "bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 shadow-md shadow-indigo-600/25 dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-500 dark:active:bg-indigo-700 dark:shadow-[0_0_20px_rgba(99,102,241,0.3)]",
-  // Gradient: Soft indigo-to-violet — promotional touchpoints
+  // Gradient: Electric indigo-to-blue with rich shadow & glow matching upload CTA
   gradient:
-    "bg-gradient-to-br from-indigo-500 to-violet-600 text-white border border-white/[0.08] shadow-[0_2px_12px_rgba(99,102,241,0.22),inset_0_1px_0_rgba(255,255,255,0.1)] hover:brightness-[1.05] hover:shadow-[0_4px_18px_rgba(99,102,241,0.32),inset_0_1px_0_rgba(255,255,255,0.1)] active:brightness-95",
+    "bg-gradient-to-r from-[#4f46e5] via-[#4338ca] to-[#3b82f6] text-white shadow-[0_4px_20px_rgba(79,70,229,0.55)] hover:shadow-[0_6px_28px_rgba(99,102,241,0.8)] hover:brightness-110 active:brightness-95",
 };
 
 const sizes = {

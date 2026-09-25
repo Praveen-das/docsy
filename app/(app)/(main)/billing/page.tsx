@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/features/billing/use-subscription";
 import { useInvoices } from "@/features/billing/use-invoices";
 import { SubscriptionStatus } from "@/features/billing/subscription-status";
-import { BillingUsageDashboard } from "@/features/billing/billing-usage-dashboard";
 import { InvoicesTable } from "@/features/billing/invoices-table";
 import { PaymentMethodCard } from "@/features/billing/payment-method-card";
 import { PLANS } from "@/lib/stripe-plans";
@@ -99,16 +98,6 @@ export default function BillingPage() {
 
       {/* Pro Subscription Status Card (for Pro Users) */}
       {!isSubLoading && isPro && subscription && <SubscriptionStatus subscription={subscription} />}
-
-      {/* Live Resource Usage Dashboard (Queries, Docs, Storage) */}
-      <BillingUsageDashboard
-        queriesUsed={queriesUsed}
-        queriesLimit={queriesLimit}
-        maxDocuments={maxDocuments}
-        storageLimitBytes={storageLimit}
-        isPro={isPro}
-        isLoading={isSubLoading}
-      />
 
       {/* Payment Method & Invoices Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

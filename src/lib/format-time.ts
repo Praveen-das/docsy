@@ -1,67 +1,40 @@
+const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+const DIVISIONS: { amount: number; name: Intl.RelativeTimeFormatUnit }[] = [
+  { amount: 60, name: "second" },
+  { amount: 60, name: "minute" },
+  { amount: 24, name: "hour" },
+  { amount: 7, name: "day" },
+  { amount: 4.34524, name: "week" },
+  { amount: 12, name: "month" },
+  { amount: Number.POSITIVE_INFINITY, name: "year" },
+];
+
 /**
  * Formats an ISO date string into a concise, human-readable relative time string.
- * Examples: "Just now", "2 min ago", "3h ago", "Yesterday", "Sep 2", "Mar 1, 2025"
  */
 export function formatRelativeTime(isoString: string): string {
   if (!isoString) return "";
   const date = new Date(isoString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  let duration = (date.getTime() - Date.now()) / 1000;
 
-  // If future date or less than 45 seconds ago
-  if (diffMs < 45 * 1000) {
-    return "Just now";
+  if (Math.abs(duration) < 45) return "Just now";
+
+  for (const division of DIVISIONS) {
+    if (Math.abs(duration) < division.amount) {
+      return rtf.format(Math.round(duration), division.name);
+    }
+    duration /= division.amount;
   }
-
-  const diffMinutes = Math.floor(diffMs / (60 * 1000));
-  if (diffMinutes < 60) {
-    return `${diffMinutes} min ago`;
-  }
-
-  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
-  if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  }
-
-  const isCurrentYear = date.getFullYear() === now.getFullYear();
-
-  // Check if yesterday
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (
-    date.getDate() === yesterday.getDate() &&
-    date.getMonth() === yesterday.getMonth() &&
-    date.getFullYear() === yesterday.getFullYear()
-  ) {
-    return "Yesterday";
-  }
-
-  if (diffHours < 48) {
-    return "Yesterday";
-  }
-
-  if (isCurrentYear) {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatDate(isoString);
 }
 
 /**
  * Formats an ISO date string into a deterministic date string matching SSR & client.
- * Example: "Feb 28, 2026"
  */
 export function formatDate(isoString: string): string {
   if (!isoString) return "";
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-US", {
+  return new Date(isoString).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -70,13 +43,12 @@ export function formatDate(isoString: string): string {
 
 /**
  * Formats an ISO date string into a deterministic 12-hour time string matching SSR & client.
- * Example: "03:45 PM"
  */
 export function formatTime(isoString: string): string {
   if (!isoString) return "";
-  const date = new Date(isoString);
-  return date.toLocaleTimeString("en-US", {
+  return new Date(isoString).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
+

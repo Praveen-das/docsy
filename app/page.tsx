@@ -20,7 +20,6 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PricingSection } from "@/features/billing/pricing-section";
 
 interface DemoQuery {
   question: string;
@@ -467,11 +466,11 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-white dark:bg-[#09090b]">
+      {/* <section id="pricing" className="py-20 bg-white dark:bg-[#09090b]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <PricingSection />
         </div>
-      </section>
+      </section> */}
 
       {/* FAQ */}
       <section id="faq" className="py-16 bg-white dark:bg-[#09090b]">

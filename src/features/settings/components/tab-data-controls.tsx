@@ -1,11 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Trash2, RefreshCw } from "lucide-react";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useDocumentStore } from "@/stores/document-store";
+import { useSubscription } from "@/features/billing/use-subscription";
+import { PLANS } from "@/lib/stripe-plans";
+import { StorageMeter } from "./billing/storage-meter";
+import { DocumentsMeter } from "./billing/documents-meter";
 import { PurgeDialog } from "./data-controls/purge-dialog";
 import { ClearCacheDialog } from "./data-controls/clear-cache-dialog";
+
+const STORAGE_LIMIT_FREE_BYTES = 50 * 1024 * 1024; // 50 MB
+const STORAGE_LIMIT_PRO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 type DataControlsDialog = "conversations" | "documents" | "cache" | null;
 
@@ -15,6 +22,16 @@ export function TabDataControls() {
 
   const documents = useDocumentStore((state) => state.documents);
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
+
+  const { data: subscription } = useSubscription();
+  const isPro = subscription?.plan === "pro";
+  const planDef = isPro ? PLANS.pro : PLANS.free;
+
+  const totalBytesUsed = useMemo(
+    () => documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0),
+    [documents]
+  );
+  const storageLimitBytes = isPro ? STORAGE_LIMIT_PRO_BYTES : STORAGE_LIMIT_FREE_BYTES;
 
   const [activeDialog, setActiveDialog] = useState<DataControlsDialog>(null);
   const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
@@ -96,6 +113,14 @@ export function TabDataControls() {
           {feedbackNotice}
         </div>
       )}
+
+      {/* Storage Usage & Quota Allocation */}
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-4 space-y-4">
+        <StorageMeter totalBytesUsed={totalBytesUsed} storageLimitBytes={storageLimitBytes} />
+        <div className="pt-3 border-t border-white/[0.05]">
+          <DocumentsMeter documentsCount={documents.length} documentsLimit={planDef.maxDocuments} />
+        </div>
+      </div>
 
       {/* Action items list */}
       <div className="divide-y divide-white/[0.06]">

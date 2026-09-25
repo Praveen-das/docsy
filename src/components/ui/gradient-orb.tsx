@@ -3,7 +3,7 @@
 import { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { useSpring, SpringValue } from "react-spring";
+import { useSpring, SpringValue } from "@react-spring/web";
 
 /**
  * Configuration options for the gradient orb.

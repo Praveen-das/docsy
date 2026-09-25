@@ -4,7 +4,7 @@ import { useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/ui-store";
 
-import { NavHomeIcon, NavDocumentsIcon } from "./sidebar-nav-icons";
+import { NavHomeIcon, NavDocumentsIcon, NavConversationsIcon } from "./sidebar-nav-icons";
 import { SidebarNavItem } from "./sidebar-nav-item";
 import { SidebarUpgradeCard } from "./sidebar-upgrade-card";
 import { SidebarRecents } from "./sidebar-recents";
@@ -25,6 +25,11 @@ const NAV_ITEMS: NavItem[] = [
     label: "Documents",
     href: "/documents",
     icon: NavDocumentsIcon,
+  },
+  {
+    label: "Conversations",
+    href: "/conversations",
+    icon: NavConversationsIcon,
   },
 ];
 

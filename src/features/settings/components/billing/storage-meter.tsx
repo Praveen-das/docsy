@@ -57,7 +57,7 @@ export function StorageMeter({ totalBytesUsed, storageLimitBytes }: StorageMeter
               ? "bg-gradient-to-r from-amber-500 to-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
               : "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_8px_rgba(16,185,129,0.35)]"
           )}
-          style={{ width: `${totalBytesUsed > 0 ? Math.max(3, storagePercent) : 0}%` }}
+          style={{ width: `${storagePercent}%` }}
         />
       </div>
 

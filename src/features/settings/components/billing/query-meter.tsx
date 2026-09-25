@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Sparkles, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,8 +9,9 @@ interface QueryMeterProps {
 }
 
 export function QueryMeter({ queriesUsed, queriesLimit }: QueryMeterProps) {
-  const queryPercent = Math.min(100, Math.round((queriesUsed / queriesLimit) * 100));
   const queriesRemaining = Math.max(0, queriesLimit - queriesUsed);
+  const remainingPercent =
+    queriesLimit > 0 ? Math.min(100, Math.max(0, Math.round((queriesRemaining / queriesLimit) * 100))) : 0;
 
   return (
     <div className="space-y-2">
@@ -27,16 +27,16 @@ export function QueryMeter({ queriesUsed, queriesLimit }: QueryMeterProps) {
         </span>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar (draining allowance) */}
       <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden p-0.5">
         <div
           className={cn(
             "h-full rounded-full transition-all duration-500",
-            queryPercent > 90
+            remainingPercent <= 10
               ? "bg-gradient-to-r from-amber-500 to-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
-              : "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(99,102,241,0.35)]"
+              : "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(99,102,241,0.35)]",
           )}
-          style={{ width: `${Math.max(4, queryPercent)}%` }}
+          style={{ width: `${remainingPercent}%` }}
         />
       </div>
 

@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { ModalBackdrop } from "./modal-backdrop";
 
 export interface DialogProps {
   isOpen: boolean;
@@ -36,12 +37,7 @@ export function Dialog({ isOpen, onClose, title, description, children, classNam
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 xs:p-4 sm:p-6">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs will-change-transform transition-opacity duration-150"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <ModalBackdrop onClose={onClose} />
 
       {/* Modal Dialog Content */}
       <div

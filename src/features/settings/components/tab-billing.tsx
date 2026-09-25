@@ -45,14 +45,10 @@ export function TabBilling({ onClose }: TabBillingProps) {
       {/* 1. Primary Plan Hero Card */}
       <PlanHeroCard subscription={subscription} onClose={onClose} />
 
-      {/* 2. Resource Usage & Quotas Meter */}
+      {/* 2. Daily Query Allowance */}
       <UsageMeter
         queriesUsed={queriesUsed}
         queriesLimit={queriesLimit}
-        documentsCount={documents.length}
-        documentsLimit={planDef.maxDocuments}
-        totalBytesUsed={totalBytesUsed}
-        storageLimitBytes={storageLimitBytes}
       />
 
       {/* 3. Account Billing Meta & Invoices */}

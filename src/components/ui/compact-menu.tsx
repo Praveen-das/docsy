@@ -90,6 +90,14 @@ export function CompactMenu({
     }
 
     const rect = anchorRef.current.getBoundingClientRect();
+
+    // Guard: If the anchor element is within a hidden container (e.g. sm:hidden on desktop, hidden sm:flex on mobile),
+    // getBoundingClientRect returns 0x0 or offsetParent is null. Do not position or render a portal in the top-left corner.
+    if ((rect.width === 0 && rect.height === 0) || !anchorRef.current.offsetParent) {
+      setPos(null);
+      return;
+    }
+
     setPos({
       top: rect.bottom,
       left: rect.left,
