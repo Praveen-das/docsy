@@ -706,3 +706,22 @@ export async function togglePinConversation(
   logger.info("conversation.pin_toggled", { conversationId, userId, isPinned });
   return { isPinned };
 }
+
+/**
+ * Delete all conversations for a user in a single atomic SQL query.
+ * Messages, pinned conversations, and conversation_documents cascade delete via foreign keys.
+ */
+export async function deleteAllConversations(userId: string): Promise<number> {
+  const result = await db
+    .delete(conversations)
+    .where(eq(conversations.userId, userId))
+    .returning({ id: conversations.id });
+
+  await invalidateCache(
+    CACHE_KEYS.conversationList(userId),
+    CACHE_KEYS.pinnedConversations(userId)
+  );
+
+  logger.info("conversations.all_deleted", { userId, count: result.length });
+  return result.length;
+}

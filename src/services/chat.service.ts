@@ -1,5 +1,5 @@
 import { persistMessage } from "@/services/conversation.service";
-import { incrementQueryCount } from "@/services/user.service";
+import { incrementQueryCount, getUserProfile } from "@/services/user.service";
 import { executeRAG, type RAGResult } from "@/services/rag.service";
 import { verifyConversationToken } from "@/lib/conversation-token";
 import { timeOperation } from "@/lib/profiler";
@@ -75,6 +75,7 @@ export interface DispatchChatPipelineParams {
   documentIds: string[];
   conversationHistory?: HistoryMessage[];
   skipUserPersistence?: boolean;
+  customPrompt?: string;
 }
 
 export interface ChatPipelineResult {
@@ -92,6 +93,7 @@ export async function dispatchChatPipeline({
   documentIds,
   conversationHistory,
   skipUserPersistence = false,
+  customPrompt,
 }: DispatchChatPipelineParams): Promise<ChatPipelineResult> {
   // Fire-and-forget user message persistence in background if not explicitly skipped
   const persistUserPromise = skipUserPersistence
@@ -111,9 +113,16 @@ export async function dispatchChatPipeline({
         })
       );
 
+  // Resolve active custom prompt from params or fallback to user profile in DB/cache
+  let activeCustomPrompt = customPrompt;
+  if (!activeCustomPrompt) {
+    const profile = await getUserProfile(userId);
+    activeCustomPrompt = profile?.customPrompt || undefined;
+  }
+
   // Execute RAG pipeline using verified document IDs from token
   const ragResult = await timeOperation("rag", () =>
-    executeRAG(userId, content, documentIds, conversationHistory)
+    executeRAG(userId, content, documentIds, conversationHistory, 5, activeCustomPrompt)
   );
 
   return {

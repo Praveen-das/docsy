@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { documents, favoriteDocuments } from "@/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
-import { deletePdf, verifyFileExists } from "@/lib/storage";
+import { deletePdf, deletePdfs, verifyFileExists } from "@/lib/storage";
 import { deleteDocumentVectors } from "@/lib/pinecone";
 import { triggerProcessingWorkflow } from "@/lib/workflow";
 import { logger } from "@/lib/logger";
@@ -240,6 +240,67 @@ export async function deleteDocument(userId: string, documentId: string): Promis
 
   logger.info("document.deleted", { documentId, userId });
   return true;
+}
+
+/**
+ * Atomic bulk deletion of all documents for a user.
+ * 1. Purges all user files in Supabase Storage in a single batch call.
+ * 2. Purges all Pinecone namespaces for the user's documents.
+ * 3. Deletes all document records in PostgreSQL (cascades to junction tables).
+ * 4. Invalidates all user document caches.
+ */
+export async function deleteAllDocuments(userId: string): Promise<number> {
+  const userDocs = await db
+    .select({ id: documents.id, fileUrl: documents.fileUrl })
+    .from(documents)
+    .where(eq(documents.userId, userId));
+
+  if (userDocs.length === 0) return 0;
+
+  // 1. Batch delete storage files in single API call
+  const filePaths = userDocs
+    .map((d) => extractFilePathFromUrl(d.fileUrl))
+    .filter((p): p is string => Boolean(p));
+
+  if (filePaths.length > 0) {
+    try {
+      await deletePdfs(filePaths);
+    } catch (err) {
+      logger.warn("documents.bulk_storage_delete_failed", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  // 2. Purge Pinecone vector namespaces in parallel
+  await Promise.allSettled(
+    userDocs.map((d) =>
+      deleteDocumentVectors(d.id).catch((err) =>
+        logger.warn("documents.bulk_vector_delete_failed", {
+          documentId: d.id,
+          error: String(err),
+        })
+      )
+    )
+  );
+
+  // 3. Delete all DB records in a single query
+  await db.delete(documents).where(eq(documents.userId, userId));
+
+  // 4. Invalidate all Redis caches for these documents
+  const metaKeys = userDocs.map((d) => CACHE_KEYS.documentMeta(d.id));
+  const statusKeys = userDocs.map((d) => CACHE_KEYS.documentStatus(d.id));
+
+  await invalidateCache(
+    CACHE_KEYS.documentList(userId),
+    CACHE_KEYS.favoriteDocuments(userId),
+    ...metaKeys,
+    ...statusKeys
+  );
+
+  logger.info("documents.all_deleted", { userId, count: userDocs.length });
+  return userDocs.length;
 }
 
 /**

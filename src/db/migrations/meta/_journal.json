@@ -15,6 +15,13 @@
       "when": 1790179057099,
       "tag": "0001_silky_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790185000000,
+      "tag": "0002_user_custom_prompt",
+      "breakpoints": true
     }
   ]
 }

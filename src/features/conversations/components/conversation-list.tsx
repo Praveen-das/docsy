@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Conversation } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations, useDeleteConversation } from "../hooks/use-conversations";
 import { ConversationItem } from "./conversation-item";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
 import { Search } from "lucide-react";
@@ -31,10 +32,10 @@ export function ConversationList({
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const storeConversations = useConversationStore((state) => state.conversations);
+  const { conversations: storeConversations } = useConversations();
   const storeActiveId = useConversationStore((state) => state.activeConversationId);
   const switchConversation = useConversationStore((state) => state.switchConversation);
-  const deleteConversation = useConversationStore((state) => state.deleteConversation);
+  const { mutate: deleteConversation } = useDeleteConversation();
 
   const [convToDelete, setConvToDelete] = useState<Conversation | null>(null);
 

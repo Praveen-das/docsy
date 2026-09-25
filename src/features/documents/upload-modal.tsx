@@ -16,7 +16,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDocumentStore } from "@/stores/document-store";
+import { addOptimisticDocument } from "./hooks/use-documents";
 import { useUIStore } from "@/stores/ui-store";
 import { GlowCard } from "@/components/ui/glow-card";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
@@ -166,7 +166,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
       setProgress(100);
 
       const now = new Date().toISOString();
-      useDocumentStore.getState().addDocument({
+      addOptimisticDocument({
         id: docId,
         userId: "",
         filename: "",

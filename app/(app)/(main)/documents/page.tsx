@@ -4,10 +4,17 @@ import { useState, useEffect } from "react";
 import { FileText, Plus } from "lucide-react";
 import { Document } from "@/types";
 import { useDocumentStore } from "@/stores/document-store";
+import {
+  useDocuments,
+  useDeleteDocument,
+  useReprocessDocument,
+  useCheckDocumentStatus,
+  useToggleFavoriteDocument,
+} from "@/features/documents/hooks/use-documents";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { useUIStore } from "@/stores/ui-store";
 import { DocumentConversationsDialog } from "@/features/conversations/document-conversations-dialog";
-import { useDocumentPolling } from "@/features/documents/hooks/use-document-polling";
 import { useDocumentFilters } from "@/features/documents/hooks/use-document-filters";
 import { DocumentToolbar, DocumentViewMode } from "@/features/documents/components/document-toolbar";
 import { DocumentCard } from "@/features/documents/components/document-card";
@@ -17,24 +24,21 @@ import { DocumentsEmptyState } from "@/features/documents/components/documents-e
 import BottomGlow from "@/components/ui/BottomGlow";
 
 export default function DocumentsPage() {
-  const documents = useDocumentStore((state) => state.documents);
-  const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
-  const deleteDocument = useDocumentStore((state) => state.deleteDocument);
-  const reprocessDocument = useDocumentStore((state) => state.reprocessDocument);
-  const checkDocumentStatus = useDocumentStore((state) => state.checkDocumentStatus);
+  const { data: documents = [] } = useDocuments();
+  const { mutateAsync: deleteDocument } = useDeleteDocument();
+  const { mutateAsync: reprocessDocument } = useReprocessDocument();
+  const { mutateAsync: checkDocumentStatus } = useCheckDocumentStatus();
+  const { mutateAsync: toggleFavoriteDocument } = useToggleFavoriteDocument();
   const openedDocumentIds = useDocumentStore((state) => state.openedDocumentIds);
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
-  const favoriteDocumentIds = useDocumentStore((state) => state.favoriteDocumentIds);
-  const toggleFavoriteDocument = useDocumentStore((state) => state.toggleFavoriteDocument);
 
-  const conversations = useConversationStore((state) => state.conversations);
-  const fetchConversations = useConversationStore((state) => state.fetchConversations);
+  const { conversations } = useConversations();
 
   const openUpload = useUIStore((state) => state.openUpload);
 
   // Filter, search, and sorting hook
   const { searchQuery, setSearchQuery, activeTab, setActiveTab, sortBy, setSortBy, filteredAndSortedDocuments } =
-    useDocumentFilters({ documents, favoriteDocumentIds });
+    useDocumentFilters({ documents });
 
   // UI state
   const [viewMode, setViewMode] = useState<DocumentViewMode>("grid");
@@ -46,10 +50,6 @@ export default function DocumentsPage() {
   const [conversationsDoc, setConversationsDoc] = useState<Document | null>(null);
   const [activeMenuDocId, setActiveMenuDocId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDocuments();
-    fetchConversations();
-  }, [fetchDocuments, fetchConversations]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -60,9 +60,6 @@ export default function DocumentsPage() {
     window.addEventListener("click", handleGlobalClick);
     return () => window.removeEventListener("click", handleGlobalClick);
   }, []);
-
-  // Auto-refresh when any document is actively processing
-  useDocumentPolling();
 
   const handleForceCheck = async (docId: string) => {
     setCheckingDocId(docId);
@@ -141,7 +138,7 @@ export default function DocumentsPage() {
                     document={doc}
                     conversationCount={getDocConversationsCount(doc.id)}
                     isOpened={isOpened}
-                    isFavorite={doc.isFavorite ?? favoriteDocumentIds.includes(doc.id)}
+                    isFavorite={Boolean(doc.isFavorite)}
                     onToggleFavorite={toggleFavoriteDocument}
                     isChecking={checkingDocId === doc.id}
                     onOpenConversations={setConversationsDoc}

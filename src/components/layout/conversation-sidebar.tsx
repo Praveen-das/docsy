@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useDocumentStore } from "@/stores/document-store";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { useUIStore } from "@/stores/ui-store";
 import { SidebarHeader } from "./sidebar-header";
 import { NewConversationButton } from "@/features/conversations/components/new-conversation-button";
@@ -24,7 +24,7 @@ export interface ConversationSidebarProps {
 }
 
 const QUICK_NAV = [
-  { label: "Home", href: "/dashboard", icon: Home },
+  { label: "Home", href: "/", icon: Home },
   { label: "Documents", href: "/documents", icon: FileText },
   { label: "Conversations", href: "/conversations", icon: MessageSquare },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -57,7 +57,7 @@ export function ConversationSidebar({ isOpen, onClose, documentId, onToggleViewe
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
   // Current document info
-  const documents = useDocumentStore((state) => state.documents);
+  const { data: documents = [] } = useDocuments();
   const activeDocument = documentId ? documents.find((d) => d.id === documentId) : undefined;
   const documentName =
     activeDocument?.originalName || (documentId ? "System Design Notes.pdf" : "System Design Notes.pdf");

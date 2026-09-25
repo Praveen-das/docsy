@@ -8,7 +8,7 @@ import { ChatComposer } from "./components/chat-composer";
 import { ChatProvider } from "./context/chat-context";
 import { useChatConversation } from "./hooks/use-chat-conversation";
 import { useChatDraft } from "./hooks/use-chat-draft";
-import { useDocumentStore } from "@/stores/document-store";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import BottomGlow from "@/components/ui/BottomGlow";
 
 export interface ChatViewProps {
@@ -66,7 +66,7 @@ export function ChatView({
 
   const { inputText, handleInputChange, clearInput } = useChatDraft(activeConvId);
 
-  const documents = useDocumentStore((state) => state.documents);
+  const { data: documents = [] } = useDocuments();
   const activeDoc = propDocumentId ? documents.find((d) => d.id === propDocumentId) : undefined;
   const documentName = activeDoc?.originalName || "System Design Notes.pdf";
   const pageCount = activeDoc?.pageCount || 24;

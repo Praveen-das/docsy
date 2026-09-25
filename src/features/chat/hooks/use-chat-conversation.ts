@@ -4,7 +4,8 @@ import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Message } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useDocumentStore } from "@/stores/document-store";
+import { useConversations, useDeleteConversation } from "@/features/conversations/hooks/use-conversations";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import {
   useConversationMessages,
   extractMessagesFromInfiniteData,
@@ -44,15 +45,15 @@ export function useChatConversation({
 
   // Zustand selectors following strict selector rule
   const storeActiveConvId = useConversationStore((state) => state.activeConversationId);
-  const conversations = useConversationStore((state) => state.conversations);
+  const { conversations } = useConversations();
   const storeIsLoading = useConversationStore((state) => state.isLoadingAi);
   const isAiTyping = useConversationStore((state) => state.isAiTyping);
   const streamingContent = useConversationStore((state) => state.streamingContent);
   const regeneratingMessageId = useConversationStore((state) => state.regeneratingMessageId);
-  const deleteConversation = useConversationStore((state) => state.deleteConversation);
+  const { mutateAsync: deleteConversation } = useDeleteConversation();
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
-  const documents = useDocumentStore((state) => state.documents);
+  const { data: documents = [] } = useDocuments();
 
   // Derived state
   const activeConvId = propConversationId || storeActiveConvId || "";

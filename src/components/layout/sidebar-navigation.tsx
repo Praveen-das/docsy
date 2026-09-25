@@ -18,7 +18,7 @@ export type { SidebarNavigationProps } from "./sidebar-navigation.types";
 const NAV_ITEMS: NavItem[] = [
   {
     label: "Start New",
-    href: "/dashboard",
+    href: "/",
     icon: NavHomeIcon,
   },
   {
@@ -43,8 +43,8 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
 
   // Determine active item from current route
   const activeHref = useMemo(() => {
-    if (!pathname) return "/dashboard";
-    if (pathname === "/dashboard" || pathname === "/") return "/dashboard";
+    if (!pathname) return "/";
+    if (pathname === "/") return "/";
     if (pathname.startsWith("/documents")) return "/documents";
     if (pathname.startsWith("/conversations")) return "/conversations";
     return null;

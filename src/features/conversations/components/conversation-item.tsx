@@ -5,7 +5,7 @@ import { Conversation } from "@/types";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Edit2, Trash2, Check, X } from "lucide-react";
 import { handleGlowMouseEnter, handleGlowMouseMove, handleGlowMouseLeave } from "@/lib/interactive-glow";
-import { useConversationStore } from "@/stores/conversation-store";
+import { useRenameConversation } from "../hooks/use-conversations";
 import { formatRelativeTime } from "@/lib/format-time";
 
 export interface ConversationItemProps {
@@ -28,7 +28,7 @@ export function ConversationItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(conversation.title);
   const [isHovered, setIsHovered] = useState(false);
-  const renameConversation = useConversationStore((state) => state.renameConversation);
+  const { mutate: renameConversation } = useRenameConversation();
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
     setIsHovered(true);
@@ -54,7 +54,7 @@ export function ConversationItem({
       if (onRename) {
         onRename(trimmed);
       } else {
-        renameConversation(conversation.id, trimmed);
+        renameConversation({ convId: conversation.id, newTitle: trimmed });
       }
     }
     setIsEditing(false);

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useDocumentStore } from "@/stores/document-store";
+import { addOptimisticDocument } from "@/features/documents/hooks/use-documents";
 
 export type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -98,7 +98,7 @@ export function useDocumentUpload() {
         setUploadState("success");
 
         const now = new Date().toISOString();
-        useDocumentStore.getState().addDocument({
+        addOptimisticDocument({
           id: docId,
           userId: "",
           filename: "",

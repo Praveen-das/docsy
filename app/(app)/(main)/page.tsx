@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { formatRelativeTime } from "@/lib/format-time";
-import { useDocumentPolling } from "@/features/documents/hooks/use-document-polling";
 import { DashboardHero } from "@/features/dashboard/components/dashboard-hero";
 import {
   RecentDocumentsSection,
@@ -101,24 +102,15 @@ const REFERENCE_CONVERSATIONS: DashboardConversationItem[] = [
   },
 ];
 
-export default function DashboardPage() {
+export default function HomePage() {
   const router = useRouter();
-  const documents = useDocumentStore((state) => state.documents);
-  const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
+  const { data: documents = [] } = useDocuments();
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
-  const conversations = useConversationStore((state) => state.conversations);
-  const fetchConversations = useConversationStore((state) => state.fetchConversations);
+  const { conversations } = useConversations();
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
   const openUpload = useUIStore((state) => state.openUpload);
-
-  useEffect(() => {
-    fetchDocuments();
-    fetchConversations();
-  }, [fetchDocuments, fetchConversations]);
-
-  useDocumentPolling();
 
   const displayDocuments: (Document | DashboardDocumentItem)[] =
     documents.length > 0 ? documents.slice(0, 4) : REFERENCE_DOCS;

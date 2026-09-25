@@ -152,19 +152,22 @@ export async function getUserProfile(userId: string) {
           id: string;
           name: string;
           email: string;
+          customPrompt?: string | null;
+          customPreset?: string;
           dailyQueriesUsed: number;
           dailyQueriesLimit: number;
           createdAt: string;
         };
         return {
           ...cached,
+          customPrompt: cached.customPrompt ?? null,
+          customPreset: cached.customPreset ?? "balanced",
           dailyQueriesUsed: rawQuota !== null ? Number(rawQuota) : cached.dailyQueriesUsed,
         };
       }
     } catch {
       // Fall through to DB fallback on cache error
     }
-  } else {
   }
 
   const [user, usedToday] = await Promise.all([getUserById(userId), redis ? ((await redis.get(quotaKey)) ?? 0) : null]);
@@ -175,6 +178,8 @@ export async function getUserProfile(userId: string) {
     id: user.id,
     name: user.name,
     email: user.email,
+    customPrompt: user.customPrompt ?? null,
+    customPreset: user.customPreset ?? "balanced",
     dailyQueriesUsed: Number(usedToday || user.dailyQueriesUsed),
     dailyQueriesLimit: user.dailyQueriesLimit,
     createdAt: user.createdAt.toISOString(),
@@ -182,6 +187,36 @@ export async function getUserProfile(userId: string) {
 
   await setCached(cacheKey, profile, CACHE_TTL.USER_PROFILE);
   return profile;
+}
+
+/**
+ * Update user custom AI system prompt and preset in Postgres and invalidate cache.
+ */
+export async function updateUserCustomPrompt(
+  userId: string,
+  customPrompt: string | null,
+  customPreset = "balanced"
+): Promise<{ customPrompt: string | null; customPreset: string }> {
+  const [updated] = await db
+    .update(users)
+    .set({
+      customPrompt,
+      customPreset,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId))
+    .returning({
+      customPrompt: users.customPrompt,
+      customPreset: users.customPreset,
+    });
+
+  await invalidateCache(CACHE_KEYS.userProfile(userId));
+  logger.info("user.custom_prompt_updated", { userId, customPreset });
+
+  return {
+    customPrompt: updated?.customPrompt ?? null,
+    customPreset: updated?.customPreset ?? "balanced",
+  };
 }
 
 /**

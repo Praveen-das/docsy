@@ -9,7 +9,9 @@ import { ConversationLayout } from "@/features/conversations/components/conversa
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
 import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { FileText, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,20 +21,14 @@ function ConversationWorkspace() {
   const docId = searchParams.get("doc");
   const convId = searchParams.get("conv");
 
-  const documents = useDocumentStore((state) => state.documents);
-  const conversations = useConversationStore((state) => state.conversations);
+  const { data: documents = [] } = useDocuments();
+  const { conversations } = useConversations();
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
   const [isViewerOpen, setIsViewerOpen] = useState(true);
   const [selectDocOpen, setSelectDocOpen] = useState(false);
   const openUpload = useUIStore((state) => state.openUpload);
-
-  // Initial fetch of documents & conversations
-  useEffect(() => {
-    useDocumentStore.getState().fetchDocuments();
-    useConversationStore.getState().fetchConversations();
-  }, []);
 
   // Effective doc ID: if none in search params, use first document if exists
   const effectiveDocId = docId || (documents.length > 0 ? documents[0].id : null);

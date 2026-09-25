@@ -2,43 +2,37 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import axios from "axios";
 import { registerTokenHandlers } from "@/lib/api-client";
-import { Conversation, Message, Document } from "@/types";
+import { Message, Document } from "@/types";
 import { createMessage, createClientConversation } from "@/features/chat/utils/message-factory";
 import { conversationService } from "@/features/chat/services/conversation.service";
 import { conversationPollingService } from "@/features/chat/services/conversation-polling.service";
 import { streamChatResponse } from "@/features/chat/services/chat-stream.client";
+import { STORAGE_KEY_CUSTOM_PROMPT } from "@/features/settings/constants/prompt-presets";
+import { updateConversationInCache } from "@/features/conversations/hooks/use-conversations";
 
 // Re-export factories for backward compatibility with existing consumers
 export { createMessage, createClientConversation };
 
-export interface ConversationState {
-  conversations: Conversation[];
-  sessionMessages: Record<string, Message[]>;
-  drafts: Record<string, string>;
+export interface ConversationUIState {
   activeConversationId: string | null;
+  drafts: Record<string, string>;
+  sessionMessages: Record<string, Message[]>;
+  streamTokens: Record<string, string>;
   isLoadingAi: boolean;
   isAiTyping: boolean;
   streamingContent: string | null;
   regeneratingMessageId: string | null;
-  isLoadingConversations: boolean;
-  error: string | null;
-  pinnedIds: Set<string>;
 
   // Actions
   setActiveConversation: (convId: string | null) => void;
-  setStreamToken: (convId: string, token: string) => void;
-  fetchConversations: () => Promise<void>;
-  createConversation: (documentId: string, initialTitle?: string) => Promise<string>;
   switchConversation: (targetConvId: string, currentDraft?: string) => void;
   saveDraft: (convId: string, draft: string) => void;
-  renameConversation: (convId: string, newTitle: string) => Promise<void>;
-  deleteConversation: (convId: string) => Promise<void>;
-  togglePinConversation: (convId: string) => Promise<void>;
+  setStreamToken: (convId: string, token: string) => void;
+  getStreamToken: (convId: string) => string | undefined;
   clearSessionMessages: (convId: string) => void;
-  syncConversationTitle: (convId: string) => Promise<void>;
   pollConversationTitle: (convId: string, initialTitle: string) => void;
+  syncConversationTitle: (convId: string) => Promise<void>;
   sendMessage: (
     convId: string,
     content: string,
@@ -53,12 +47,11 @@ export interface ConversationState {
       conversationHistory?: { role: "user" | "assistant"; content: string }[];
     },
   ) => Promise<void>;
-  deleteMessage: (convId: string, messageId: string) => Promise<void>;
   resetToDefaults: () => void;
 }
 
 /**
- * Internal helper to coordinate SSE streaming response with Zustand state updates.
+ * Internal helper to coordinate SSE streaming response with Zustand UI state.
  */
 async function executeChatStream({
   convId,
@@ -76,12 +69,15 @@ async function executeChatStream({
   conversationHistory: { role: "user" | "assistant"; content: string }[];
   skipUserPersistence?: boolean;
   replaceAssistantMessageId?: string;
-  set: (fn: (state: ConversationState) => Partial<ConversationState>) => void;
-  get: () => ConversationState;
+  set: (fn: (state: ConversationUIState) => Partial<ConversationUIState>) => void;
+  get: () => ConversationUIState;
 }): Promise<void> {
-  const currentConv = get().conversations.find((c) => c.id === convId);
-  const conversationToken = currentConv?.streamToken;
+  const conversationToken = get().getStreamToken(convId);
   const targetId = replaceAssistantMessageId || assistantMessageId;
+  const customPrompt =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(STORAGE_KEY_CUSTOM_PROMPT) || undefined
+      : undefined;
 
   await streamChatResponse({
     convId,
@@ -91,96 +87,119 @@ async function executeChatStream({
     conversationToken,
     skipUserPersistence,
     replaceAssistantMessageId,
-    onTyping: () => set(() => ({ isAiTyping: true })),
-    onChunk: (fullText) => set(() => ({ isAiTyping: false, streamingContent: fullText })),
-    onComplete: (fullText) => {
-      set((s) => {
-        const currentSession = s.sessionMessages[convId] || [];
+    customPrompt,
+
+    onTyping: () => {
+      set(() => ({
+        isLoadingAi: false,
+        isAiTyping: true,
+        streamingContent: "",
+      }));
+    },
+
+    onChunk: (accumulatedText) => {
+      set((state) => {
+        const currentSession = state.sessionMessages[convId] || [];
         const existingIdx = currentSession.findIndex((m) => m.id === targetId);
 
         let updatedSession: Message[];
         if (existingIdx !== -1) {
-          updatedSession = currentSession.map((m, idx) =>
-            idx === existingIdx ? { ...m, content: fullText } : m
+          updatedSession = currentSession.map((m) =>
+            m.id === targetId ? { ...m, content: accumulatedText } : m,
           );
         } else {
-          const assistantMsg = createMessage(convId, "assistant", fullText, { id: targetId });
-          updatedSession = [...currentSession, assistantMsg];
+          const aiMsg = createMessage(convId, "assistant", accumulatedText, {
+            id: targetId,
+          });
+          updatedSession = [...currentSession, aiMsg];
         }
 
         return {
           sessionMessages: {
-            ...s.sessionMessages,
+            ...state.sessionMessages,
             [convId]: updatedSession,
           },
-          conversations: s.conversations.map((c) =>
-            c.id === convId
-              ? {
-                  ...c,
-                  messageCount: replaceAssistantMessageId
-                    ? c.messageCount
-                    : (c.messageCount || 0) + 1,
-                  lastMessageSnippet:
-                    fullText.slice(0, 90) + (fullText.length > 90 ? "..." : ""),
-                  updatedAt: new Date().toISOString(),
-                }
-              : c
-          ),
-          streamingContent: null,
-          regeneratingMessageId: null,
-          isLoadingAi: false,
-          isAiTyping: false,
+          streamingContent: accumulatedText,
+          isAiTyping: true,
         };
       });
     },
-    onError: (errorDetail) => {
-      const errorMsg = createMessage(
-        convId,
-        "assistant",
-        `⚠️ **Request Notice**: ${errorDetail}`,
-        { id: targetId }
-      );
 
-      set((s) => {
-        const currentSession = s.sessionMessages[convId] || [];
+    onComplete: (fullText) => {
+      set((state) => {
+        const currentSession = state.sessionMessages[convId] || [];
         const existingIdx = currentSession.findIndex((m) => m.id === targetId);
 
         let updatedSession: Message[];
         if (existingIdx !== -1) {
-          updatedSession = currentSession.map((m, idx) => (idx === existingIdx ? errorMsg : m));
+          updatedSession = currentSession.map((m) =>
+            m.id === targetId ? { ...m, content: fullText } : m,
+          );
         } else {
-          updatedSession = [...currentSession, errorMsg];
+          const aiMsg = createMessage(convId, "assistant", fullText, {
+            id: targetId,
+          });
+          updatedSession = [...currentSession, aiMsg];
         }
+
+        updateConversationInCache(convId, {
+          lastMessageSnippet: fullText.slice(0, 100),
+          updatedAt: new Date().toISOString(),
+        });
 
         return {
           sessionMessages: {
-            ...s.sessionMessages,
+            ...state.sessionMessages,
             [convId]: updatedSession,
           },
           streamingContent: null,
-          regeneratingMessageId: null,
           isLoadingAi: false,
           isAiTyping: false,
+          regeneratingMessageId: null,
+        };
+      });
+    },
+
+    onError: (errorDetail) => {
+      set((state) => {
+        const currentSession = state.sessionMessages[convId] || [];
+        const errorContent = errorDetail.startsWith("⚠️")
+          ? errorDetail
+          : `⚠️ **Request Notice**: ${errorDetail}`;
+        const errorMsg = createMessage(convId, "assistant", errorContent, {
+          id: targetId,
+        });
+
+        return {
+          sessionMessages: {
+            ...state.sessionMessages,
+            [convId]: [...currentSession.filter((m) => m.id !== targetId), errorMsg],
+          },
+          streamingContent: null,
+          isLoadingAi: false,
+          isAiTyping: false,
+          regeneratingMessageId: null,
         };
       });
     },
   });
 }
 
-export const useConversationStore = create<ConversationState>()(
+/**
+ * Global Zustand store strictly for client-side Conversation UI state.
+ * Server state (conversations list, pins, mutations) is managed via React Query (useConversations).
+ */
+export const useConversationStore = create<ConversationUIState>()(
   persist(
     (set, get) => ({
-      conversations: [],
-      sessionMessages: {},
-      drafts: {},
       activeConversationId: null,
+      drafts: {},
+      sessionMessages: {},
+      streamTokens: {},
       isLoadingAi: false,
       isAiTyping: false,
       streamingContent: null,
       regeneratingMessageId: null,
-      isLoadingConversations: false,
-      error: null,
-      pinnedIds: new Set<string>(),
 
       setActiveConversation: (convId: string | null) => {
         if (get().activeConversationId === convId) return;
@@ -189,81 +208,15 @@ export const useConversationStore = create<ConversationState>()(
 
       setStreamToken: (convId: string, token: string) => {
         set((s) => ({
-          conversations: s.conversations.map((c) =>
-            c.id === convId ? { ...c, streamToken: token } : c
-          ),
+          streamTokens: {
+            ...s.streamTokens,
+            [convId]: token,
+          },
         }));
       },
 
-      fetchConversations: async () => {
-        set({ isLoadingConversations: true, error: null });
-        try {
-          const data = await conversationService.fetchConversations();
-          set({
-            conversations: data.conversations,
-            pinnedIds: new Set(data.pinnedIds),
-            isLoadingConversations: false,
-          });
-        } catch (err: unknown) {
-          if (axios.isAxiosError(err) && err.response?.status === 401) {
-            set({ isLoadingConversations: false });
-            return;
-          }
-          const message =
-            axios.isAxiosError(err) && err.response?.data?.error
-              ? err.response.data.error
-              : err instanceof Error
-                ? err.message
-                : "Error fetching conversations";
-          set({
-            error: message,
-            isLoadingConversations: false,
-          });
-        }
-      },
-
-      createConversation: async (documentId: string, initialTitle?: string): Promise<string> => {
-        const state = get();
-        const existingForDoc = state.conversations.filter((c) =>
-          c.documentIds.includes(documentId)
-        );
-        const title = initialTitle || `Conversation ${existingForDoc.length + 1}`;
-
-        const newConversation = createClientConversation(documentId, title);
-        const newConvId = newConversation.id;
-
-        set({
-          conversations: [newConversation, ...state.conversations],
-          sessionMessages: {
-            ...state.sessionMessages,
-            [newConvId]: [],
-          },
-          drafts: {
-            ...state.drafts,
-            [newConvId]: "",
-          },
-          activeConversationId: newConvId,
-        });
-
-        // Persist to the backend and store stream capability token
-        try {
-          const data = await conversationService.createConversation(
-            newConvId,
-            [documentId],
-            title
-          );
-          if (data?.streamToken) {
-            set((s) => ({
-              conversations: s.conversations.map((c) =>
-                c.id === newConvId ? { ...c, streamToken: data.streamToken } : c
-              ),
-            }));
-          }
-        } catch (err) {
-          console.error("Failed to sync new conversation to server:", err);
-        }
-
-        return newConvId;
+      getStreamToken: (convId: string) => {
+        return get().streamTokens[convId];
       },
 
       switchConversation: (targetConvId: string, currentDraft?: string) => {
@@ -290,92 +243,12 @@ export const useConversationStore = create<ConversationState>()(
         }));
       },
 
-      renameConversation: async (convId: string, newTitle: string) => {
-        const trimmed = newTitle.trim();
-        if (!trimmed) return;
-
-        // Optimistic update
-        set((state) => ({
-          conversations: state.conversations.map((c) =>
-            c.id === convId ? { ...c, title: trimmed, updatedAt: new Date().toISOString() } : c
-          ),
-        }));
-
-        try {
-          await conversationService.renameConversation(convId, trimmed);
-        } catch (err) {
-          console.error("Failed to rename conversation:", err);
-        }
-      },
-
-      deleteConversation: async (convId: string) => {
-        const state = get();
-        const remaining = state.conversations.filter((c) => c.id !== convId);
-        const remainingSessionMessages = { ...state.sessionMessages };
-        delete remainingSessionMessages[convId];
-        const remainingDrafts = { ...state.drafts };
-        delete remainingDrafts[convId];
-
-        let newActiveId = state.activeConversationId;
-        if (state.activeConversationId === convId) {
-          newActiveId = null;
-        }
-
-        set({
-          conversations: remaining,
-          sessionMessages: remainingSessionMessages,
-          drafts: remainingDrafts,
-          activeConversationId: newActiveId,
-        });
-
-        conversationPollingService.stopTitlePolling(convId);
-
-        try {
-          await conversationService.deleteConversation(convId);
-        } catch (err) {
-          console.error("Failed to delete conversation on server:", err);
-        }
-      },
-
-      togglePinConversation: async (convId: string) => {
-        // Optimistic toggle
-        set((s) => {
-          const next = new Set(s.pinnedIds);
-          if (next.has(convId)) next.delete(convId);
-          else next.add(convId);
-          return { pinnedIds: next };
-        });
-
-        try {
-          await conversationService.togglePinConversation(convId);
-        } catch (err) {
-          // Revert on failure
-          set((s) => {
-            const reverted = new Set(s.pinnedIds);
-            if (reverted.has(convId)) reverted.delete(convId);
-            else reverted.add(convId);
-            return { pinnedIds: reverted };
-          });
-          console.error("Failed to toggle pin:", err);
-        }
-      },
-
       clearSessionMessages: (convId: string) => {
         set((state) => ({
           sessionMessages: {
             ...state.sessionMessages,
             [convId]: [],
           },
-          conversations: state.conversations.map((c) =>
-            c.id === convId
-              ? {
-                  ...c,
-                  messageCount: 0,
-                  lastMessageSnippet: undefined,
-                  updatedAt: new Date().toISOString(),
-                }
-              : c
-          ),
         }));
       },
 
@@ -383,11 +256,7 @@ export const useConversationStore = create<ConversationState>()(
         try {
           const newTitle = await conversationService.fetchConversationTitle(convId);
           if (newTitle) {
-            set((state) => ({
-              conversations: state.conversations.map((c) =>
-                c.id === convId ? { ...c, title: newTitle } : c
-              ),
-            }));
+            updateConversationInCache(convId, { title: newTitle });
           }
         } catch (err) {
           console.warn("Failed to sync conversation title:", err);
@@ -396,11 +265,7 @@ export const useConversationStore = create<ConversationState>()(
 
       pollConversationTitle: (convId: string, initialTitle: string) => {
         conversationPollingService.startTitlePolling(convId, initialTitle, (serverTitle) => {
-          set((state) => ({
-            conversations: state.conversations.map((c) =>
-              c.id === convId ? { ...c, title: serverTitle } : c
-            ),
-          }));
+          updateConversationInCache(convId, { title: serverTitle });
         });
       },
 
@@ -422,33 +287,26 @@ export const useConversationStore = create<ConversationState>()(
         const updatedSession = [...existingSession, userMsg];
         const updatedDrafts = { ...state.drafts, [convId]: "" };
 
+        updateConversationInCache(convId, {
+          lastMessageSnippet: content,
+          updatedAt: now,
+        });
+
         // Save user message immediately & set loading state
         set({
           sessionMessages: {
             ...state.sessionMessages,
             [convId]: updatedSession,
           },
-          conversations: state.conversations.map((c) =>
-            c.id === convId
-              ? {
-                  ...c,
-                  messageCount: (c.messageCount || 0) + 1,
-                  lastMessageSnippet: content,
-                  updatedAt: now,
-                }
-              : c
-          ),
           drafts: updatedDrafts,
           isLoadingAi: true,
           streamingContent: null,
           regeneratingMessageId: null,
         });
 
-        // Pre-create assistant message reference
         const placeholderAiMsg = createMessage(convId, "assistant");
         const assistantMessageId = placeholderAiMsg.id;
 
-        // Prepare prior conversation history for multi-turn context (last 10 turns)
         const allPrior = priorMessages ?? existingSession;
         const conversationHistory = allPrior
           .filter((m) => m.role === "user" || m.role === "assistant")
@@ -516,29 +374,9 @@ export const useConversationStore = create<ConversationState>()(
         });
       },
 
-      deleteMessage: async (convId: string, messageId: string) => {
-        set((state) => {
-          const currentSession = state.sessionMessages[convId];
-          if (!currentSession) return {};
-          return {
-            sessionMessages: {
-              ...state.sessionMessages,
-              [convId]: currentSession.filter((m) => m.id !== messageId),
-            },
-          };
-        });
-
-        try {
-          await conversationService.deleteMessage(convId, messageId);
-        } catch (err) {
-          console.error("Failed to delete message on server:", err);
-        }
-      },
-
       resetToDefaults: () => {
         conversationPollingService.clearAllTitlePolling();
         set({
-          conversations: [],
           sessionMessages: {},
           drafts: {},
           activeConversationId: null,
@@ -546,8 +384,6 @@ export const useConversationStore = create<ConversationState>()(
           isAiTyping: false,
           streamingContent: null,
           regeneratingMessageId: null,
-          error: null,
-          pinnedIds: new Set<string>(),
         });
       },
     }),
@@ -563,8 +399,7 @@ export const useConversationStore = create<ConversationState>()(
 
 // Register token handlers so Axios interceptor seamlessly coordinates with Zustand state
 registerTokenHandlers({
-  getToken: (convId) =>
-    useConversationStore.getState().conversations.find((c) => c.id === convId)?.streamToken,
+  getToken: (convId) => useConversationStore.getState().getStreamToken(convId),
   setToken: (convId, token) => {
     useConversationStore.getState().setStreamToken(convId, token);
   },

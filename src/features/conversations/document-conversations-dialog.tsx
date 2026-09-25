@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Document, Conversation } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations, useCreateConversation } from "./hooks/use-conversations";
 import { formatRelativeTime } from "@/lib/format-time";
 import {
   MessageSquare,
@@ -31,12 +32,10 @@ export function DocumentConversationsDialog({
   document,
 }: DocumentConversationsDialogProps) {
   const router = useRouter();
-  const conversations = useConversationStore((state) => state.conversations);
+  const { conversations } = useConversations();
+  const { mutateAsync: createConversation } = useCreateConversation();
   const activeConversationId = useConversationStore(
     (state) => state.activeConversationId
-  );
-  const createConversation = useConversationStore(
-    (state) => state.createConversation
   );
   const switchConversation = useConversationStore(
     (state) => state.switchConversation

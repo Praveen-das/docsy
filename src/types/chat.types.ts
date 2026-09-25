@@ -10,4 +10,5 @@ export interface ChatWorkflowPayload {
   conversationHistory?: HistoryMessage[];
   skipUserPersistence?: boolean;
   replaceAssistantMessageId?: string;
+  customPrompt?: string;
 }

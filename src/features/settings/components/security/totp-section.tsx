@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useReverification } from "@clerk/nextjs";
+import { isReverificationCancelledError } from "@clerk/nextjs/errors";
 import {
   Smartphone,
   QrCode,
@@ -40,18 +41,38 @@ export function TotpSection({
   const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [isDisabling, setIsDisabling] = useState(false);
 
+  const createTOTPWithReverification = useReverification(() => {
+    if (!user) throw new Error("User not found");
+    return user.createTOTP();
+  });
+
+  const verifyTOTPWithReverification = useReverification(
+    (params: { code: string }) => {
+      if (!user) throw new Error("User not found");
+      return user.verifyTOTP(params);
+    }
+  );
+
+  const disableTOTPWithReverification = useReverification(() => {
+    if (!user) throw new Error("User not found");
+    return user.disableTOTP();
+  });
+
   const handleStartSetup = async () => {
     if (!user) return;
     try {
       setIsSettingUp(true);
       setVerificationCode("");
 
-      const totp = await user.createTOTP();
+      const totp = await createTOTPWithReverification();
       setTotpData({
         secret: totp.secret,
         uri: totp.uri,
       });
     } catch (err: unknown) {
+      if (isReverificationCancelledError(err)) {
+        return;
+      }
       console.error("Failed to initiate TOTP setup:", err);
       onError(
         extractClerkErrorMessage(
@@ -71,7 +92,7 @@ export function TotpSection({
     try {
       setIsVerifying(true);
 
-      const result = await user.verifyTOTP({ code: verificationCode.trim() });
+      const result = await verifyTOTPWithReverification({ code: verificationCode.trim() });
       await user.reload();
 
       setTotpData(null);
@@ -83,6 +104,9 @@ export function TotpSection({
         onSuccess("Authenticator app (MFA) enabled successfully!");
       }
     } catch (err: unknown) {
+      if (isReverificationCancelledError(err)) {
+        return;
+      }
       console.error("Failed to verify TOTP code:", err);
       onError(
         extractClerkErrorMessage(
@@ -100,12 +124,15 @@ export function TotpSection({
     try {
       setIsDisabling(true);
 
-      await user.disableTOTP();
+      await disableTOTPWithReverification();
       await user.reload();
 
       setShowDisableDialog(false);
       onSuccess("Two-factor authentication has been disabled.");
     } catch (err: unknown) {
+      if (isReverificationCancelledError(err)) {
+        return;
+      }
       console.error("Failed to disable TOTP:", err);
       onError(extractClerkErrorMessage(err, "Failed to disable MFA. Please try again."));
     } finally {

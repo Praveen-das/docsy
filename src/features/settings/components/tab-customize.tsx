@@ -1,78 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React from "react";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  SYSTEM_PROMPT_PRESETS,
-  STORAGE_KEY_CUSTOM_PROMPT,
-  STORAGE_KEY_ACTIVE_PRESET,
-  PromptPreset,
-} from "../constants/prompt-presets";
+import { SYSTEM_PROMPT_PRESETS } from "../constants/prompt-presets";
 import { PresetPill } from "./customize/preset-pill";
+import { useCustomPrompt } from "../hooks/use-custom-prompt";
 
 export function TabCustomize() {
-  const [selectedPreset, setSelectedPreset] = useState<string>("balanced");
-  const [promptText, setPromptText] = useState<string>(SYSTEM_PROMPT_PRESETS[0].prompt);
-  const [savedNotice, setSavedNotice] = useState(false);
+  const {
+    selectedPreset,
+    promptText,
+    savedNotice,
+    isSaving,
+    activeLabel,
+    selectPreset,
+    selectCustom,
+    updatePromptText,
+    savePrompt,
+  } = useCustomPrompt();
 
-  const noticeTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (noticeTimerRef.current) {
-        clearTimeout(noticeTimerRef.current);
-      }
-    };
-  }, []);
-
-  // Load saved prompt from localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedPrompt = window.localStorage.getItem(STORAGE_KEY_CUSTOM_PROMPT);
-    const savedPreset = window.localStorage.getItem(STORAGE_KEY_ACTIVE_PRESET);
-
-    if (savedPreset) {
-      setSelectedPreset(savedPreset);
-    }
-    if (savedPrompt) {
-      setPromptText(savedPrompt);
-    }
-  }, []);
-
-  const handleSelectPreset = (preset: PromptPreset) => {
-    setSelectedPreset(preset.id);
-    setPromptText(preset.prompt);
-  };
-
-  const handleCustomTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    setPromptText(newText);
-
-    const matchingPreset = SYSTEM_PROMPT_PRESETS.find((p) => p.prompt === newText);
-    setSelectedPreset(matchingPreset ? matchingPreset.id : "custom");
-  };
-
-  const handleSave = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY_CUSTOM_PROMPT, promptText);
-      window.localStorage.setItem(STORAGE_KEY_ACTIVE_PRESET, selectedPreset);
-    }
-    setSavedNotice(true);
-    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
-    noticeTimerRef.current = setTimeout(() => {
-      setSavedNotice(false);
-    }, 2500);
+    savePrompt();
   };
-
-  const activeLabel = useMemo(() => {
-    if (selectedPreset === "custom") return "Custom prompt active";
-    return `${selectedPreset} preset applied`;
-  }, [selectedPreset]);
 
   return (
-    <form onSubmit={handleSave} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Description header */}
       <div>
         <h4 className="text-[13.5px] font-medium text-zinc-200">AI Personality & Response Style</h4>
@@ -86,7 +40,7 @@ export function TabCustomize() {
         <PresetPill
           label="Custom"
           isSelected={selectedPreset === "custom"}
-          onClick={() => setSelectedPreset("custom")}
+          onClick={selectCustom}
         />
 
         {SYSTEM_PROMPT_PRESETS.map((preset) => (
@@ -94,7 +48,7 @@ export function TabCustomize() {
             key={preset.id}
             label={preset.label}
             isSelected={selectedPreset === preset.id}
-            onClick={() => handleSelectPreset(preset)}
+            onClick={() => selectPreset(preset)}
           />
         ))}
       </div>
@@ -104,7 +58,7 @@ export function TabCustomize() {
         <textarea
           rows={6}
           value={promptText}
-          onChange={handleCustomTextChange}
+          onChange={(e) => updatePromptText(e.target.value)}
           placeholder="Describe how you'd like Docsy AI to interpret documents and answer queries..."
           className="w-full bg-transparent text-xs text-zinc-200 placeholder-zinc-500 outline-none resize-none leading-relaxed custom-scrollbar"
         />
@@ -127,8 +81,14 @@ export function TabCustomize() {
         ) : (
           <span className="text-[11.5px] text-zinc-500">Applies to all newly generated document answers.</span>
         )}
-        <Button type="submit" variant="accent" size="sm" className="rounded-lg active:scale-[0.98]">
-          Save Prompt
+        <Button
+          type="submit"
+          variant="accent"
+          size="sm"
+          disabled={isSaving}
+          className="rounded-lg active:scale-[0.98] disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Save Prompt"}
         </Button>
       </div>
     </form>

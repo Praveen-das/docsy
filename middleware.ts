@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
  * Clerk middleware checks for a valid session and redirects to sign-in if missing.
  */
 const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
+  "/",
   "/documents(.*)",
   "/conversations(.*)",
   "/conversation(.*)",

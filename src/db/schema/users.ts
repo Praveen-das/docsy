@@ -14,6 +14,8 @@ export const users = pgTable("users", {
   id: text("id").primaryKey(), // Clerk user ID
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  customPrompt: text("custom_prompt"),
+  customPreset: text("custom_preset").default("balanced"),
   dailyQueriesUsed: integer("daily_queries_used").notNull().default(0),
   dailyQueriesLimit: integer("daily_queries_limit").notNull().default(25),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

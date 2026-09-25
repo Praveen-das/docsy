@@ -189,6 +189,23 @@ export async function deletePdf(filePath: string): Promise<void> {
   }
 }
 
+/**
+ * Delete multiple PDFs from storage in a single batch request.
+ */
+export async function deletePdfs(filePaths: string[]): Promise<void> {
+  if (filePaths.length === 0) return;
+  const client = getStorageClient();
+  const bucket = getBucket();
+
+  const { error } = await client.storage
+    .from(bucket)
+    .remove(filePaths);
+
+  if (error) {
+    throw new Error(`Storage batch delete failed: ${error.message}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Feedback Attachments — separate "feedback-attachments" bucket
 // ---------------------------------------------------------------------------

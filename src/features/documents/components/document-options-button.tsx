@@ -1,11 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { createPortal } from "react-dom";
-import { MoreVertical } from "lucide-react";
-import { useDocumentStore } from "@/stores/document-store";
 import { DocumentOptionsMenu } from "@/features/documents/components/document-options-menu";
-import { cn } from "@/lib/utils";
 import type { Document } from "@/types";
 
 export interface DocumentOptionsProps {

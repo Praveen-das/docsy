@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CreditCard, Receipt, ExternalLink } from "lucide-react";
 import { currentUser } from "@/lib/mock-data";
 import { useSubscription } from "@/features/billing/use-subscription";
-import { useDocumentStore } from "@/stores/document-store";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { PLANS } from "@/lib/stripe-plans";
 import { PlanHeroCard } from "./billing/plan-hero-card";
 import { UsageMeter } from "./billing/usage-meter";
@@ -19,7 +19,7 @@ const STORAGE_LIMIT_PRO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 export function TabBilling({ onClose }: TabBillingProps) {
   const { data: subscription } = useSubscription();
-  const documents = useDocumentStore((state) => state.documents);
+  const { data: documents = [] } = useDocuments();
 
   const isPro = subscription?.plan === "pro";
   const planDef = isPro ? PLANS.pro : PLANS.free;

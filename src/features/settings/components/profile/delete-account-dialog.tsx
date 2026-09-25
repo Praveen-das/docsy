@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useReverification } from "@clerk/nextjs";
+import { isReverificationCancelledError } from "@clerk/nextjs/errors";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,11 @@ export function DeleteAccountDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const deleteAccountWithReverification = useReverification(() => {
+    if (!user) throw new Error("User not found");
+    return user.delete();
+  });
+
   const resetForm = () => {
     setDeleteConfirmationInput("");
     setDeleteError(null);
@@ -43,12 +49,15 @@ export function DeleteAccountDialog({
       setDeleteError(null);
 
       if (user) {
-        await user.delete();
+        await deleteAccountWithReverification();
       }
 
       onAccountDeleted?.();
       window.location.href = "/";
     } catch (err: unknown) {
+      if (isReverificationCancelledError(err)) {
+        return;
+      }
       console.error("Failed to delete account:", err);
       setDeleteError(
         extractClerkErrorMessage(

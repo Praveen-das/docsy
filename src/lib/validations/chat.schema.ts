@@ -13,6 +13,7 @@ export const chatStreamSchema = z.object({
   conversationToken: z.string().optional(),
   skipUserPersistence: z.boolean().optional(),
   replaceAssistantMessageId: z.string().optional(),
+  customPrompt: z.string().max(3000).optional(),
 });
 
 export type HistoryMessage = z.infer<typeof historyMessageSchema>;

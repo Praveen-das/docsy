@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Trash2, RefreshCw } from "lucide-react";
-import { useConversationStore } from "@/stores/conversation-store";
-import { useDocumentStore } from "@/stores/document-store";
+import { useConversations, useDeleteAllConversations } from "@/features/conversations/hooks/use-conversations";
+import { useDocuments, useDeleteAllDocuments } from "@/features/documents/hooks/use-documents";
 import { useSubscription } from "@/features/billing/use-subscription";
 import { PLANS } from "@/lib/stripe-plans";
 import { StorageMeter } from "./billing/storage-meter";
@@ -17,11 +17,11 @@ const STORAGE_LIMIT_PRO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 type DataControlsDialog = "conversations" | "documents" | "cache" | null;
 
 export function TabDataControls() {
-  const conversations = useConversationStore((state) => state.conversations);
-  const deleteConversation = useConversationStore((state) => state.deleteConversation);
+  const { conversations } = useConversations();
+  const { mutateAsync: deleteAllConversations } = useDeleteAllConversations();
 
-  const documents = useDocumentStore((state) => state.documents);
-  const deleteDocument = useDocumentStore((state) => state.deleteDocument);
+  const { data: documents = [] } = useDocuments();
+  const { mutateAsync: deleteAllDocuments } = useDeleteAllDocuments();
 
   const { data: subscription } = useSubscription();
   const isPro = subscription?.plan === "pro";
@@ -58,29 +58,35 @@ export function TabDataControls() {
     setActiveDialog(null);
   }, []);
 
-  // Delete all conversations
+  // Delete all conversations atomically
   const handleDeleteAllConversations = async () => {
     try {
-      const convIds = conversations.map((c) => c.id);
-      await Promise.allSettled(convIds.map((id) => deleteConversation(id)));
+      const success = await deleteAllConversations();
       closeDialog();
-      showFeedback(`Successfully deleted ${convIds.length} conversation${convIds.length === 1 ? "" : "s"}.`);
+      if (success) {
+        showFeedback("All conversations and message histories permanently deleted.");
+      } else {
+        showFeedback("Failed to delete conversations. Please try again.");
+      }
     } catch (err) {
       console.error("Failed to delete conversations:", err);
-      showFeedback("Failed to delete some conversations. Please try again.");
+      showFeedback("Failed to delete conversations. Please try again.");
     }
   };
 
-  // Delete all documents
+  // Delete all documents atomically
   const handleDeleteAllDocuments = async () => {
     try {
-      const docIds = documents.map((d) => d.id);
-      await Promise.allSettled(docIds.map((id) => deleteDocument(id)));
+      const success = await deleteAllDocuments();
       closeDialog();
-      showFeedback(`Successfully deleted ${docIds.length} document${docIds.length === 1 ? "" : "s"}.`);
+      if (success) {
+        showFeedback("All documents, storage files, and vector embeddings permanently deleted.");
+      } else {
+        showFeedback("Failed to delete documents. Please try again.");
+      }
     } catch (err) {
       console.error("Failed to delete documents:", err);
-      showFeedback("Failed to delete some documents. Please try again.");
+      showFeedback("Failed to delete documents. Please try again.");
     }
   };
 

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Document } from "@/types";
-import { useDocumentStore } from "@/stores/document-store";
-import { useConversationStore } from "@/stores/conversation-store";
+import { useDocuments } from "../hooks/use-documents";
+import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { useUIStore } from "@/stores/ui-store";
 import { formatRelativeTime } from "@/lib/format-time";
 import { FileText, Search, UploadCloud, ArrowRight, Plus, X, MessageSquare, AlertCircle, Loader2 } from "lucide-react";
@@ -40,18 +40,10 @@ export function SelectDocumentModal({
       openUpload();
     });
 
-  const documents = useDocumentStore((state) => state.documents);
-  const isLoadingDocs = useDocumentStore((state) => state.isLoading);
-  const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
-  const conversations = useConversationStore((state) => state.conversations);
+  const { data: documents = [], isLoading: isLoadingDocs } = useDocuments();
+  const { conversations } = useConversations();
 
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    if (effectiveIsOpen && documents.length === 0) {
-      fetchDocuments();
-    }
-  }, [effectiveIsOpen, documents.length, fetchDocuments]);
 
   useEffect(() => {
     if (!effectiveIsOpen) {

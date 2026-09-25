@@ -23,7 +23,7 @@ export function MobileBottomNav() {
   const activeTab = useMemo(() => {
     if (isSettingsOpen) return "settings";
     if (!pathname) return "home";
-    if (pathname === "/dashboard" || pathname === "/") return "home";
+    if (pathname === "/") return "home";
     if (pathname.startsWith("/documents")) return "documents";
     if (pathname.startsWith("/conversations")) return "conversations";
     return null;
@@ -47,7 +47,7 @@ export function MobileBottomNav() {
     {
       id: "home",
       label: "Home",
-      href: "/dashboard",
+      href: "/",
       icon: NavHomeIcon,
       onClick: undefined,
     },

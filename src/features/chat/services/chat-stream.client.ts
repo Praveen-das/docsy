@@ -9,6 +9,7 @@ export interface StreamChatParams {
   conversationToken?: string;
   skipUserPersistence?: boolean;
   replaceAssistantMessageId?: string;
+  customPrompt?: string;
   onTyping: () => void;
   onChunk: (accumulatedText: string) => void;
   onComplete: (fullText: string) => void;
@@ -41,6 +42,7 @@ export async function streamChatResponse({
   conversationToken,
   skipUserPersistence,
   replaceAssistantMessageId,
+  customPrompt,
   onTyping,
   onChunk,
   onComplete,
@@ -71,6 +73,7 @@ export async function streamChatResponse({
         conversationToken,
         skipUserPersistence,
         replaceAssistantMessageId,
+        customPrompt,
       }),
     ]);
 

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSpring } from "@react-spring/web";
-import { useDocumentStore } from "@/stores/document-store";
+import { addOptimisticDocument } from "@/features/documents/hooks/use-documents";
 import { UploadOrbitRing } from "./upload-zone/upload-orbit-ring";
 import { UploadBackgroundOrb } from "./upload-zone/upload-background-orb";
 import { UploadCoreContent, UploadState } from "./upload-zone/upload-core-content";
@@ -186,7 +186,7 @@ export function AtmosphericUploadZone() {
       setUploadState("success");
 
       const now = new Date().toISOString();
-      useDocumentStore.getState().addDocument({
+      addOptimisticDocument({
         id: docId,
         userId: "",
         filename: "",

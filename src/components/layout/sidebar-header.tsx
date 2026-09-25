@@ -35,9 +35,9 @@ export function SidebarHeader({
         /* Expanded Mode: Docsy Stylized D Logo + "Docsy" Brand Text */
         <div className="flex items-center justify-between w-full min-w-0">
           <Link
-            href="/dashboard"
+            href="/"
             className="flex items-center gap-3.5 group min-w-0 select-none"
-            title="Docsy AI Dashboard"
+            title="Docsy AI Home"
           >
             <DocsyIcon className="h-8 w-8 transition-transform duration-150 group-hover:scale-105" />
             <span className="font-bold tracking-tight text-white text-[22px] font-sans">

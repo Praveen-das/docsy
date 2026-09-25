@@ -3,7 +3,11 @@
 import React, { useCallback, useMemo } from "react";
 import { Share2, Pencil, Trash2, ExternalLink, Pin } from "lucide-react";
 import { CompactMenu, CompactMenuSection, CompactMenuItem } from "@/components/ui/compact-menu";
-import { useConversationStore } from "@/stores/conversation-store";
+import {
+  useRenameConversation,
+  useDeleteConversation,
+  useTogglePinConversation,
+} from "@/features/conversations/hooks/use-conversations";
 
 export interface ConversationOptionsMenuProps {
   /** The conversation this menu operates on. */
@@ -52,9 +56,9 @@ export function ConversationOptionsMenu({
   onDelete,
   className,
 }: ConversationOptionsMenuProps) {
-  const renameConversation = useConversationStore((s) => s.renameConversation);
-  const deleteConversation = useConversationStore((s) => s.deleteConversation);
-  const togglePinConversation = useConversationStore((s) => s.togglePinConversation);
+  const { mutate: renameConversation } = useRenameConversation();
+  const { mutate: deleteConversation } = useDeleteConversation();
+  const { mutate: togglePinConversation } = useTogglePinConversation();
 
   // --- Default implementations ---
 
@@ -74,7 +78,7 @@ export function ConversationOptionsMenu({
     // Default: prompt-based rename
     const newTitle = window.prompt("Rename conversation");
     if (newTitle?.trim()) {
-      renameConversation(conversationId, newTitle.trim());
+      renameConversation({ convId: conversationId, newTitle: newTitle.trim() });
     }
   }, [conversationId, onRename, renameConversation]);
 

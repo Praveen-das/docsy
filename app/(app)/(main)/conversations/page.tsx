@@ -3,8 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { useConversationStore } from "@/stores/conversation-store";
-import { useDocumentStore } from "@/stores/document-store";
+import {
+  useConversations,
+  useDeleteConversation,
+  useRenameConversation,
+  useTogglePinConversation,
+} from "@/features/conversations/hooks/use-conversations";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { useUIStore } from "@/stores/ui-store";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,16 +31,13 @@ import { useConversationsData } from "@/features/conversations/hooks/use-convers
 export default function ConversationsPage() {
   const router = useRouter();
 
-  // Zustand Store bindings
-  const conversations = useConversationStore((state) => state.conversations);
-  const fetchConversations = useConversationStore((state) => state.fetchConversations);
-  const deleteConversation = useConversationStore((state) => state.deleteConversation);
-  const renameConversation = useConversationStore((state) => state.renameConversation);
-  const pinnedIds = useConversationStore((state) => state.pinnedIds);
-  const togglePinConversation = useConversationStore((state) => state.togglePinConversation);
+  // React Query bindings
+  const { conversations, pinnedIds } = useConversations();
+  const { mutateAsync: deleteConversation } = useDeleteConversation();
+  const { mutateAsync: renameConversation } = useRenameConversation();
+  const { mutate: togglePinConversation } = useTogglePinConversation();
 
-  const documents = useDocumentStore((state) => state.documents);
-  const fetchDocuments = useDocumentStore((state) => state.fetchDocuments);
+  const { data: documents = [] } = useDocuments();
 
   const openUpload = useUIStore((state) => state.openUpload);
 
@@ -54,11 +56,6 @@ export default function ConversationsPage() {
   // Context menu & Delete states
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [convToDelete, setConvToDelete] = useState<{ id: string; title: string } | null>(null);
-
-  useEffect(() => {
-    fetchConversations();
-    fetchDocuments();
-  }, [fetchConversations, fetchDocuments]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -96,7 +93,7 @@ export default function ConversationsPage() {
   const handleRename = (id: string, currentTitle: string) => {
     const newTitle = window.prompt("Rename conversation", currentTitle);
     if (newTitle && newTitle.trim()) {
-      renameConversation(id, newTitle.trim());
+      renameConversation({ convId: id, newTitle: newTitle.trim() });
     }
   };
 

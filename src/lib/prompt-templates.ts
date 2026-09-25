@@ -36,14 +36,15 @@ export function buildContextBlock(
   return `DOCUMENT CONTEXT:\n\n${contextParts.join("\n\n---\n\n")}`;
 }
 
-/**
- * Build the complete system prompt including operational rules and retrieved context.
- */
-export function buildSystemPrompt(contextBlock: string): string {
+export function buildSystemPrompt(contextBlock: string, customPrompt?: string): string {
+  const customSection = customPrompt?.trim()
+    ? `\n\nUSER-SPECIFIED STYLE & PERSONALITY INSTRUCTIONS:\n${customPrompt.trim()}`
+    : "";
+
   if (!contextBlock) {
-    return `${SYSTEM_PROMPT}\n\nDOCUMENT CONTEXT:\nNo relevant context was found for this query.`;
+    return `${SYSTEM_PROMPT}${customSection}\n\nDOCUMENT CONTEXT:\nNo relevant context was found for this query.`;
   }
-  return `${SYSTEM_PROMPT}\n\n${contextBlock}`;
+  return `${SYSTEM_PROMPT}${customSection}\n\n${contextBlock}`;
 }
 
 /**

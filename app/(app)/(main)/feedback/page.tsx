@@ -14,7 +14,7 @@ export default function FeedbackPage() {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
     } else {
-      router.push("/dashboard");
+      router.push("/");
     }
   };
 

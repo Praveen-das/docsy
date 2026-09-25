@@ -27,6 +27,7 @@ export async function executeRAG(
   documentIdOrIds: string | string[],
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = [],
   topK = 5,
+  customPrompt?: string,
 ): Promise<RAGResult> {
   const documentId = Array.isArray(documentIdOrIds) ? documentIdOrIds[0] : documentIdOrIds;
 
@@ -41,7 +42,7 @@ export async function executeRAG(
     logger.warn("rag.no_document_provided", { userId });
     return {
       contextBlock: "",
-      systemPrompt: buildSystemPrompt(""),
+      systemPrompt: buildSystemPrompt("", customPrompt),
       promptMessages: buildPromptMessages(conversationHistory, query),
     };
   }
@@ -64,7 +65,7 @@ export async function executeRAG(
 
   // Step 4: Build context block, system instructions, and chat messages
   const contextBlock = buildContextBlock(contextChunks);
-  const systemPrompt = buildSystemPrompt(contextBlock);
+  const systemPrompt = buildSystemPrompt(contextBlock, customPrompt);
   const promptMessages = buildPromptMessages(conversationHistory, query);
 
   logger.info("rag.completed", {

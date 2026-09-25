@@ -5,6 +5,7 @@ import {
   createConversation,
   listConversations,
   listPinnedConversationIds,
+  deleteAllConversations,
 } from "@/services/conversation.service";
 
 const createConversationSchema = z.object({
@@ -93,6 +94,27 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to create conversation" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/conversations
+ * Atomic bulk deletion of all conversations for the authenticated user.
+ */
+export async function DELETE() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const count = await deleteAllConversations(userId);
+    return NextResponse.json({ success: true, count });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to delete conversations" },
       { status: 500 }
     );
   }

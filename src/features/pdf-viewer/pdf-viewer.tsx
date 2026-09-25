@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Document as DocumentType, MockPdfPage } from "@/types";
 import { mockPdfDocumentPages } from "@/lib/mock-data";
 import { PdfPageCanvas } from "./components/pdf-page-canvas";
-import { useDocumentStore } from "@/stores/document-store";
+import { useDocuments } from "@/features/documents/hooks/use-documents";
 import {
   ChevronUp,
   ChevronDown,
@@ -29,7 +29,7 @@ export function PdfViewer({
   activeDocumentId: propActiveDocId,
   onClose,
 }: PdfViewerProps) {
-  const storeDocuments = useDocumentStore((state) => state.documents);
+  const { data: storeDocuments = [] } = useDocuments();
   const documents = propDocuments || storeDocuments;
   const activeDocId = propActiveDocId || "";
   const currentDoc =

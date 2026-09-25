@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useConversationStore } from "@/stores/conversation-store";
+import { updateConversationInCache } from "@/features/conversations/hooks/use-conversations";
 import { conversationService } from "../services/conversation.service";
 import { getAllConversationMessages } from "../utils/chat-message.utils";
 
@@ -29,13 +29,10 @@ export function useConversationTitleGen(activeConvId: string) {
       );
 
       if (newTitle) {
-        useConversationStore.setState((s) => ({
-          conversations: s.conversations.map((c) =>
-            c.id === activeConvId
-              ? { ...c, title: newTitle, updatedAt: new Date().toISOString() }
-              : c
-          ),
-        }));
+        updateConversationInCache(activeConvId, {
+          title: newTitle,
+          updatedAt: new Date().toISOString(),
+        });
       }
     } catch (err) {
       console.error("Failed to generate label for conversation:", err);

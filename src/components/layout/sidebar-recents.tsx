@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/format-time";
 import { handleGlowMouseEnter, handleGlowMouseMove, handleGlowMouseLeave } from "@/lib/interactive-glow";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations, useDeleteConversation } from "@/features/conversations/hooks/use-conversations";
 import { DeleteConversationDialog } from "@/features/conversations/components/delete-conversation-dialog";
 import { Conversation } from "@/types";
 
@@ -84,17 +85,12 @@ export const RecentsRow = React.memo(function RecentsRow({
 
 export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   const router = useRouter();
-  const conversations = useConversationStore((state) => state.conversations);
+  const { conversations } = useConversations();
   const activeConversationId = useConversationStore((state) => state.activeConversationId);
-  const fetchConversations = useConversationStore((state) => state.fetchConversations);
   const switchConversation = useConversationStore((state) => state.switchConversation);
-  const deleteConversation = useConversationStore((state) => state.deleteConversation);
+  const { mutate: deleteConversation } = useDeleteConversation();
 
   const [convToDelete, setConvToDelete] = useState<Conversation | null>(null);
-
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
 
   // Sort by updatedAt descending
   const sortedConversations = useMemo(() => {

@@ -56,11 +56,11 @@ export default function PricingPage() {
 
       {/* Top minimal navigation: Logo + Close exit button */}
       <header className="relative z-20 w-full max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 flex items-center justify-between">
-        <Link href="/dashboard" className="transition-opacity hover:opacity-80">
+        <Link href="/" className="transition-opacity hover:opacity-80">
           <Logo size="sm" />
         </Link>
         <Link
-          href="/dashboard"
+          href="/"
           title="Back to Docsy"
           aria-label="Close pricing"
           className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all active:scale-95"

@@ -3,7 +3,7 @@
 import React, { Suspense } from "react";
 import { MessageSquare, FileText } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations } from "../hooks/use-conversations";
 
 export interface MobilePaneSwitcherProps {
   activeTab: "conversation" | "pdf";
@@ -19,7 +19,7 @@ function MobilePaneSwitcherInner({
   onTabChange,
 }: MobilePaneSwitcherProps) {
   const searchParams = useSearchParams();
-  const conversations = useConversationStore((state) => state.conversations);
+  const { conversations } = useConversations();
   const docId = propDocId !== undefined ? propDocId : searchParams.get("doc");
 
   const count =

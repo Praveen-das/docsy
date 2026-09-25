@@ -89,6 +89,7 @@ export const POST = async (request: Request, { params }: RouteParams) => {
     streamChannelId,
     skipUserPersistence,
     replaceAssistantMessageId,
+    customPrompt,
   } = parsed.data;
 
   if (!messageId || !content) {
@@ -124,6 +125,7 @@ export const POST = async (request: Request, { params }: RouteParams) => {
     conversationHistory,
     skipUserPersistence,
     replaceAssistantMessageId,
+    customPrompt,
   };
 
   try {

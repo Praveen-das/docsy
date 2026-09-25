@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { Document, Message, type PaginatedMessagesResponse } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useCreateConversation } from "@/features/conversations/hooks/use-conversations";
 import {
   getAllConversationMessages,
   extractConversationTurns,
@@ -34,7 +35,7 @@ export function useChatActions({
   const sendMessage = useConversationStore((state) => state.sendMessage);
   const editMessage = useConversationStore((state) => state.editMessage);
   const regenerateMessage = useConversationStore((state) => state.regenerateMessage);
-  const createConversation = useConversationStore((state) => state.createConversation);
+  const { mutateAsync: createConversation } = useCreateConversation();
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
   const pollConversationTitle = useConversationStore((state) => state.pollConversationTitle);
 
@@ -50,7 +51,10 @@ export function useChatActions({
         if (!targetConvId) {
           const targetDocId = effectiveDocId || primaryDoc?.id || "doc-1";
           try {
-            targetConvId = await createConversation(targetDocId, content);
+            targetConvId = await createConversation({
+              documentId: targetDocId,
+              initialTitle: content,
+            });
             setActiveConversation(targetConvId);
             router.replace(`/conversation?doc=${targetDocId}&conv=${targetConvId}`);
             pollConversationTitle(targetConvId, content);

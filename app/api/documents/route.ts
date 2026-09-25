@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { listDocuments, listFavoriteDocumentIds } from "@/services/document.service";
+import { listDocuments, listFavoriteDocumentIds, deleteAllDocuments } from "@/services/document.service";
 
 /**
  * GET /api/documents
@@ -37,4 +37,25 @@ export async function GET() {
       updatedAt: d.updatedAt.toISOString(),
     })),
   );
+}
+
+/**
+ * DELETE /api/documents
+ * Atomic bulk deletion of all documents, storage files, and Pinecone vectors for the authenticated user.
+ */
+export async function DELETE() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const count = await deleteAllDocuments(userId);
+    return NextResponse.json({ success: true, count });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to delete documents" },
+      { status: 500 }
+    );
+  }
 }

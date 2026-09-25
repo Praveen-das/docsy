@@ -29,7 +29,7 @@ export function ConversationSidebarHeader({ isCollapsed, onToggleCollapse, onClo
           </div>
         ) : (
           <div className="flex items-center justify-between w-full min-w-0">
-            <Link href="/dashboard" className="flex items-center group min-w-0" title="Docsy AI Dashboard">
+            <Link href="/" className="flex items-center group min-w-0" title="Docsy AI Home">
               <div className="w-10 h-10 flex items-center justify-center shrink-0">
                 <Sparkles className="h-5 w-5 shrink-0 fill-zinc-950 text-zinc-950 dark:fill-white dark:text-white transition-transform duration-150 group-hover:scale-105" />
               </div>

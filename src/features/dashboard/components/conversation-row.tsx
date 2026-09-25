@@ -5,7 +5,7 @@ import { MessageSquare, FileText, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlowRow } from "@/components/ui/glow-row";
 import { ConversationOptionsMenu } from "@/features/documents/components/conversation-options-menu";
-import { useConversationStore } from "@/stores/conversation-store";
+import { useConversations } from "@/features/conversations/hooks/use-conversations";
 
 export interface ConversationRowProps {
   id: string;
@@ -18,7 +18,7 @@ export interface ConversationRowProps {
 }
 
 export function ConversationRow({ id, title, docName, preview, timeText, isPinned: isPinnedProp, onClick }: ConversationRowProps) {
-  const pinnedIds = useConversationStore((s) => s.pinnedIds);
+  const { pinnedIds } = useConversations();
   const isPinned = isPinnedProp ?? pinnedIds.has(id);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

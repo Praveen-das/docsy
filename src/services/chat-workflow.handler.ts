@@ -29,6 +29,7 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
     conversationHistory = [],
     skipUserPersistence = false,
     replaceAssistantMessageId,
+    customPrompt,
   } = context.requestPayload;
 
   if (!conversationId || !messageId || !userId || !content) {
@@ -69,6 +70,7 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
         documentIds,
         conversationHistory,
         skipUserPersistence,
+        customPrompt,
       });
 
       const result = streamText({

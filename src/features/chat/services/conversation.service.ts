@@ -44,6 +44,14 @@ export const conversationService = {
   },
 
   /**
+   * Deletes all conversations for the authenticated user on the server.
+   */
+  async deleteAllConversations(): Promise<number> {
+    const res = await api.delete<{ success: boolean; count: number }>("/api/conversations");
+    return res.data?.count ?? 0;
+  },
+
+  /**
    * Fetches the current title of a conversation.
    */
   async fetchConversationTitle(convId: string): Promise<string | undefined> {

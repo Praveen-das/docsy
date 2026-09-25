@@ -4,7 +4,11 @@ import React, { useMemo } from "react";
 import { MessageSquare, RefreshCw, Trash2, Star } from "lucide-react";
 import { CompactMenu, CompactMenuSection, CompactMenuItem } from "@/components/ui/compact-menu";
 import { Document } from "@/types";
-import { useDocumentStore } from "@/stores/document-store";
+import {
+  useToggleFavoriteDocument,
+  useReprocessDocument,
+  useCheckDocumentStatus,
+} from "../hooks/use-documents";
 
 export interface DocumentOptionsMenuProps {
   document: Document;
@@ -23,10 +27,10 @@ export function DocumentOptionsMenu({
   onDelete,
   className,
 }: DocumentOptionsMenuProps) {
-  const isFavorite = useDocumentStore((state) => state.isDocumentFavorite(doc.id));
-  const toggleFavorite = useDocumentStore((state) => state.toggleFavoriteDocument);
-  const reprocessDocument = useDocumentStore((state) => state.reprocessDocument);
-  const checkDocumentStatus = useDocumentStore((state) => state.checkDocumentStatus);
+  const isFavorite = Boolean(doc.isFavorite);
+  const { mutate: toggleFavorite } = useToggleFavoriteDocument();
+  const { mutate: reprocessDocument } = useReprocessDocument();
+  const { mutate: checkDocumentStatus } = useCheckDocumentStatus();
   const sections = useMemo<CompactMenuSection[]>(() => {
     const items: CompactMenuItem[] = [
       {
