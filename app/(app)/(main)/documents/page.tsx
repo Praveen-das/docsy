@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileText } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { Document } from "@/types";
 import { useDocumentStore } from "@/stores/document-store";
 import { useConversationStore } from "@/stores/conversation-store";
+import { useUIStore } from "@/stores/ui-store";
 import { DocumentConversationsDialog } from "@/features/conversations/document-conversations-dialog";
 import { useDocumentPolling } from "@/features/documents/hooks/use-document-polling";
 import { useDocumentFilters } from "@/features/documents/hooks/use-document-filters";
@@ -28,6 +29,8 @@ export default function DocumentsPage() {
 
   const conversations = useConversationStore((state) => state.conversations);
   const fetchConversations = useConversationStore((state) => state.fetchConversations);
+
+  const openUpload = useUIStore((state) => state.openUpload);
 
   // Filter, search, and sorting hook
   const { searchQuery, setSearchQuery, activeTab, setActiveTab, sortBy, setSortBy, filteredAndSortedDocuments } =
@@ -91,12 +94,10 @@ export default function DocumentsPage() {
 
   const hasRealDocs = documents.length > 0;
 
-  console.log(filteredAndSortedDocuments);
-
   return (
     <>
-      <div className="relative min-h-full w-full overflow-x-hidden pt-12 pb-20 select-none isolate">
-        <div className="relative z-10 px-4 sm:px-8 py-7 max-w-[1400px] mx-auto space-y-8">
+      <div className="relative min-h-full w-full overflow-x-hidden pt-14 sm:pt-6 pb-28 sm:pb-12 select-none isolate">
+        <div className="relative z-10 px-4 sm:px-8 py-2 sm:py-5 max-w-[1400px] mx-auto space-y-4 sm:space-y-6">
           {/* Controls Bar: Filter Tabs, Expandable Search, Sort & View Switcher */}
           <DocumentToolbar
             activeTab={activeTab}
@@ -155,12 +156,12 @@ export default function DocumentsPage() {
           )}
 
           {/* Bottom Empty / Pagination Status Box */}
-          <div className="rounded-[22px] border border-dashed border-white/[0.07] bg-[#0c1017]/40 p-8 sm:p-10 text-center select-none backdrop-blur-xs will-change-transform">
+          <div className="rounded-[22px] border border-dashed border-white/[0.08] bg-[#0c1017]/40 p-6 sm:p-10 text-center select-none backdrop-blur-xs will-change-transform">
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-[#727f9d] mb-2">
               <FileText className="h-5 w-5 stroke-[1.8]" />
             </div>
             <h4 className="text-[13.5px] font-semibold text-[#f1f3f9]">No more documents</h4>
-            <p className="text-[12px] text-[#818ea8] mt-1">
+            <p className="text-[12px] text-[#818ea8] mt-1 max-w-xs mx-auto">
               Upload more PDFs to continue building your knowledge base.
             </p>
           </div>
@@ -169,6 +170,17 @@ export default function DocumentsPage() {
         {/* Subtle Atmospheric Bottom Glow */}
         <BottomGlow />
       </div>
+
+      {/* Mobile Floating Action Button (FAB) matching reference image */}
+      <button
+        type="button"
+        onClick={() => openUpload()}
+        className="fixed bottom-20 right-5 z-30 sm:hidden flex h-13 w-13 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.6)] border border-white/20 active:scale-95 transition-transform cursor-pointer"
+        aria-label="Upload document"
+        title="Upload document"
+      >
+        <Plus className="h-6 w-6 stroke-[2.5]" />
+      </button>
 
       {/* Delete Document Confirmation Dialog */}
       <DeleteDocumentDialog

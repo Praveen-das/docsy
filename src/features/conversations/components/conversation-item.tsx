@@ -97,7 +97,7 @@ export function ConversationItem({
         "group relative flex flex-col justify-center rounded-xl px-3 py-2 text-xs transition-[border-color,background-color,color] duration-150 select-none cursor-pointer",
         isActive || isHovered
           ? "active-row-glow text-white"
-          : "border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]",
+          : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]",
       )}
     >
       {isEditing ? (

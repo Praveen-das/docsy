@@ -10,6 +10,8 @@ import { SidebarUpgradeCard } from "./sidebar-upgrade-card";
 import { SidebarRecents } from "./sidebar-recents";
 import { useSlidingNav } from "./use-sliding-nav";
 import type { NavItem, SidebarNavigationProps } from "./sidebar-navigation.types";
+import { useUser } from "@clerk/nextjs";
+import { useSubscription } from "@/features/billing/use-subscription";
 
 export type { SidebarNavigationProps } from "./sidebar-navigation.types";
 
@@ -27,8 +29,12 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: SidebarNavigationProps) {
+  const { data: subscription, isLoading } = useSubscription();
+
   const pathname = usePathname();
   const openSearch = useUIStore((state) => state.openSearch);
+
+  const isProUser = subscription?.plan === "pro";
 
   // Determine active item from current route
   const activeHref = useMemo(() => {
@@ -36,7 +42,6 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
     if (pathname === "/dashboard" || pathname === "/") return "/dashboard";
     if (pathname.startsWith("/documents")) return "/documents";
     if (pathname.startsWith("/conversations")) return "/conversations";
-    if (pathname.startsWith("/settings")) return "/settings";
     return null;
   }, [pathname]);
 
@@ -97,9 +102,11 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
       <SidebarRecents isCollapsed={isCollapsed} onClose={onClose} />
 
       {/* Upgrade to Pro Card */}
-      <div className="shrink-0 px-3.5">
-        <SidebarUpgradeCard isCollapsed={isCollapsed} onClose={onClose} />
-      </div>
+      {!isProUser && (
+        <div className="shrink-0 px-3.5">
+          <SidebarUpgradeCard isCollapsed={isCollapsed} onClose={onClose} />
+        </div>
+      )}
     </div>
   );
 }

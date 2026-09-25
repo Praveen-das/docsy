@@ -29,8 +29,8 @@ export function DeleteConversationDialog({
         <p className="text-xs text-zinc-600 dark:text-zinc-400">
           Are you sure you want to delete &ldquo;{conversation.title}&rdquo;?
         </p>
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose}>
+        <div className="flex flex-col-reverse xs:flex-row items-stretch xs:items-center justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={onClose} className="w-full xs:w-auto">
             Cancel
           </Button>
           <Button
@@ -40,6 +40,7 @@ export function DeleteConversationDialog({
               onConfirm(conversation.id);
               onClose();
             }}
+            className="w-full xs:w-auto"
           >
             Delete Conversation
           </Button>

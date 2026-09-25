@@ -39,8 +39,8 @@ export const RecentsRow = React.memo(function RecentsRow({
       className={cn(
         "group relative flex items-center justify-between gap-2 rounded-xl px-2.5 h-8 text-xs select-none cursor-pointer shrink-0 active:scale-[0.98] transition-colors duration-150",
         isActive || isHovered
-          ? "bg-(--card-spotlight-mid) text-white"
-          : "border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-(--card-spotlight-mid)",
+          ? "bg-(--card-spotlight-mid) text-white "
+          : "text-zinc-400 hover:text-zinc-200 hover:bg-(--card-spotlight-low)",
       )}
     >
       {/* Conversation Title & Left Icon */}

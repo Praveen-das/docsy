@@ -34,6 +34,12 @@
     --sidebar-nav-muted: #8b95a8;
     --surface-card: #0c1017;
 
+    /* Signature tile & card material tokens */
+    --tile-border: rgba(0, 0, 0, 0.08);
+    --tile-bg: rgba(0, 0, 0, 0.02);
+    --tile-border-hover: rgba(0, 0, 0, 0.15);
+    --tile-bg-hover: rgba(0, 0, 0, 0.04);
+
     /* Motion tokens */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -42,7 +48,8 @@
 
     /* Card spotlight glow colors */
     --card-spotlight-center: rgba(99, 102, 241, 0.1);
-    --card-spotlight-mid: rgba(99, 102, 241, 0.05);
+    --card-spotlight-mid: #171a2d;
+    --card-spotlight-low: #6a6ecf13;
   }
 
   .dark {
@@ -68,6 +75,12 @@
     --active-row-bg: #0b0d14;
     --sidebar-nav-muted: #8b95a8;
     --surface-card: #0c1017;
+
+    /* Signature tile & card material tokens (Obsidian Dark) */
+    --tile-border: rgba(255, 255, 255, 0.08);
+    --tile-bg: #0e0f13;
+    --tile-border-hover: rgba(255, 255, 255, 0.15);
+    --tile-bg-hover: rgba(255, 255, 255, 0.04);
   }
 }
 
@@ -139,6 +152,44 @@
 .neon-border-glow {
   border: 1px solid rgba(99, 102, 241, 0.4);
   box-shadow: 0 0 30px rgba(99, 102, 241, 0.22);
+}
+
+.active-tile-glow {
+  border-color: rgba(129, 140, 248, 0.6);
+  background-color: rgba(30, 27, 75, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.25),
+    0 0 16px rgba(99, 102, 241, 0.12);
+}
+
+@utility active-tile-glow {
+  border-color: rgba(129, 140, 248, 0.6);
+  background-color: rgba(30, 27, 75, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.25),
+    0 0 16px rgba(99, 102, 241, 0.12);
+}
+
+.interactive-tile {
+  border-color: var(--tile-border, rgba(255, 255, 255, 0.08));
+  background-color: var(--tile-bg, rgba(255, 255, 255, 0.02));
+  transition: all 150ms var(--ease-out, ease);
+}
+
+.interactive-tile:hover {
+  border-color: var(--tile-border-hover, rgba(255, 255, 255, 0.15));
+  background-color: var(--tile-bg-hover, rgba(255, 255, 255, 0.04));
+}
+
+@utility interactive-tile {
+  border-color: var(--tile-border, rgba(255, 255, 255, 0.08));
+  background-color: var(--tile-bg, rgba(255, 255, 255, 0.02));
+  transition: all 150ms var(--ease-out, ease);
+
+  &:hover {
+    border-color: var(--tile-border-hover, rgba(255, 255, 255, 0.15));
+    background-color: var(--tile-bg-hover, rgba(255, 255, 255, 0.04));
+  }
 }
 
 .dropzone-card-glow {
@@ -566,6 +617,15 @@ button:not(:disabled):active,
 .dark .citation-target-active {
   animation: citationPulseDark 2s var(--ease-out) infinite alternate;
   border-left: 3px solid #f59e0b;
+}
+
+/* Utility to hide scrollbars while maintaining scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Subtle Shimmer for Pipeline & Analysis States */

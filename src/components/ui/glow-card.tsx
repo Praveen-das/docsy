@@ -7,6 +7,7 @@ import { handleGlowMouseEnter, handleGlowMouseMove, handleGlowMouseLeave } from 
 export interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
+  hasHoverEffect?: boolean;
 }
 
 /**
@@ -15,7 +16,7 @@ export interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
  * obsidian surface card styling, and subtle drop shadow.
  */
 export const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
-  ({ children, className, onMouseEnter, onMouseMove, onMouseLeave, ...props }, ref) => {
+  ({ children, className, hasHoverEffect = true, onMouseEnter, onMouseMove, onMouseLeave, ...props }, ref) => {
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
       handleGlowMouseEnter(e);
       onMouseEnter?.(e);
@@ -39,7 +40,8 @@ export const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
         onMouseLeave={handleMouseLeave}
         className={cn(
           "group relative isolate flex items-center justify-between rounded-[22px] border border-white/[0.07] bg-(--surface-card) px-5 py-4",
-          "hover:active-card-glow hover:border-indigo-400/35",
+          hasHoverEffect && "hover:active-card-glow",
+          "interactive-tile",
           "transition-[border-color,background-color,box-shadow] duration-200 cursor-pointer shadow-lg shadow-black/30",
           className,
         )}

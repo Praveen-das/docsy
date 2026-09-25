@@ -3,6 +3,7 @@ import {
   conversations,
   conversationDocuments,
   messages,
+  pinnedConversations,
 } from "@/db/schema";
 import { eq, and, or, lt, desc, asc, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
@@ -640,4 +641,68 @@ export async function deleteMessage(
   }
 
   return false;
+}
+
+// --- Pinned Conversations ---
+
+/**
+ * List all pinned conversation IDs for a user.
+ * Cached in Redis (120s TTL).
+ */
+export async function listPinnedConversationIds(userId: string): Promise<string[]> {
+  const cacheKey = CACHE_KEYS.pinnedConversations(userId);
+  const cached = await getCached<string[]>(cacheKey);
+  if (cached) return cached;
+
+  const rows = await db
+    .select({ conversationId: pinnedConversations.conversationId })
+    .from(pinnedConversations)
+    .where(eq(pinnedConversations.userId, userId));
+
+  const ids = rows.map((r) => r.conversationId);
+  await setCached(cacheKey, ids, CACHE_TTL.DOCUMENTS_LIST);
+  return ids;
+}
+
+/**
+ * Toggle pin status of a conversation for a user.
+ */
+export async function togglePinConversation(
+  userId: string,
+  conversationId: string
+): Promise<{ isPinned: boolean }> {
+  const existing = await db
+    .select()
+    .from(pinnedConversations)
+    .where(
+      and(
+        eq(pinnedConversations.userId, userId),
+        eq(pinnedConversations.conversationId, conversationId)
+      )
+    )
+    .limit(1);
+
+  let isPinned = false;
+
+  if (existing.length > 0) {
+    await db
+      .delete(pinnedConversations)
+      .where(
+        and(
+          eq(pinnedConversations.userId, userId),
+          eq(pinnedConversations.conversationId, conversationId)
+        )
+      );
+  } else {
+    await db.insert(pinnedConversations).values({ userId, conversationId });
+    isPinned = true;
+  }
+
+  await invalidateCache(
+    CACHE_KEYS.pinnedConversations(userId),
+    CACHE_KEYS.conversationList(userId)
+  );
+
+  logger.info("conversation.pin_toggled", { conversationId, userId, isPinned });
+  return { isPinned };
 }

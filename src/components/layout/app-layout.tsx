@@ -1,7 +1,9 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { UploadModal } from "@/features/documents/upload-modal";
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
+import { SettingsModal } from "@/features/settings/components/settings-modal";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 
 export interface AppLayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,16 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Global Search / Select Document Modal */}
       <SelectDocumentModal />
+
+      {/* Global Settings Modal with URL Tab Routing */}
+      <Suspense fallback={null}>
+        <SettingsModal />
+      </Suspense>
+
+      {/* Mobile Bottom Navigation Bar matching reference mobile design */}
+      <Suspense fallback={null}>
+        <MobileBottomNav />
+      </Suspense>
     </div>
   );
 }

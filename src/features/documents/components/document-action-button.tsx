@@ -31,12 +31,12 @@ export function DocumentActionButton({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#151928] hover:bg-[#1d2338] text-white hover:border-indigo-500/40 text-xs font-medium transition-all cursor-pointer shadow-xs active:scale-[0.98]",
-            isSm ? "px-3.5 py-1" : "px-3.5 py-1.5"
+            "inline-flex items-center gap-1.5 rounded-full border border-indigo-500/35 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 hover:text-white text-xs font-medium transition-all cursor-pointer shadow-xs active:scale-[0.98]",
+            isSm ? "px-3.5 py-1" : "px-4 py-1.5"
           )}
         >
           <span>Open</span>
-          <ArrowRight className="h-3 w-3 text-[#a5b4fc]" />
+          <ArrowRight className="h-3 w-3 text-indigo-400 stroke-[2]" />
         </button>
       </Link>
     );
@@ -48,11 +48,11 @@ export function DocumentActionButton({
         type="button"
         onClick={() => onReprocess?.(doc.id)}
         className={cn(
-          "inline-flex items-center gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-medium transition-all cursor-pointer",
-          isSm ? "px-3.5 py-1" : "px-3.5 py-1.5"
+          "inline-flex items-center gap-1.5 rounded-full border border-rose-500/35 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-medium transition-all cursor-pointer active:scale-[0.98]",
+          isSm ? "px-3.5 py-1" : "px-4 py-1.5"
         )}
       >
-        <RefreshCw className="h-3 w-3" />
+        <RefreshCw className="h-3 w-3 stroke-[2]" />
         <span>Retry</span>
       </button>
     );
@@ -64,11 +64,11 @@ export function DocumentActionButton({
       onClick={() => onCheckStatus?.(doc.id)}
       disabled={isChecking}
       className={cn(
-        "inline-flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium transition-all cursor-pointer",
-        isSm ? "px-3.5 py-1" : "px-3.5 py-1.5"
+        "inline-flex items-center gap-1.5 rounded-full border border-amber-500/35 bg-amber-500/10 text-amber-300 text-xs font-medium transition-all cursor-pointer active:scale-[0.98]",
+        isSm ? "px-3.5 py-1" : "px-4 py-1.5"
       )}
     >
-      <Loader2 className="h-3 w-3 animate-spin" />
+      <Loader2 className="h-3 w-3 animate-spin stroke-[2]" />
       <span>Checking</span>
     </button>
   );

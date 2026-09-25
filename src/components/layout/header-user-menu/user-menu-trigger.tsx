@@ -1,0 +1,73 @@
+"use client";
+
+import React from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { UserMenuProfileInfo } from "./types";
+
+export interface UserMenuTriggerProps {
+  profile: UserMenuProfileInfo;
+  isOpen: boolean;
+  onToggle: () => void;
+  className?: string;
+}
+
+/**
+ * Header avatar pill trigger that toggles the user menu dropdown / mobile drawer.
+ * Supports image avatar with fallback stylized initials.
+ */
+export function UserMenuTrigger({
+  profile,
+  isOpen,
+  onToggle,
+  className,
+}: UserMenuTriggerProps) {
+  const { displayName, imageUrl, userInitials, planName = "Pro Plan" } = profile;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={isOpen}
+      aria-haspopup="true"
+      aria-label="User Account Menu"
+      className={cn(
+        "group flex items-center gap-2.5 sm:gap-3 rounded-full py-1.5 pl-1.5 pr-2 sm:pr-2.5 transition-all duration-150 cursor-pointer select-none",
+        "active:scale-[0.98] min-h-[44px]",
+        isOpen && "bg-white/[0.06] border-white/[0.1]",
+        className,
+      )}
+    >
+      {/* Minimalist Avatar */}
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={displayName}
+          className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10"
+        />
+      ) : (
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-b from-[#171a2a] to-[#0f121d] text-[12.5px] font-semibold text-[#c7d2fe] shadow-inner select-none">
+          {userInitials}
+        </div>
+      )}
+
+      {/* Username & Plan Aligned Vertically (Visible on Desktop) */}
+      <div className="hidden sm:flex flex-col items-start text-left leading-none gap-1">
+        <span className="text-[13px] font-medium text-[#e2e8f0] group-hover:text-white transition-colors truncate max-w-[130px]">
+          {displayName}
+        </span>
+        <span className="text-[11px] font-medium text-[#818ea8] group-hover:text-[#a5b4fc] transition-colors">
+          {planName}
+        </span>
+      </div>
+
+      {/* Subtle Chevron */}
+      <ChevronDown
+        className={cn(
+          "h-3.5 w-3.5 text-[#7e8ba6] group-hover:text-zinc-200 transition-transform duration-200 stroke-[2] ml-0.5",
+          isOpen && "rotate-180 text-white",
+        )}
+      />
+    </button>
+  );
+}

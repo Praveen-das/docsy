@@ -22,31 +22,40 @@ export function PricingSection({
   subheading = "Start free. Upgrade when you need more power.",
 }: PricingSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const handleUpgrade = async () => {
     setIsLoading(true);
+    setCheckoutError(null);
     try {
       const res = await fetch("/api/stripe/checkout", { method: "POST" });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error("Checkout error:", data.error);
+        setCheckoutError(data.error ?? "Failed to create checkout session");
         setIsLoading(false);
       }
     } catch {
+      setCheckoutError("Network error. Please try again.");
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+    <div className="space-y-6">
+      <div className="text-center space-y-1.5">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           {heading}
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">{subheading}</p>
+        <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto">{subheading}</p>
       </div>
+
+      {checkoutError && (
+        <div className="max-w-md mx-auto p-3 text-xs text-rose-300 bg-rose-950/40 border border-rose-500/20 rounded-xl text-center">
+          {checkoutError}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
         {(["free", "pro"] as PlanId[]).map((planId) => (

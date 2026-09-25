@@ -1,105 +1,126 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, CreditCard, Zap } from "lucide-react";
+import { CheckCircle2, CreditCard, Sparkles, ArrowRight, Shield, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/features/billing/use-subscription";
-import { PricingSection } from "@/features/billing/pricing-section";
+import { useInvoices } from "@/features/billing/use-invoices";
 import { SubscriptionStatus } from "@/features/billing/subscription-status";
-import { UsageGauge } from "@/features/billing/usage-gauge";
+import { BillingUsageDashboard } from "@/features/billing/billing-usage-dashboard";
+import { InvoicesTable } from "@/features/billing/invoices-table";
+import { PaymentMethodCard } from "@/features/billing/payment-method-card";
+import { PLANS } from "@/lib/stripe-plans";
+
+const STORAGE_LIMIT_FREE_BYTES = 50 * 1024 * 1024; // 50 MB
+const STORAGE_LIMIT_PRO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 /**
- * /billing — Subscription management and plan comparison page.
+ * /billing — Production-ready subscription, usage, and invoices center.
  *
- * Shows different UI depending on the user's current plan:
- * - Free: pricing cards + upgrade CTA
- * - Pro (active): status card + cancel option
- * - Pro (canceling): status card + reactivate option
+ * Provides:
+ * - Current plan overview and status
+ * - Live multi-resource consumption dashboard (Queries, Documents, Storage)
+ * - Pro subscription management (in-app cancel / reactivate)
+ * - Payment method card with Stripe Customer Portal access
+ * - Past invoices & receipts table with direct PDF download
  */
 export default function BillingPage() {
-  const { data: subscription, isLoading } = useSubscription();
+  const { data: subscription, isLoading: isSubLoading } = useSubscription();
+  const { data: invoicesData, isLoading: isInvoicesLoading } = useInvoices();
   const searchParams = useSearchParams();
+
   const checkoutResult = searchParams.get("checkout");
 
   const isPro = subscription?.plan === "pro";
+  const planDef = isPro ? PLANS.pro : PLANS.free;
+
+  const storageLimit = isPro ? STORAGE_LIMIT_PRO_BYTES : STORAGE_LIMIT_FREE_BYTES;
+  const maxDocuments = planDef.maxDocuments ?? 5;
+  const queriesLimit = subscription?.dailyQueriesLimit ?? planDef.dailyQueryLimit;
+  const queriesUsed = subscription?.dailyQueriesUsed ?? 0;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-          Billing & Subscription
-        </h2>
-        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-          Manage your plan, view usage, and control your subscription.
-        </p>
-      </div>
-
-      {/* Checkout success / cancel banners */}
+    <div className="px-4 sm:px-8 py-7 max-w-7xl mt-8 lg:mt-8 mb-4 mx-auto space-y-7">
+      {/* Checkout Success / Cancel Banners */}
       {checkoutResult === "success" && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-950/30 dark:text-emerald-300">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-950/30 p-4 text-xs sm:text-sm text-emerald-300 shadow-lg shadow-emerald-950/20 animate-in fade-in duration-200">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
           <div>
-            <span className="font-semibold">Upgrade successful!</span> Your Pro subscription is
-            active. It may take a moment for your quota to update.
+            <span className="font-semibold text-white">Upgrade successful!</span> Your Pro subscription is now active.
+            Your 200 daily queries and 2 GB storage are ready to use.
           </div>
         </div>
       )}
+
       {checkoutResult === "cancelled" && (
-        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-xs text-zinc-600 dark:border-white/5 dark:bg-white/5 dark:text-zinc-400">
-          <CreditCard className="h-4 w-4 shrink-0" />
-          Checkout was cancelled. Your plan was not changed.
+        <div className="flex items-center gap-3 rounded-2xl border interactive-tile p-4 text-xs sm:text-sm text-zinc-300">
+          <CreditCard className="h-4 w-4 shrink-0 text-zinc-400" />
+          <span>Checkout was cancelled. Your current plan remains unchanged.</span>
         </div>
       )}
 
-      {/* Usage card — always visible */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-2xs space-y-4 dark:border-white/5 dark:bg-[#121216]">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4 dark:border-white/5">
-          <div className="flex items-center gap-2.5">
-            <Zap className="h-4 w-4 text-zinc-800 dark:text-zinc-200" />
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Daily Usage</h3>
-          </div>
-          {isLoading ? (
-            <div className="h-5 w-20 animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800" />
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-[11px] font-semibold text-zinc-700 dark:border-white/5 dark:bg-white/5 dark:text-zinc-300">
-              {isPro ? "Pro" : "Free"} Plan
-            </span>
-          )}
-        </div>
-
-        {isLoading ? (
-          <div className="space-y-2">
-            <div className="h-3 w-full animate-pulse rounded bg-zinc-100 dark:bg-zinc-800" />
-            <div className="h-1.5 w-full animate-pulse rounded-full bg-zinc-100 dark:bg-zinc-800" />
-          </div>
-        ) : (
-          <UsageGauge
-            used={subscription?.dailyQueriesUsed ?? 0}
-            limit={subscription?.dailyQueriesLimit ?? 25}
+      {/* Current Plan Card (Free Tier Banner when not Pro) */}
+      {!isSubLoading && !isPro && (
+        <div className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/30 via-[#0c1017] to-purple-950/20 p-5 sm:p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)]">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-500/15 blur-2xl"
           />
-        )}
-      </div>
 
-      {/* Pro status + cancel/reactivate — only for Pro users */}
-      {!isLoading && isPro && subscription && (
-        <SubscriptionStatus subscription={subscription} />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-semibold text-white tracking-tight">Free Tier Account</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-white/10 text-zinc-300 border border-white/10">
+                  Standard Access
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+                You are currently on the complimentary plan with 25 daily queries and 5 documents. Upgrade to Pro for
+                200 daily queries, 200 documents, 2 GB storage, and priority queue processing.
+              </p>
+            </div>
+
+            <Link href="/pricing">
+              <Button
+                variant="accent"
+                size="sm"
+                className="shrink-0 gap-2 text-xs font-semibold shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-transform"
+              >
+                <Sparkles className="h-3.5 w-3.5 fill-current" />
+                <span>Upgrade to Pro ($19/mo)</span>
+                <ArrowRight className="h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
+        </div>
       )}
 
-      {/* Pricing section — show always for Free, show comparison for Pro */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-white/5 dark:bg-[#121216]">
-        {isLoading ? (
-          <div className="h-64 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />
-        ) : (
-          <PricingSection
-            currentPlan={subscription?.plan ?? "free"}
-            heading={isPro ? "Your Current Plan" : "Upgrade to Pro"}
-            subheading={
-              isPro
-                ? "You're on the Pro plan. Compare features below."
-                : "Unlock unlimited documents, 200 queries/day, and priority processing."
-            }
-          />
-        )}
+      {/* Pro Subscription Status Card (for Pro Users) */}
+      {!isSubLoading && isPro && subscription && <SubscriptionStatus subscription={subscription} />}
+
+      {/* Live Resource Usage Dashboard (Queries, Docs, Storage) */}
+      <BillingUsageDashboard
+        queriesUsed={queriesUsed}
+        queriesLimit={queriesLimit}
+        maxDocuments={maxDocuments}
+        storageLimitBytes={storageLimit}
+        isPro={isPro}
+        isLoading={isSubLoading}
+      />
+
+      {/* Payment Method & Invoices Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Payment Method Card */}
+        <PaymentMethodCard
+          paymentMethod={invoicesData?.paymentMethod ?? null}
+          isLoading={isInvoicesLoading}
+          isPro={isPro}
+        />
+
+        {/* Invoices & Receipts Table */}
+        <InvoicesTable invoices={invoicesData?.invoices ?? []} isLoading={isInvoicesLoading} isPro={isPro} />
       </div>
     </div>
   );

@@ -188,3 +188,61 @@ export async function deletePdf(filePath: string): Promise<void> {
     throw new Error(`Storage delete failed: ${error.message}`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Feedback Attachments — separate "feedback-attachments" bucket
+// ---------------------------------------------------------------------------
+
+const FEEDBACK_BUCKET = "feedback-attachments";
+
+/**
+ * Upload a feedback attachment to Supabase Storage.
+ * Files are stored under `{userId}/{uuid}.{ext}` in the feedback-attachments bucket.
+ */
+export async function uploadFeedbackAttachment(
+  userId: string,
+  file: Buffer,
+  originalName: string,
+  contentType: string
+): Promise<{ storagePath: string; publicUrl: string }> {
+  const client = getStorageClient();
+  const ext = originalName.split(".").pop() || "bin";
+  const fileId = crypto.randomUUID();
+  const storagePath = `${userId}/${fileId}.${ext}`;
+
+  const { error } = await client.storage
+    .from(FEEDBACK_BUCKET)
+    .upload(storagePath, file, {
+      contentType,
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(`Feedback attachment upload failed: ${error.message}`);
+  }
+
+  const { data: urlData } = client.storage
+    .from(FEEDBACK_BUCKET)
+    .getPublicUrl(storagePath);
+
+  return {
+    storagePath,
+    publicUrl: urlData.publicUrl,
+  };
+}
+
+/**
+ * Delete a feedback attachment from storage.
+ */
+export async function deleteFeedbackAttachment(storagePath: string): Promise<void> {
+  const client = getStorageClient();
+
+  const { error } = await client.storage
+    .from(FEEDBACK_BUCKET)
+    .remove([storagePath]);
+
+  if (error) {
+    throw new Error(`Feedback attachment delete failed: ${error.message}`);
+  }
+}
+

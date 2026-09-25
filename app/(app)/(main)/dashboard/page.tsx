@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
 import { useConversationStore } from "@/stores/conversation-store";
@@ -119,6 +120,9 @@ export default function DashboardPage() {
 
   useDocumentPolling();
 
+  const displayDocuments: (Document | DashboardDocumentItem)[] =
+    documents.length > 0 ? documents.slice(0, 4) : REFERENCE_DOCS;
+
   const displayConversations: DashboardConversationItem[] =
     conversations.length > 0
       ? conversations.slice(0, 4).map((c, idx) => {
@@ -155,19 +159,29 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="relative min-h-full w-full overflow-x-hidden">
+    <div className="relative min-h-full w-full overflow-x-hidden pt-14 sm:pt-6 pb-28 sm:pb-12 select-none isolate">
       {/* Atmospheric Ambient Nebula Glows */}
-
-      <div className="relative px-4 sm:px-8 py-7 max-w-7xl mx-auto space-y-12">
+      <div className="relative px-4 sm:px-6 lg:px-8 py-2 sm:py-5 max-w-7xl mx-auto space-y-6 sm:space-y-10">
         {/* Hero Section */}
-        <DashboardHero onOpenUpload={openUpload} />
+        <DashboardHero />
 
         {/* Recent Documents */}
-        <RecentDocumentsSection documents={documents} onOpenDoc={handleOpenDoc} />
+        <RecentDocumentsSection documents={displayDocuments} onOpenDoc={handleOpenDoc} />
 
         {/* Recent Conversations */}
         <RecentConversationsSection conversations={displayConversations} onOpenConv={handleOpenConv} />
       </div>
+
+      {/* Mobile Floating Action Button (FAB) for instant document upload */}
+      <button
+        type="button"
+        onClick={openUpload}
+        className="fixed bottom-20 right-5 z-30 sm:hidden flex h-13 w-13 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.6)] border border-white/20 active:scale-95 transition-transform cursor-pointer"
+        aria-label="Upload document"
+        title="Upload document"
+      >
+        <Plus className="h-6 w-6 stroke-[2.5]" />
+      </button>
 
       {/* Subtle Atmospheric Bottom Glow */}
       <BottomGlow />

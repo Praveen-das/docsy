@@ -35,10 +35,10 @@ export function Dialog({ isOpen, onClose, title, description, children, classNam
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 xs:p-4 sm:p-6">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-xs will-change-transform transition-opacity duration-150"
+        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs will-change-transform transition-opacity duration-150"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -50,32 +50,32 @@ export function Dialog({ isOpen, onClose, title, description, children, classNam
         aria-labelledby={title ? "dialog-title" : undefined}
         aria-describedby={description ? "dialog-description" : undefined}
         className={cn(
-          "relative z-50 w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-2xl text-zinc-900 dark:border-white/5 dark:bg-[#121216] dark:text-zinc-100 transition-all duration-150 ease-out transform",
-          "scale-100 opacity-100 animate-in fade-in zoom-in-95",
+          "relative z-50 w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-4.5 xs:p-5 sm:p-6 shadow-2xl text-zinc-900 dark:border-white/10 dark:bg-[#10121a] dark:text-zinc-100 transition-all duration-150 ease-out transform",
+          "max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar scale-100 opacity-100 animate-in fade-in zoom-in-95",
           className,
         )}
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-md p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:text-zinc-200 dark:hover:bg-white/5 transition-colors cursor-pointer"
+          className="absolute right-3.5 top-3.5 rounded-xl p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-white/5 transition-colors cursor-pointer active:scale-95"
           aria-label="Close dialog"
         >
           <X className="h-4 w-4" />
         </button>
 
         {title && (
-          <h2 id="dialog-title" className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white pr-6">
+          <h2 id="dialog-title" className="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-white pr-8">
             {title}
           </h2>
         )}
 
         {description && (
-          <p id="dialog-description" className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+          <p id="dialog-description" className="mt-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
             {description}
           </p>
         )}
 
-        <div className="mt-4">{children}</div>
+        <div className="mt-3.5 sm:mt-4">{children}</div>
       </div>
     </div>
   );

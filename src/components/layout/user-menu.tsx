@@ -36,10 +36,10 @@ export function UserMenu({ isCollapsed, onClose }: UserMenuProps) {
     <div className="px-3 py-2.5 border-t border-white/[0.06] select-none flex items-center justify-between gap-2">
       {/* User profile link */}
       <Link
-        href="/settings"
+        href="?settings=profile"
         onClick={onClose}
         title="View Account Settings"
-        className="flex items-center gap-2.5 rounded-xl transition-colors min-w-0 flex-1"
+        className="flex items-center gap-2.5 rounded-xl transition-colors min-w-0 flex-1 cursor-pointer active:scale-[0.98]"
       >
         {/* Avatar badge */}
         <div className="relative shrink-0">

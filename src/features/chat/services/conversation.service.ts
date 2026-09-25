@@ -6,10 +6,10 @@ import { Conversation } from "@/types";
  */
 export const conversationService = {
   /**
-   * Fetches all conversations for the authenticated user.
+   * Fetches all conversations and pinned IDs for the authenticated user.
    */
-  async fetchConversations(): Promise<Conversation[]> {
-    const res = await api.get<Conversation[]>("/api/conversations");
+  async fetchConversations(): Promise<{ conversations: Conversation[]; pinnedIds: string[] }> {
+    const res = await api.get<{ conversations: Conversation[]; pinnedIds: string[] }>("/api/conversations");
     return res.data;
   },
 
@@ -81,5 +81,13 @@ export const conversationService = {
    */
   async deleteMessage(convId: string, messageId: string): Promise<void> {
     await api.delete(`/api/conversations/${convId}/messages/${messageId}`);
+  },
+
+  /**
+   * Toggles pin status for a conversation.
+   */
+  async togglePinConversation(convId: string): Promise<{ isPinned: boolean }> {
+    const res = await api.post<{ isPinned: boolean }>(`/api/conversations/${convId}/pin`);
+    return res.data;
   },
 };

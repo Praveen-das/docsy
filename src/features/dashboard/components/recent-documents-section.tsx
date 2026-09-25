@@ -14,17 +14,25 @@ export interface DashboardDocumentItem {
 }
 
 export interface RecentDocumentsSectionProps {
-  documents: Document[];
+  documents: (Document | (DashboardDocumentItem & Partial<Document>))[];
   onOpenDoc: (docId: string, isReal: boolean) => void;
 }
 
 export function RecentDocumentsSection({ documents, onOpenDoc }: RecentDocumentsSectionProps) {
-  console.log(documents);
-  return (
-    <div className="space-y-4 pt-2">
-      <DashboardSectionHeader title="Recent Documents" href="/documents" icon={FileText} />
+  if (documents.length === 0) {
+    return null;
+  }
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  return (
+    <div className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
+      <DashboardSectionHeader
+        title="Recent Documents"
+        href="/documents"
+        icon={FileText}
+        viewAllHref="/documents"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {documents.map((doc) => (
           <RecentDocumentCard key={doc.id} document={doc} onOpenDoc={onOpenDoc} />
         ))}

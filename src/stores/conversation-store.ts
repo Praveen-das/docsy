@@ -24,6 +24,7 @@ export interface ConversationState {
   regeneratingMessageId: string | null;
   isLoadingConversations: boolean;
   error: string | null;
+  pinnedIds: Set<string>;
 
   // Actions
   setActiveConversation: (convId: string | null) => void;
@@ -34,6 +35,7 @@ export interface ConversationState {
   saveDraft: (convId: string, draft: string) => void;
   renameConversation: (convId: string, newTitle: string) => Promise<void>;
   deleteConversation: (convId: string) => Promise<void>;
+  togglePinConversation: (convId: string) => Promise<void>;
   clearSessionMessages: (convId: string) => void;
   syncConversationTitle: (convId: string) => Promise<void>;
   pollConversationTitle: (convId: string, initialTitle: string) => void;
@@ -178,6 +180,7 @@ export const useConversationStore = create<ConversationState>()(
       regeneratingMessageId: null,
       isLoadingConversations: false,
       error: null,
+      pinnedIds: new Set<string>(),
 
       setActiveConversation: (convId: string | null) => {
         if (get().activeConversationId === convId) return;
@@ -197,7 +200,8 @@ export const useConversationStore = create<ConversationState>()(
         try {
           const data = await conversationService.fetchConversations();
           set({
-            conversations: data,
+            conversations: data.conversations,
+            pinnedIds: new Set(data.pinnedIds),
             isLoadingConversations: false,
           });
         } catch (err: unknown) {
@@ -330,6 +334,29 @@ export const useConversationStore = create<ConversationState>()(
           await conversationService.deleteConversation(convId);
         } catch (err) {
           console.error("Failed to delete conversation on server:", err);
+        }
+      },
+
+      togglePinConversation: async (convId: string) => {
+        // Optimistic toggle
+        set((s) => {
+          const next = new Set(s.pinnedIds);
+          if (next.has(convId)) next.delete(convId);
+          else next.add(convId);
+          return { pinnedIds: next };
+        });
+
+        try {
+          await conversationService.togglePinConversation(convId);
+        } catch (err) {
+          // Revert on failure
+          set((s) => {
+            const reverted = new Set(s.pinnedIds);
+            if (reverted.has(convId)) reverted.delete(convId);
+            else reverted.add(convId);
+            return { pinnedIds: reverted };
+          });
+          console.error("Failed to toggle pin:", err);
         }
       },
 
@@ -520,6 +547,7 @@ export const useConversationStore = create<ConversationState>()(
           streamingContent: null,
           regeneratingMessageId: null,
           error: null,
+          pinnedIds: new Set<string>(),
         });
       },
     }),

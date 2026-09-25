@@ -12,6 +12,7 @@ const isProtectedRoute = createRouteMatcher([
   "/conversation(.*)",
   "/settings(.*)",
   "/billing(.*)",
+  "/pricing(.*)",
   "/chat(.*)",
   "/api/documents(.*)",
   "/api/conversations(.*)",
@@ -20,6 +21,9 @@ const isProtectedRoute = createRouteMatcher([
   "/api/stripe/cancel(.*)",
   "/api/stripe/reactivate(.*)",
   "/api/stripe/subscription(.*)",
+  "/api/stripe/invoices(.*)",
+  "/api/stripe/portal(.*)",
+  "/api/feedback(.*)",
   // Note: /api/webhooks/clerk, /api/webhooks/stripe, and /api/workflows are unauthenticated endpoints verified via signatures
 ]);
 

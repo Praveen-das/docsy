@@ -24,13 +24,13 @@ export function PricingCard({ plan, isCurrentPlan, onUpgrade, isLoading }: Prici
       className={cn(
         "relative rounded-2xl border p-6 sm:p-7 flex flex-col gap-5 transition-all duration-200",
         plan.highlighted
-          ? "border-blue-500/40 bg-gradient-to-b from-blue-950/30 to-[#121216] shadow-lg shadow-blue-900/20 dark:border-blue-500/30"
-          : "border-zinc-200 bg-white dark:border-white/8 dark:bg-[#121216]",
+          ? "border-indigo-500/40 bg-gradient-to-b from-indigo-950/30 via-[#0c1017] to-[#08090d] shadow-xl shadow-indigo-950/30"
+          : "border-white/[0.08] bg-[#0c1017]"
       )}
     >
       {plan.highlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-3 py-1 text-[11px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.35)] border border-white/15">
             <Sparkles className="h-3 w-3" />
             Most Popular
           </span>
@@ -39,18 +39,13 @@ export function PricingCard({ plan, isCurrentPlan, onUpgrade, isLoading }: Prici
 
       {/* Header */}
       <div className="space-y-1">
-        <h3
-          className={cn(
-            "text-base font-bold",
-            plan.highlighted ? "text-white" : "text-zinc-900 dark:text-zinc-100",
-          )}
-        >
+        <h3 className="text-base font-bold text-white">
           {plan.name}
         </h3>
         <p
           className={cn(
             "text-xs leading-relaxed",
-            plan.highlighted ? "text-blue-200/70" : "text-zinc-500 dark:text-zinc-400",
+            plan.highlighted ? "text-indigo-200/70" : "text-zinc-400"
           )}
         >
           {plan.description}
@@ -60,28 +55,18 @@ export function PricingCard({ plan, isCurrentPlan, onUpgrade, isLoading }: Prici
       {/* Price */}
       <div className="flex items-baseline gap-1">
         {isFree ? (
-          <span
-            className={cn(
-              "text-3xl font-extrabold",
-              plan.highlighted ? "text-white" : "text-zinc-900 dark:text-zinc-100",
-            )}
-          >
+          <span className="text-3xl font-extrabold text-white">
             Free
           </span>
         ) : (
           <>
-            <span
-              className={cn(
-                "text-3xl font-extrabold",
-                plan.highlighted ? "text-white" : "text-zinc-900 dark:text-zinc-100",
-              )}
-            >
+            <span className="text-3xl font-extrabold text-white">
               ${plan.monthlyPrice}
             </span>
             <span
               className={cn(
                 "text-xs font-medium",
-                plan.highlighted ? "text-blue-200/60" : "text-zinc-400 dark:text-zinc-500",
+                plan.highlighted ? "text-indigo-200/60" : "text-zinc-400"
               )}
             >
               / month
@@ -98,13 +83,13 @@ export function PricingCard({ plan, isCurrentPlan, onUpgrade, isLoading }: Prici
               className={cn(
                 "h-3.5 w-3.5 shrink-0 mt-0.5",
                 plan.highlighted
-                  ? "text-blue-400"
-                  : "text-emerald-600 dark:text-emerald-400",
+                  ? "text-indigo-400"
+                  : "text-emerald-400"
               )}
             />
             <span
               className={cn(
-                plan.highlighted ? "text-blue-100/80" : "text-zinc-600 dark:text-zinc-400",
+                plan.highlighted ? "text-indigo-100/90" : "text-zinc-300"
               )}
             >
               {feature}
@@ -117,10 +102,10 @@ export function PricingCard({ plan, isCurrentPlan, onUpgrade, isLoading }: Prici
       {isCurrentPlan ? (
         <div
           className={cn(
-            "w-full rounded-lg border py-2 text-center text-xs font-semibold",
+            "w-full rounded-xl border py-2.5 text-center text-xs font-semibold",
             plan.highlighted
-              ? "border-blue-500/30 bg-blue-900/30 text-blue-300"
-              : "border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-white/5 dark:bg-white/5 dark:text-zinc-400",
+              ? "border-indigo-500/30 bg-indigo-950/40 text-indigo-300"
+              : "border-white/10 bg-white/[0.04] text-zinc-300"
           )}
         >
           Current Plan
@@ -129,7 +114,7 @@ export function PricingCard({ plan, isCurrentPlan, onUpgrade, isLoading }: Prici
         <Button
           variant={plan.highlighted ? "accent" : "outline"}
           size="sm"
-          className="w-full"
+          className="w-full active:scale-[0.98] transition-transform"
           onClick={onUpgrade}
           disabled={isLoading || isFree}
           id={`upgrade-to-${plan.id}-btn`}

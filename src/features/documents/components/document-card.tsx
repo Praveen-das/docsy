@@ -36,7 +36,7 @@ export function DocumentCard({
   return (
     <GlowCard
       className={cn(
-        "p-5 flex-col justify-between items-stretch transition-all duration-200",
+        "p-4 sm:p-5 rounded-[22px] sm:rounded-2xl flex-col justify-between items-stretch transition-all duration-200",
         isMenuOpen ? "z-20" : "z-10",
       )}
     >
@@ -63,14 +63,16 @@ export function DocumentCard({
             </div>
           </div>
 
-          <MenuButton onClick={() => setIsMenuOpen(!isMenuOpen)} />
-          <DocumentOptionsMenu
-            isOpen={isMenuOpen}
-            document={doc}
-            onOpenConversations={onOpenConversations}
-            onDelete={onDelete}
-            onClose={() => setIsMenuOpen(false)}
-          />
+          <div className="relative shrink-0 z-10">
+            <MenuButton onClick={() => setIsMenuOpen(!isMenuOpen)} />
+            <DocumentOptionsMenu
+              isOpen={isMenuOpen}
+              document={doc}
+              onOpenConversations={onOpenConversations}
+              onDelete={onDelete}
+              onClose={() => setIsMenuOpen(false)}
+            />
+          </div>
         </div>
       </div>
 
@@ -82,16 +84,24 @@ export function DocumentCard({
             <span>Analyzing document contents...</span>
           </span>
         ) : doc.status === "FAILED" ? (
-          <span className="text-rose-400 font-medium">
-            {doc.error || "Processing failed. Click retry to re-analyze."}
+          <span className="text-rose-400 font-normal leading-snug">
+            {doc.error || (
+              <>
+                Upload failed: file not found in storage.
+                <br />
+                Please re-upload.
+              </>
+            )}
           </span>
         ) : (
-          <span>Architecture overview, reference sections, and conversation insights.</span>
+          <span className="text-[#818ea8]">
+            Architecture overview, reference sections, and conversation insights...
+          </span>
         )}
       </div>
 
       {/* Card Bottom: Conversation Counter & Action Button */}
-      <div className="mt-5 pt-3.5 border-t border-white/[0.06] flex items-center justify-between gap-2 relative z-10">
+      <div className="mt-4 sm:mt-5 pt-3 sm:pt-3.5 border-t border-white/[0.06] flex items-center justify-between gap-2 relative z-10">
         <button
           type="button"
           onClick={() => onOpenConversations(doc)}

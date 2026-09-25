@@ -76,10 +76,10 @@ export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: Sidebar
       {/* Sidebar Container matching Image 1: Deep obsidian surface without right border */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#07080c] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
-          enableTransitions && "transition-[width] duration-200 ease-out",
+          "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#07080c] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden shadow-2xl lg:shadow-none transition-transform lg:transition-[width] duration-200 ease-out",
           effectiveIsOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-16" : "w-64",
+          "w-72 sm:w-64 max-w-[85vw] lg:max-w-none",
+          isCollapsed ? "lg:w-16" : "lg:w-64",
         )}
       >
         {/* Ambient subtle light gradient inside sidebar matching reference image */}
@@ -87,7 +87,11 @@ export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: Sidebar
         <div className="absolute bottom-10 right-0 w-44 h-80 bg-indigo-300/5 rounded-full blur-3xl will-change-transform pointer-events-none -z-10" />
 
         {/* Brand Header with Stylized D Logo */}
-        <SidebarHeader isCollapsed={isCollapsed} onToggleCollapse={setSidebarCollapsed} />
+        <SidebarHeader
+          isCollapsed={isCollapsed}
+          onToggleCollapse={setSidebarCollapsed}
+          onClose={effectiveOnClose}
+        />
 
         {/* Navigation Menu & Upgrade to Pro Card */}
         <SidebarNavigation isCollapsed={isCollapsed} onClose={effectiveOnClose} onOpenSearch={onOpenSearch} />

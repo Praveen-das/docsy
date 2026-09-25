@@ -247,3 +247,142 @@ export async function getSubscriptionByCustomerId(customerId: string): Promise<S
 
   return result[0] ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// Invoices & Portal helpers
+// ---------------------------------------------------------------------------
+
+export interface InvoiceDto {
+  id: string;
+  number: string | null;
+  created: number;
+  amountPaid: number;
+  currency: string;
+  status: string | null;
+  pdfUrl: string | null;
+  hostedInvoiceUrl: string | null;
+}
+
+export interface PaymentMethodDto {
+  brand: string | null;
+  last4: string | null;
+  expMonth: number | null;
+  expYear: number | null;
+  email: string | null;
+}
+
+/**
+ * Fetch past invoices for the current user from Stripe.
+ */
+export async function getCustomerInvoices(userId: string): Promise<InvoiceDto[]> {
+  const sub = await getSubscriptionByUserId(userId);
+  if (!sub?.stripeCustomerId) {
+    return [];
+  }
+
+  try {
+    const invoices = await stripe.invoices.list({
+      customer: sub.stripeCustomerId,
+      limit: 12,
+    });
+
+    return invoices.data.map((inv) => ({
+      id: inv.id,
+      number: inv.number ?? null,
+      created: inv.created,
+      amountPaid: inv.amount_paid,
+      currency: inv.currency,
+      status: inv.status ?? null,
+      pdfUrl: inv.invoice_pdf ?? null,
+      hostedInvoiceUrl: inv.hosted_invoice_url ?? null,
+    }));
+  } catch (err) {
+    logger.error("subscription.invoices_fetch_failed", { userId, error: err });
+    return [];
+  }
+}
+
+/**
+ * Fetch default card payment method and billing email for the current user.
+ */
+export async function getCustomerPaymentMethod(userId: string): Promise<PaymentMethodDto | null> {
+  const sub = await getSubscriptionByUserId(userId);
+  if (!sub?.stripeCustomerId) {
+    return null;
+  }
+
+  try {
+    const customer = await stripe.customers.retrieve(sub.stripeCustomerId, {
+      expand: ["invoice_settings.default_payment_method"],
+    });
+
+    if ("deleted" in customer && customer.deleted) {
+      return null;
+    }
+
+    const email = customer.email ?? null;
+    const defaultPm = customer.invoice_settings?.default_payment_method;
+
+    if (defaultPm && typeof defaultPm === "object" && defaultPm.card) {
+      return {
+        brand: defaultPm.card.brand,
+        last4: defaultPm.card.last4,
+        expMonth: defaultPm.card.exp_month,
+        expYear: defaultPm.card.exp_year,
+        email,
+      };
+    }
+
+    // Fallback: query attached card payment methods
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: sub.stripeCustomerId,
+      type: "card",
+      limit: 1,
+    });
+
+    const firstCard = paymentMethods.data[0]?.card;
+    if (firstCard) {
+      return {
+        brand: firstCard.brand,
+        last4: firstCard.last4,
+        expMonth: firstCard.exp_month,
+        expYear: firstCard.exp_year,
+        email,
+      };
+    }
+
+    return {
+      brand: null,
+      last4: null,
+      expMonth: null,
+      expYear: null,
+      email,
+    };
+  } catch (err) {
+    logger.warn("subscription.payment_method_fetch_failed", { userId, error: err });
+    return null;
+  }
+}
+
+/**
+ * Create a Stripe Customer Portal Session for managing subscriptions, cards, and tax details.
+ */
+export async function createCustomerPortalSession(userId: string): Promise<string> {
+  const sub = await getSubscriptionByUserId(userId);
+  if (!sub?.stripeCustomerId) {
+    throw new Error("No Stripe customer found for this account. Upgrade to Pro first.");
+  }
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: sub.stripeCustomerId,
+    return_url: `${APP_URL}/billing`,
+  });
+
+  if (!session.url) {
+    throw new Error("Stripe Customer Portal URL was not generated");
+  }
+
+  logger.info("subscription.portal_session_created", { userId, portalSessionId: session.id });
+  return session.url;
+}
+

@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   createConversation,
   listConversations,
+  listPinnedConversationIds,
 } from "@/services/conversation.service";
 
 const createConversationSchema = z.object({
@@ -24,7 +25,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const conversations = await listConversations(userId);
+  const [conversations, pinnedIds] = await Promise.all([
+    listConversations(userId),
+    listPinnedConversationIds(userId),
+  ]);
   const withTokens = await Promise.all(
     conversations.map(async (conv) => ({
       ...conv,
@@ -36,7 +40,7 @@ export async function GET() {
     }))
   );
 
-  return NextResponse.json(withTokens);
+  return NextResponse.json({ conversations: withTokens, pinnedIds });
 }
 
 /**

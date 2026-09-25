@@ -39,11 +39,11 @@ export function DeleteDocumentDialog({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 pt-2">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isDeleting}>
+        <div className="flex flex-col-reverse xs:flex-row items-stretch xs:items-center justify-end gap-2.5 pt-2">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={isDeleting} className="w-full xs:w-auto">
             Cancel
           </Button>
-          <Button variant="destructive" size="sm" onClick={onConfirm} disabled={isDeleting}>
+          <Button variant="destructive" size="sm" onClick={onConfirm} disabled={isDeleting} className="w-full xs:w-auto">
             {isDeleting ? "Deleting..." : "Confirm Deletion"}
           </Button>
         </div>

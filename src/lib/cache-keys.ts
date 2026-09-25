@@ -4,6 +4,7 @@
 export const CACHE_KEYS = {
   documentList: (userId: string) => `user:${userId}:documents`,
   favoriteDocuments: (userId: string) => `user:${userId}:favorite_docs`,
+  pinnedConversations: (userId: string) => `user:${userId}:pinned_convs`,
   documentMeta: (docId: string) => `doc:${docId}:meta`,
   documentStatus: (docId: string) => `doc:status:${docId}`,
   conversationList: (userId: string) => `user:${userId}:conversations`,

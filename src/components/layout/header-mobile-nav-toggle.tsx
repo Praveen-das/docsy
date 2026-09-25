@@ -29,7 +29,7 @@ export function HeaderMobileNavToggle({ onToggle }: HeaderMobileNavToggleProps) 
       <button
         type="button"
         onClick={handleClick}
-        className="rounded-lg p-2 text-zinc-400 hover:bg-white/5 hover:text-white cursor-pointer active:scale-95 transition-all"
+        className="hidden md:flex lg:hidden rounded-lg p-2 text-zinc-400 hover:bg-white/5 hover:text-white cursor-pointer active:scale-95 transition-all"
         aria-label="Toggle navigation menu"
       >
         <Menu className="h-5 w-5" />

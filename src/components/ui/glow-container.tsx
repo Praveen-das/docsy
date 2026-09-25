@@ -21,7 +21,7 @@ export const GlowContainer = React.forwardRef<HTMLDivElement, GlowContainerProps
       <div
         ref={ref}
         className={cn(
-          "user-menu-glow relative rounded-[26px] bg-[#0c1017]/80 p-3.5 backdrop-blur-2xl backdrop-saturate-150 overflow-hidden",
+          "user-menu-glow relative rounded-[26px] bg-(--tile-bg) p-3.5 backdrop-blur-2xl backdrop-saturate-150 overflow-hidden",
           className,
         )}
         {...props}

@@ -54,6 +54,7 @@ export function ConversationOptionsMenu({
 }: ConversationOptionsMenuProps) {
   const renameConversation = useConversationStore((s) => s.renameConversation);
   const deleteConversation = useConversationStore((s) => s.deleteConversation);
+  const togglePinConversation = useConversationStore((s) => s.togglePinConversation);
 
   // --- Default implementations ---
 
@@ -79,8 +80,8 @@ export function ConversationOptionsMenu({
 
   const handlePin = useCallback(() => {
     if (onPin) return onPin();
-    // TODO: wire to pin store action when available
-  }, [onPin]);
+    togglePinConversation(conversationId);
+  }, [onPin, togglePinConversation, conversationId]);
 
   const handleDelete = useCallback(() => {
     if (onDelete) return onDelete();

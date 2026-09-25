@@ -45,18 +45,18 @@ Authoritative CSS variables, Tailwind configurations, and token constants for Do
   --color-pdf-red: #d91428;
 
   /* Spacing Scale */
-  --space-2xs: 0.25rem;    /* 4px */
-  --space-xs: 0.5rem;      /* 8px */
-  --space-sm: 0.75rem;     /* 12px */
-  --space-md: 1rem;        /* 16px */
-  --space-lg: 1.5rem;      /* 24px */
-  --space-xl: 2rem;        /* 32px */
-  --space-2xl: 3rem;       /* 48px */
+  --space-2xs: 0.25rem; /* 4px */
+  --space-xs: 0.5rem; /* 8px */
+  --space-sm: 0.75rem; /* 12px */
+  --space-md: 1rem; /* 16px */
+  --space-lg: 1.5rem; /* 24px */
+  --space-xl: 2rem; /* 32px */
+  --space-2xl: 3rem; /* 48px */
 
   /* Corner Radii Scale */
-  --radius-sm: 0.5rem;     /* 8px */
-  --radius-md: 0.75rem;    /* 12px */
-  --radius-lg: 1rem;       /* 16px */
+  --radius-sm: 0.5rem; /* 8px */
+  --radius-md: 0.75rem; /* 12px */
+  --radius-lg: 1rem; /* 16px */
   --radius-card: 1.375rem; /* 22px */
   --radius-dropzone: 2.125rem; /* 34px */
   --radius-full: 9999px;
@@ -146,17 +146,17 @@ export const springTokens = {
 
 ## 3. Tailwind Quick-Reference
 
-| Design Token | Equivalent Tailwind Class |
-|---|---|
-| Card background | `bg-(--surface-card)` or `bg-[#0c1017]` |
-| Card border | `border border-white/[0.07]` |
-| Card hover surface | `hover:bg-[#10141f]` |
-| Card hover border | `hover:border-indigo-400/35` |
-| Card corner radius | `rounded-[22px]` |
-| Card idle shadow | `shadow-lg shadow-black/30` |
-| Primary text | `text-white` or `text-[#f1f5f9]` |
-| Secondary text | `text-slate-400` or `text-[#94a3b8]` |
-| Muted metadata | `text-[#818ea8]` or `text-[#6b7794]` |
-| Primary CTA button | `Button variant="accent"` |
-| Active press feedback | `active:scale-[0.98]` |
-| Hairline separator | `w-px h-3 bg-white/10` |
+| Design Token          | Equivalent Tailwind Class            |
+| --------------------- | ------------------------------------ |
+| Card background       | `bg-(--tile-bg)`                     |
+| Card border           | `border border-(--tile-border)`      |
+| Card hover surface    | `hover:bg-(--tile-bg-hover)`         |
+| Card hover border     | `hover:border-(--tile-border-hover)` |
+| Card corner radius    | `rounded-[22px]`                     |
+| Card idle shadow      | `shadow-lg shadow-black/30`          |
+| Primary text          | `text-white` or `text-[#f1f5f9]`     |
+| Secondary text        | `text-slate-400` or `text-[#94a3b8]` |
+| Muted metadata        | `text-[#818ea8]` or `text-[#6b7794]` |
+| Primary CTA button    | `Button variant="accent"`            |
+| Active press feedback | `active:scale-[0.98]`                |
+| Hairline separator    | `w-px h-3 bg-white/10`               |

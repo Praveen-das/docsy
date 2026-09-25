@@ -8,11 +8,13 @@ import { DocsyIcon } from "@/components/ui/logo";
 export interface SidebarHeaderProps {
   isCollapsed: boolean;
   onToggleCollapse: (collapsed: boolean) => void;
+  onClose?: () => void;
 }
 
 export function SidebarHeader({
   isCollapsed,
   onToggleCollapse,
+  onClose,
 }: SidebarHeaderProps) {
   return (
     <div className="flex h-20 shrink-0 items-center px-5 relative overflow-hidden bg-transparent">
@@ -43,14 +45,28 @@ export function SidebarHeader({
             </span>
           </Link>
 
-          <button
-            onClick={() => onToggleCollapse(true)}
-            className="hidden lg:flex rounded-lg p-1.5 text-zinc-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer active:scale-95 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
-            title="Collapse sidebar"
-            aria-label="Collapse sidebar"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onToggleCollapse(true)}
+              className="hidden lg:flex rounded-lg p-1.5 text-zinc-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer active:scale-95 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex lg:hidden rounded-lg p-1.5 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer active:scale-95 shrink-0"
+                title="Close navigation menu"
+                aria-label="Close navigation menu"
+              >
+                <PanelLeftClose className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

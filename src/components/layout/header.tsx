@@ -32,7 +32,7 @@ export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps
   return (
     <header
       className={cn(
-        "sticky top-0 -mb-10 z-30 flex h-20 shrink-0 w-full items-center justify-between px-6 sm:px-7",
+        "sticky top-0 -mb-10 z-30 flex h-16 sm:h-20 shrink-0 w-full items-center justify-between px-3 xs:px-4 sm:px-7 gap-2 sm:gap-4 lg:gap-6",
         "bg-transparent transition-colors isolate",
         className,
       )}
@@ -43,11 +43,13 @@ export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps
       {/* Mobile Navigation Toggle */}
       <HeaderMobileNavToggle onToggle={onToggleSidebar} />
 
-      {/* Center Search Pill */}
-      <HeaderSearchBar onOpen={onOpenSearch} />
+      {/* Center Search Pill - Hidden on mobile where page-level search is present */}
+      <div className="hidden sm:flex flex-1 justify-center max-w-[460px] min-w-0">
+        <HeaderSearchBar onOpen={onOpenSearch} />
+      </div>
 
       {/* Right Controls: Theme Switcher & User Profile Pill */}
-      <div className="flex items-center gap-5 sm:gap-6 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-6 shrink-0">
         {/* <ThemeToggle variant="minimal" className="text-[#94a3b8] hover:text-white" /> */}
         <HeaderUserMenu />
       </div>
