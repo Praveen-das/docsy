@@ -27,6 +27,7 @@ const isDisplayable = (message: Message) => message.role !== "assistant" || mess
 
 function MessageRow({
   message,
+  isStreaming = false,
   isRegenerating = false,
   streamingContent = null,
   onEditMessage,
@@ -35,6 +36,7 @@ function MessageRow({
   onShareMessage,
 }: {
   message: Message;
+  isStreaming?: boolean;
   isRegenerating?: boolean;
   streamingContent?: string | null;
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
@@ -46,6 +48,7 @@ function MessageRow({
     <div className="mx-auto w-full max-w-2xl pb-6">
       <ChatMessageItem
         message={message}
+        isStreaming={isStreaming}
         isRegenerating={isRegenerating}
         streamingContent={isRegenerating ? streamingContent : null}
         onEdit={onEditMessage}
@@ -60,10 +63,7 @@ function MessageRow({
 const TypingIndicator = React.memo(function TypingIndicator() {
   return (
     <div className="mx-auto w-full max-w-2xl flex items-center gap-2.5 text-sm justify-start pb-6">
-      <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white text-[10px] font-bold shrink-0 shadow-2xs">
-        D
-      </div>
-      <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-xs border border-zinc-200 bg-white px-3.5 py-2.5 shadow-2xs dark:border-white/10 dark:bg-[#121215]">
+      <div className="flex items-center gap-1.5 px-3.5 py-2.5">
         <BounceDot delay="-0.32s" />
         <BounceDot delay="-0.16s" />
         <BounceDot />
@@ -141,14 +141,14 @@ export function MessageList({
   const prevScrollOffsetRef = useRef<number>(0);
   const isPrependingRef = useRef(false);
 
+  const showStreaming = Boolean(streamingContent) && !regeneratingMessageId;
+
   const displayHistory = messages.filter(isDisplayable);
   const displayPending = pendingMessages.filter(isDisplayable);
   const messageCount = displayHistory.length + displayPending.length;
 
-  const showStreaming = streamingContent !== null && !regeneratingMessageId;
-  const showTyping = isAiTyping && !showStreaming && !regeneratingMessageId;
   const showBeginningMarker = !hasMoreMessages && displayHistory.length > 0;
-  const totalChildCount = messageCount + +showStreaming + +showTyping + +showBeginningMarker;
+  const totalChildCount = messageCount + +showStreaming + +isAiTyping + +showBeginningMarker;
 
   // ── Scroll tracking & upward trigger ──────────────────────
 
@@ -341,6 +341,7 @@ export function MessageList({
             onShareMessage={onShareMessage}
           />
         ))}
+
         {displayPending.map((msg) => (
           <MessageRow
             key={msg.id}
@@ -357,17 +358,18 @@ export function MessageList({
         {showStreaming && (
           <MessageRow
             key="streaming-ai-message"
+            isStreaming={true}
             message={{
               id: "streaming-ai-message",
               conversationId: "",
               role: "assistant",
-              content: streamingContent,
+              content: streamingContent ?? "",
               createdAt: STREAMING_CREATED_AT,
             }}
           />
         )}
 
-        {showTyping && <TypingIndicator />}
+        {isAiTyping && <TypingIndicator />}
       </VList>
     </div>
   );

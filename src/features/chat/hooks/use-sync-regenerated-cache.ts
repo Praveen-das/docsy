@@ -50,8 +50,6 @@ export function useSyncRegeneratedCache(
 
         lastKnownRegIdRef.current = null;
       }
-
-      queryClient.invalidateQueries({ queryKey: ["conversations", activeConvId, "messages"] });
     }
     prevLoadingRef.current = isLoadingAi;
   }, [isLoadingAi, activeConvId, queryClient]);

@@ -75,9 +75,7 @@ async function executeChatStream({
   const conversationToken = get().getStreamToken(convId);
   const targetId = replaceAssistantMessageId || assistantMessageId;
   const customPrompt =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem(STORAGE_KEY_CUSTOM_PROMPT) || undefined
-      : undefined;
+    typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY_CUSTOM_PROMPT) || undefined : undefined;
 
   await streamChatResponse({
     convId,
@@ -93,34 +91,30 @@ async function executeChatStream({
       set(() => ({
         isLoadingAi: false,
         isAiTyping: true,
-        streamingContent: "",
+        streamingContent: null,
       }));
     },
 
     onChunk: (accumulatedText) => {
       set((state) => {
-        const currentSession = state.sessionMessages[convId] || [];
-        const existingIdx = currentSession.findIndex((m) => m.id === targetId);
-
-        let updatedSession: Message[];
-        if (existingIdx !== -1) {
-          updatedSession = currentSession.map((m) =>
-            m.id === targetId ? { ...m, content: accumulatedText } : m,
-          );
-        } else {
-          const aiMsg = createMessage(convId, "assistant", accumulatedText, {
-            id: targetId,
-          });
-          updatedSession = [...currentSession, aiMsg];
+        // If this is an in-place regeneration, update the existing session message
+        if (replaceAssistantMessageId) {
+          const currentSession = state.sessionMessages[convId] || [];
+          return {
+            sessionMessages: {
+              ...state.sessionMessages,
+              [convId]: currentSession.map((m) => (m.id === targetId ? { ...m, content: accumulatedText } : m)),
+            },
+            streamingContent: accumulatedText,
+            isAiTyping: false,
+          };
         }
 
+        // For new generations, streamingContent powers the dedicated streaming bubble in MessageList.
+        // Avoid pushing into sessionMessages during streaming to prevent duplicate rendering.
         return {
-          sessionMessages: {
-            ...state.sessionMessages,
-            [convId]: updatedSession,
-          },
           streamingContent: accumulatedText,
-          isAiTyping: true,
+          isAiTyping: false,
         };
       });
     },
@@ -132,9 +126,7 @@ async function executeChatStream({
 
         let updatedSession: Message[];
         if (existingIdx !== -1) {
-          updatedSession = currentSession.map((m) =>
-            m.id === targetId ? { ...m, content: fullText } : m,
-          );
+          updatedSession = currentSession.map((m) => (m.id === targetId ? { ...m, content: fullText } : m));
         } else {
           const aiMsg = createMessage(convId, "assistant", fullText, {
             id: targetId,
@@ -163,9 +155,7 @@ async function executeChatStream({
     onError: (errorDetail) => {
       set((state) => {
         const currentSession = state.sessionMessages[convId] || [];
-        const errorContent = errorDetail.startsWith("⚠️")
-          ? errorDetail
-          : `⚠️ **Request Notice**: ${errorDetail}`;
+        const errorContent = errorDetail.startsWith("⚠️") ? errorDetail : `⚠️ **Request Notice**: ${errorDetail}`;
         const errorMsg = createMessage(convId, "assistant", errorContent, {
           id: targetId,
         });
@@ -202,8 +192,19 @@ export const useConversationStore = create<ConversationUIState>()(
       regeneratingMessageId: null,
 
       setActiveConversation: (convId: string | null) => {
-        if (get().activeConversationId === convId) return;
-        set({ activeConversationId: convId, streamingContent: null });
+        const prevId = get().activeConversationId;
+        if (prevId === convId) return;
+        set((state) => {
+          const updatedSession = { ...state.sessionMessages };
+          if (prevId) {
+            delete updatedSession[prevId];
+          }
+          return {
+            activeConversationId: convId,
+            sessionMessages: updatedSession,
+            streamingContent: null,
+          };
+        });
       },
 
       setStreamToken: (convId: string, token: string) => {
@@ -222,14 +223,19 @@ export const useConversationStore = create<ConversationUIState>()(
       switchConversation: (targetConvId: string, currentDraft?: string) => {
         const state = get();
         const updatedDrafts = { ...state.drafts };
+        const updatedSession = { ...state.sessionMessages };
 
-        if (state.activeConversationId && typeof currentDraft === "string") {
-          updatedDrafts[state.activeConversationId] = currentDraft;
+        if (state.activeConversationId) {
+          if (typeof currentDraft === "string") {
+            updatedDrafts[state.activeConversationId] = currentDraft;
+          }
+          delete updatedSession[state.activeConversationId];
         }
 
         set({
           activeConversationId: targetConvId,
           drafts: updatedDrafts,
+          sessionMessages: updatedSession,
           streamingContent: null,
         });
       },
@@ -272,7 +278,7 @@ export const useConversationStore = create<ConversationUIState>()(
       sendMessage: async (
         convId: string,
         content: string,
-        options?: { priorMessages?: Message[]; activeDoc?: Document } | Document
+        options?: { priorMessages?: Message[]; activeDoc?: Document } | Document,
       ) => {
         const state = get();
         const now = new Date().toISOString();
@@ -333,9 +339,7 @@ export const useConversationStore = create<ConversationUIState>()(
           return {
             sessionMessages: {
               ...state.sessionMessages,
-              [convId]: currentSession.map((m) =>
-                m.id === messageId ? { ...m, content: newContent } : m
-              ),
+              [convId]: currentSession.map((m) => (m.id === messageId ? { ...m, content: newContent } : m)),
             },
           };
         });
@@ -353,7 +357,7 @@ export const useConversationStore = create<ConversationUIState>()(
         options: {
           promptContent: string;
           conversationHistory?: { role: "user" | "assistant"; content: string }[];
-        }
+        },
       ) => {
         set({
           isLoadingAi: true,
@@ -393,8 +397,8 @@ export const useConversationStore = create<ConversationUIState>()(
         drafts: state.drafts,
         activeConversationId: state.activeConversationId,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Register token handlers so Axios interceptor seamlessly coordinates with Zustand state

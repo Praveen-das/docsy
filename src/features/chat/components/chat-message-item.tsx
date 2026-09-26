@@ -24,6 +24,7 @@ export interface ChatMessageItemProps {
 
 export const ChatMessageItem = React.memo(function ChatMessageItem({
   message,
+  isStreaming = false,
   isRegenerating = false,
   streamingContent = null,
   onEdit,
@@ -42,19 +43,11 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
 
   const formattedTime = formatTime(message.createdAt) || "10:24 AM";
   const displayContent = isRegenerating && streamingContent !== null ? streamingContent : message.content;
+  const isStreamingActive = isStreaming || isRegenerating || message.id === "streaming-ai-message";
   const isErrorMessage =
     !isUser && (message.content.startsWith("⚠️ **Request Notice**:") || message.content.startsWith("⚠️"));
 
   const displayName = user?.fullName || user?.firstName || "Praveen Das";
-  const userInitials =
-    user?.firstName && user?.lastName
-      ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-      : displayName
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase() || "PD";
 
   // Keep draft in sync
   useEffect(() => {
@@ -181,40 +174,42 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
             <MarkdownRenderer content={displayContent} onCitationClick={onCitationClick} />
           </div>
 
-          {/* Message Action Toolbar matching Image 2: Copy, Regenerate, Thumbs */}
-          <div className="flex items-center gap-2 pt-1 text-xs text-zinc-400 select-none">
-            {/* Copy button */}
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-emerald-400 text-xs">Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  <span className="text-xs">Copy</span>
-                </>
-              )}
-            </button>
-
-            {/* Regenerate button */}
-            {onRegenerate && (
+          {/* Message Action Toolbar: Copy, Regenerate - display only after stream completion */}
+          {!isStreamingActive && (
+            <div className="flex items-center gap-2 pt-1 text-xs text-zinc-400 select-none -ml-2">
+              {/* Copy button */}
               <button
                 type="button"
-                onClick={() => onRegenerate(message.id)}
-                disabled={isRegenerating}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400 disabled:opacity-40"
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400"
               >
-                <RotateCcw className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin text-indigo-400")} />
-                <span className="text-xs">Regenerate</span>
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="text-emerald-400 text-xs">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" />
+                    <span className="text-xs">Copy</span>
+                  </>
+                )}
               </button>
-            )}
-          </div>
+
+              {/* Regenerate button */}
+              {onRegenerate && (
+                <button
+                  type="button"
+                  onClick={() => onRegenerate(message.id)}
+                  disabled={isRegenerating}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400 disabled:opacity-40"
+                >
+                  <RotateCcw className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin text-indigo-400")} />
+                  <span className="text-xs">Regenerate</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

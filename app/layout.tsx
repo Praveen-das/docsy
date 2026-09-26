@@ -4,7 +4,7 @@ import { Inter, Caveat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/providers/query-provider";
-import { OfflineProvider } from "@/providers/offline-provider";
+// import { OfflineProvider } from "@/providers/offline-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -67,7 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ClerkProvider>
           <QueryProvider>
             <ThemeProvider>
-              <OfflineProvider>{children}</OfflineProvider>
+              {/* <OfflineProvider>
+                </OfflineProvider> */}
+              {children}
             </ThemeProvider>
           </QueryProvider>
         </ClerkProvider>
