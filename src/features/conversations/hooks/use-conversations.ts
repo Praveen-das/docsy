@@ -17,6 +17,8 @@ export interface ConversationsData {
   pinnedIds: string[];
 }
 
+import { saveOfflineConversations, getOfflineConversations } from "@/lib/offline-db";
+
 /**
  * Hook to retrieve all user conversations and pinned IDs.
  */
@@ -24,11 +26,28 @@ export function useConversations() {
   const query = useQuery<ConversationsData>({
     queryKey: CONVERSATION_QUERY_KEYS.all,
     queryFn: async () => {
-      const data = await conversationService.fetchConversations();
-      return {
-        conversations: data.conversations || [],
-        pinnedIds: data.pinnedIds || [],
-      };
+      try {
+        const data = await conversationService.fetchConversations();
+        const result = {
+          conversations: data.conversations || [],
+          pinnedIds: data.pinnedIds || [],
+        };
+        // Save to IndexedDB offline storage
+        saveOfflineConversations(result.conversations).catch(() => {});
+        return result;
+      } catch (err) {
+        // Fallback to offline cache
+        try {
+          const cached = await getOfflineConversations();
+          if (cached && cached.length > 0) {
+            return {
+              conversations: cached,
+              pinnedIds: [],
+            };
+          }
+        } catch (_) {}
+        throw err;
+      }
     },
     staleTime: 1000 * 30,
   });

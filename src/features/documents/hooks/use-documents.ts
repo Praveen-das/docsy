@@ -5,6 +5,8 @@ import { Document, DocumentStatusDto } from "@/types";
 import { documentApiService } from "../services/document-api.service";
 import { getQueryClient } from "@/lib/query-client";
 
+import { saveOfflineDocuments, getOfflineDocuments } from "@/lib/offline-db";
+
 export const DOCUMENT_QUERY_KEYS = {
   all: ["documents"] as const,
   detail: (id: string) => ["documents", id] as const,
@@ -16,7 +18,21 @@ export const DOCUMENT_QUERY_KEYS = {
 export function useDocuments() {
   return useQuery<Document[]>({
     queryKey: DOCUMENT_QUERY_KEYS.all,
-    queryFn: documentApiService.fetchDocuments,
+    queryFn: async () => {
+      try {
+        const docs = await documentApiService.fetchDocuments();
+        saveOfflineDocuments(docs).catch(() => {});
+        return docs;
+      } catch (err) {
+        try {
+          const cached = await getOfflineDocuments();
+          if (cached && cached.length > 0) {
+            return cached;
+          }
+        } catch (_) {}
+        throw err;
+      }
+    },
     staleTime: 1000 * 30,
     refetchInterval: (query) => {
       const docs = query.state.data;

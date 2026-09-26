@@ -20,6 +20,7 @@ import { addOptimisticDocument } from "./hooks/use-documents";
 import { useUIStore } from "@/stores/ui-store";
 import { GlowCard } from "@/components/ui/glow-card";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { useNetworkStatus } from "@/features/offline/hooks/use-network-status";
 
 export interface UploadModalProps {
   isOpen?: boolean;
@@ -31,6 +32,7 @@ type UploadStep = "idle" | "uploading" | "failed";
 
 export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps = {}) {
   const router = useRouter();
+  const { isOffline } = useNetworkStatus();
   const storeIsOpen = useUIStore((state) => state.isUploadOpen);
   const storeClose = useUIStore((state) => state.closeUpload);
 
@@ -242,20 +244,35 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
         {/* Content Body */}
         <div className="mt-3.5 sm:mt-4 space-y-3.5 sm:space-y-4 relative z-10">
+          {isOffline && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs">
+              <AlertCircle className="h-4 w-4 shrink-0 text-amber-400" />
+              <span>You are currently offline. Connect to the internet to upload and parse documents.</span>
+            </div>
+          )}
+
           {step === "idle" ? (
             <>
               {/* Dropzone Container */}
               {!selectedFile ? (
                 <GlowCard
                   onDragOver={(e) => {
+                    if (isOffline) return;
                     e.preventDefault();
                     setIsDragging(true);
                   }}
                   onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+                  onDrop={(e) => {
+                    if (isOffline) return;
+                    handleDrop(e);
+                  }}
+                  onClick={() => {
+                    if (isOffline) return;
+                    fileInputRef.current?.click();
+                  }}
                   className={cn(
                     "relative flex flex-col items-center justify-center rounded-[20px] sm:rounded-[22px] p-6 sm:p-10 text-center transition-all cursor-pointer group select-none",
+                    isOffline && "opacity-60 cursor-not-allowed",
                     isDragging
                       ? "border-indigo-400/80 bg-indigo-950/25 scale-[0.99] shadow-[0_0_35px_rgba(99,102,241,0.25)]"
                       : "border-white/[0.09] bg-[#0c1017]/60 hover:border-indigo-400/35 hover:bg-[#10141f]/80 active:scale-[0.995]",
@@ -362,7 +379,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                 <Button variant="outline" size="sm" onClick={handleClose}>
                   Cancel
                 </Button>
-                <Button variant="accent" size="sm" disabled={!selectedFile} onClick={handleStartUpload}>
+                <Button variant="accent" size="sm" disabled={!selectedFile || isOffline} onClick={handleStartUpload}>
                   <span>Analyze Document</span>
                   <ArrowRight className="h-3.5 w-3.5 ml-1" />
                 </Button>

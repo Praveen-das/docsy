@@ -3,6 +3,8 @@ import { Message, PaginatedMessagesResponse } from "@/types";
 import { api } from "@/lib/api-client";
 import axios from "axios";
 
+import { saveOfflineMessages, getOfflineMessages } from "@/lib/offline-db";
+
 import { mockMessages } from "@/lib/mock-data";
 
 export const MESSAGES_PAGE_SIZE = 30;
@@ -78,11 +80,21 @@ export function useConversationMessages(conversationId: string | null | undefine
           `/api/conversations/${conversationId}/messages`,
           { params }
         );
+        if (res.data?.messages) {
+          saveOfflineMessages(conversationId, res.data.messages).catch(() => {});
+        }
         return res.data;
       } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response?.status === 404) {
           return { messages: [], nextCursor: null, hasMore: false };
         }
+        // Fallback to offline IndexedDB cache
+        try {
+          const offlineMsgs = await getOfflineMessages(conversationId);
+          if (offlineMsgs && offlineMsgs.length > 0) {
+            return { messages: offlineMsgs, nextCursor: null, hasMore: false };
+          }
+        } catch (_) {}
         throw err;
       }
     },

@@ -1,63 +1,63 @@
 "use client";
 
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, CreditCard, Sparkles, ArrowRight, Shield, Zap } from "lucide-react";
+import { CheckCircle2, CreditCard, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/features/billing/use-subscription";
 import { useInvoices } from "@/features/billing/use-invoices";
 import { SubscriptionStatus } from "@/features/billing/subscription-status";
 import { InvoicesTable } from "@/features/billing/invoices-table";
 import { PaymentMethodCard } from "@/features/billing/payment-method-card";
-import { PLANS } from "@/lib/stripe-plans";
-
-const STORAGE_LIMIT_FREE_BYTES = 50 * 1024 * 1024; // 50 MB
-const STORAGE_LIMIT_PRO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 /**
- * /billing — Production-ready subscription, usage, and invoices center.
- *
- * Provides:
- * - Current plan overview and status
- * - Live multi-resource consumption dashboard (Queries, Documents, Storage)
- * - Pro subscription management (in-app cancel / reactivate)
- * - Payment method card with Stripe Customer Portal access
- * - Past invoices & receipts table with direct PDF download
+ * Isolated client banner component reading URL query parameters.
+ * Separated to ensure `useSearchParams()` is strictly encapsulated inside a `<Suspense>` boundary.
  */
-export default function BillingPage() {
-  const { data: subscription, isLoading: isSubLoading } = useSubscription();
-  const { data: invoicesData, isLoading: isInvoicesLoading } = useInvoices();
+function CheckoutBanner() {
   const searchParams = useSearchParams();
-
   const checkoutResult = searchParams.get("checkout");
 
-  const isPro = subscription?.plan === "pro";
-  const planDef = isPro ? PLANS.pro : PLANS.free;
+  if (checkoutResult === "success") {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-950/30 p-4 text-xs sm:text-sm text-emerald-300 shadow-lg shadow-emerald-950/20 animate-in fade-in duration-200">
+        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+        <div>
+          <span className="font-semibold text-white">Upgrade successful!</span> Your Pro subscription is now active.
+          Your 200 daily queries and 2 GB storage are ready to use.
+        </div>
+      </div>
+    );
+  }
 
-  const storageLimit = isPro ? STORAGE_LIMIT_PRO_BYTES : STORAGE_LIMIT_FREE_BYTES;
-  const maxDocuments = planDef.maxDocuments ?? 5;
-  const queriesLimit = subscription?.dailyQueriesLimit ?? planDef.dailyQueryLimit;
-  const queriesUsed = subscription?.dailyQueriesUsed ?? 0;
+  if (checkoutResult === "cancelled") {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border interactive-tile p-4 text-xs sm:text-sm text-zinc-300">
+        <CreditCard className="h-4 w-4 shrink-0 text-zinc-400" />
+        <span>Checkout was cancelled. Your current plan remains unchanged.</span>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Main billing view content containing plan status, payment methods, and invoices.
+ */
+function BillingContent() {
+  const { data: subscription, isLoading: isSubLoading } = useSubscription();
+  const { data: invoicesData, isLoading: isInvoicesLoading } = useInvoices();
+
+  const isPro = subscription?.plan === "pro";
 
   return (
     <div className="px-4 sm:px-8 py-7 max-w-7xl mt-8 lg:mt-8 mb-4 mx-auto space-y-7">
-      {/* Checkout Success / Cancel Banners */}
-      {checkoutResult === "success" && (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-950/30 p-4 text-xs sm:text-sm text-emerald-300 shadow-lg shadow-emerald-950/20 animate-in fade-in duration-200">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
-          <div>
-            <span className="font-semibold text-white">Upgrade successful!</span> Your Pro subscription is now active.
-            Your 200 daily queries and 2 GB storage are ready to use.
-          </div>
-        </div>
-      )}
-
-      {checkoutResult === "cancelled" && (
-        <div className="flex items-center gap-3 rounded-2xl border interactive-tile p-4 text-xs sm:text-sm text-zinc-300">
-          <CreditCard className="h-4 w-4 shrink-0 text-zinc-400" />
-          <span>Checkout was cancelled. Your current plan remains unchanged.</span>
-        </div>
-      )}
+      {/* Checkout Success / Cancel Banners wrapped in Suspense */}
+      <Suspense fallback={null}>
+        <CheckoutBanner />
+      </Suspense>
 
       {/* Current Plan Card (Free Tier Banner when not Pro) */}
       {!isSubLoading && !isPro && (
@@ -114,3 +114,31 @@ export default function BillingPage() {
     </div>
   );
 }
+
+/**
+ * Fallback skeleton while billing content or search params resolve.
+ */
+function BillingSkeleton() {
+  return (
+    <div className="px-4 sm:px-8 py-7 max-w-7xl mt-8 lg:mt-8 mb-4 mx-auto space-y-7 animate-pulse">
+      <div className="h-28 rounded-2xl border border-white/5 bg-zinc-900/40" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="h-64 rounded-2xl border border-white/5 bg-zinc-900/40" />
+        <div className="h-64 rounded-2xl border border-white/5 bg-zinc-900/40" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * /billing — Production-ready subscription, usage, and invoices center.
+ * Exported page wrapped in a top-level Suspense boundary for Next.js App Router static prerendering.
+ */
+export default function BillingPage() {
+  return (
+    <Suspense fallback={<BillingSkeleton />}>
+      <BillingContent />
+    </Suspense>
+  );
+}
+
