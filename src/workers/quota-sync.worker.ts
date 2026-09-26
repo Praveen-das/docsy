@@ -6,8 +6,8 @@ loadEnvConfig(process.cwd());
 import { syncDirtyQuotas } from "@/services/quota-sync.service";
 import { logger } from "@/lib/logger";
 
-const FLUSH_INTERVAL_MS = Number(process.env.QUOTA_SYNC_INTERVAL_MS) || 15_000;
-const BATCH_SIZE = Number(process.env.QUOTA_SYNC_BATCH_SIZE) || 100;
+const FLUSH_INTERVAL_MS = Number(process.env.QUOTA_SYNC_INTERVAL_MS);
+const BATCH_SIZE = Number(process.env.QUOTA_SYNC_BATCH_SIZE);
 
 let isFlushing = false;
 let isShuttingDown = false;

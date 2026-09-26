@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36" fill="none">
+  <defs>
+    <!-- Main Ribbon Gradient -->
+    <linearGradient id="docsyGrad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="40%" stop-color="#6366f1" />
+      <stop offset="85%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <!-- Ambient Glow Gradient -->
+    <radialGradient id="docsyGlow" cx="18" cy="18" r="16" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Top Fold Glass Sheen -->
+    <linearGradient id="docsySheen" x1="6" y1="4" x2="28" y2="16" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Inner Arc Overlay -->
+    <linearGradient id="docsyInnerArc" x1="14" y1="10" x2="26" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="docsyShadow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#4f46e5" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Atmospheric Backglow -->
+  <circle cx="18" cy="18" r="16" fill="url(#docsyGlow)" />
+
+  <!-- Primary Dimensional D Mark -->
+  <g filter="url(#docsyShadow)">
+    <!-- Background stem + outer loop compound path -->
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M6 7.5C6 5.567 7.567 4 9.5 4H19C26.1797 4 32 9.8203 32 17C32 24.1797 26.1797 30 19 30H9.5C7.567 30 6 28.433 6 26.5V7.5ZM12.5 10C12.5 9.17157 13.1716 8.5 14 8.5H18.5C23.1944 8.5 27 12.3056 27 17C27 21.6944 23.1944 25.5 18.5 25.5H14C13.1716 25.5 12.5 24.8284 12.5 24V10Z"
+      fill="url(#docsyGrad)"
+    />
+
+    <!-- Futuristic Interlocking AI Document Ribbon (Layered Depth) -->
+    <path
+      d="M12.5 8.5H18C22.6944 8.5 26.5 12.3056 26.5 17C26.5 21.6944 22.6944 25.5 18 25.5"
+      stroke="url(#docsyInnerArc)"
+      stroke-width="3.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Specular Rim Light on upper curvature -->
+    <path
+      d="M7 11V7.5C7 6.11929 8.11929 5 9.5 5H19C25.0751 5 30 9.92487 30.8 15.5"
+      stroke="url(#docsySheen)"
+      stroke-width="1.2"
+      stroke-linecap="round"
+    />
+
+    <!-- Document Fold Micro-Prism -->
+    <path
+      d="M19 4L32 17"
+      stroke="#ffffff"
+      stroke-opacity="0.3"
+      stroke-width="1"
+      stroke-linecap="round"
+    />
+
+    <!-- Core Intelligence Spark / Node -->
+    <circle cx="18" cy="17" r="2.2" fill="#ffffff" />
+    <circle cx="18" cy="17" r="1.2" fill="#38bdf8" />
+  </g>
+</svg>

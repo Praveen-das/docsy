@@ -20,7 +20,13 @@ export const metadata: Metadata = {
   description:
     "Upload PDFs and have clear, citation-backed conversations. Get instant answers with clickable page references.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon-32x32.png",
   },
 };
 
