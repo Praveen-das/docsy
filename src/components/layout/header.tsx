@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { HeaderSearchBar } from "./header-search-bar";
 import { HeaderMobileNavToggle } from "./header-mobile-nav-toggle";
@@ -24,11 +25,14 @@ export interface HeaderProps {
  *
  * Submodules:
  * - `HeaderMobileNavToggle`: Mobile drawer hamburger & brand logo
- * - `HeaderSearchBar`: Search pill with Ctrl+K shortcut & store trigger
+ * - `HeaderSearchBar`: Search pill with Ctrl+K shortcut & store trigger (displayed only on home page)
  * - `ThemeToggle (variant="minimal")`: Subtle sun toggle
  * - `HeaderUserMenu`: Avatar, displayName, and account settings dropdown
  */
 export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps) {
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
+
   return (
     <header
       className={cn(
@@ -43,9 +47,9 @@ export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps
       {/* Mobile Navigation Toggle */}
       <HeaderMobileNavToggle onToggle={onToggleSidebar} />
 
-      {/* Center Search Pill - Hidden on mobile where page-level search is present */}
+      {/* Center Search Pill - Displayed strictly on the home page */}
       <div className="hidden sm:flex flex-1 justify-center max-w-[460px] min-w-0">
-        <HeaderSearchBar onOpen={onOpenSearch} />
+        {isHomePage && <HeaderSearchBar onOpen={onOpenSearch} />}
       </div>
 
       {/* Right Controls: Theme Switcher & User Profile Pill */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -20,10 +20,7 @@ import {
   ConversationFilterTab,
   ConversationSortOption,
 } from "@/features/conversations/components/conversations-toolbar";
-import {
-  ConversationListRow,
-  ConversationItemData,
-} from "@/features/conversations/components/conversation-list-row";
+import { ConversationListRow, ConversationItemData } from "@/features/conversations/components/conversation-list-row";
 import { ConversationGridCard } from "@/features/conversations/components/conversation-grid-card";
 import { ConversationsEmptyState } from "@/features/conversations/components/conversations-empty-state";
 import { useConversationsData } from "@/features/conversations/hooks/use-conversations-data";
@@ -49,6 +46,7 @@ export default function ConversationsPage() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   // Active / Selected conversation item
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
@@ -115,19 +113,17 @@ export default function ConversationsPage() {
             onDocFilterChange={setSelectedDocFilter}
             uniqueDocNames={uniqueDocNames}
             isDocDropdownOpen={isDocDropdownOpen}
-            onToggleDocDropdown={(open) =>
-              setIsDocDropdownOpen((prev) => (open !== undefined ? open : !prev))
-            }
+            onToggleDocDropdown={(open) => setIsDocDropdownOpen((prev) => (open !== undefined ? open : !prev))}
             sortBy={sortBy}
             onSortChange={setSortBy}
             isSortOpen={isSortOpen}
-            onToggleSortOpen={(open) =>
-              setIsSortOpen((prev) => (open !== undefined ? open : !prev))
-            }
+            onToggleSortOpen={(open) => setIsSortOpen((prev) => (open !== undefined ? open : !prev))}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            isSearchExpanded={isSearchExpanded}
+            onToggleSearch={setIsSearchExpanded}
           />
 
           {/* Conversations Content: List View or Grid View */}
@@ -207,9 +203,7 @@ export default function ConversationsPage() {
         description="Deleting a conversation permanently removes its question history. Your uploaded documents will NOT be deleted."
       >
         <div className="space-y-4 pt-2">
-          <p className="text-xs text-zinc-400">
-            Are you sure you want to delete &ldquo;{convToDelete?.title}&rdquo;?
-          </p>
+          <p className="text-xs text-zinc-400">Are you sure you want to delete &ldquo;{convToDelete?.title}&rdquo;?</p>
           <div className="flex items-center justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setConvToDelete(null)}>
               Cancel

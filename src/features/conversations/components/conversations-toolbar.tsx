@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, List, Grid, Search, X, SlidersHorizontal, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FilterTabs, FilterTabOption } from "@/components/ui/filter-tabs";
@@ -37,6 +37,8 @@ export interface ConversationsToolbarProps {
   onViewModeChange: (mode: "list" | "grid") => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  isSearchExpanded?: boolean;
+  onToggleSearch?: (expanded: boolean) => void;
 }
 
 export function ConversationsToolbar({
@@ -55,7 +57,20 @@ export function ConversationsToolbar({
   onViewModeChange,
   searchQuery,
   onSearchChange,
+  isSearchExpanded,
+  onToggleSearch,
 }: ConversationsToolbarProps) {
+  const [internalSearchExpanded, setInternalSearchExpanded] = useState(false);
+  const searchExpanded = isSearchExpanded !== undefined ? isSearchExpanded : internalSearchExpanded;
+  const handleToggleSearch = onToggleSearch ?? setInternalSearchExpanded;
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchExpanded) {
+      const timer = setTimeout(() => searchInputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [searchExpanded]);
   const sortMenuItems = useMemo<CompactMenuItem[]>(
     () => [
       {
@@ -269,6 +284,48 @@ export function ConversationsToolbar({
                 },
               ]}
             />
+          </div>
+
+          {/* Expandable Search Input */}
+          <div className="relative flex items-center">
+            {searchExpanded ? (
+              <div className="relative flex items-center h-9 w-52 sm:w-60 lg:w-72 transition-all duration-200 animate-in fade-in zoom-in-95">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#818ea8] stroke-[2] z-10" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="Search conversations..."
+                  className="h-9 w-full rounded-xl border border-white/[0.08] bg-[#0c1017]/90 pl-9 pr-8 text-xs text-[#f1f5f9] placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSearchChange("");
+                    handleToggleSearch(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#818ea8] hover:text-white transition-colors cursor-pointer"
+                  aria-label="Close search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleToggleSearch(true)}
+                className={cn(
+                  "relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-[0.98] will-change-transform",
+                  searchQuery && "text-indigo-400 border-indigo-500/40 bg-indigo-500/10",
+                )}
+                title="Search conversations"
+                aria-label="Search conversations"
+              >
+                <Search className="h-4 w-4 stroke-[2]" />
+                {searchQuery && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-indigo-500" />}
+              </button>
+            )}
           </div>
         </div>
 
