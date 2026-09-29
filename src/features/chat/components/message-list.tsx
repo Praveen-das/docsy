@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Message, PaginatedMessagesResponse } from "@/types";
 import { EmptyChatState } from "./empty-chat-state";
 import { ChatMessageItem } from "./chat-message-item";
+import { ThinkingIndicator } from "./thinking-indicator";
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -59,24 +60,11 @@ function MessageRow({
 
 const TypingIndicator = React.memo(function TypingIndicator() {
   return (
-    <div className="mx-auto w-full max-w-2xl flex items-center gap-2.5 text-sm justify-start pb-6">
-      <div className="flex items-center gap-1.5 px-3.5 py-2.5">
-        <BounceDot delay="-0.32s" />
-        <BounceDot delay="-0.16s" />
-        <BounceDot />
-      </div>
+    <div className="mx-auto w-full max-w-2xl flex items-center text-sm justify-start pb-6 px-4">
+      <ThinkingIndicator />
     </div>
   );
 });
-
-function BounceDot({ delay }: { delay?: string }) {
-  return (
-    <span
-      className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-400 animate-bounce"
-      style={{ animationDelay: delay, animationDuration: "1s" }}
-    />
-  );
-}
 
 function HistoryBeginningMarker() {
   return (

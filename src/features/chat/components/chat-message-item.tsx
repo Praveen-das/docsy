@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { MessageEditBox } from "./message-edit-box";
+import { ThinkingIndicator } from "./thinking-indicator";
 import { Message } from "@/types";
 import { cn } from "@/lib/utils";
-import { Copy, Check, Pencil, RotateCcw, Share2, AlertCircle, Loader2, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Copy, Check, Pencil, RotateCcw, Share2, AlertCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import { formatTime } from "@/lib/format-time";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { DocsyIcon } from "@/components/ui/logo";
@@ -68,8 +69,9 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
     const trimmed = draftText.trim();
     if (!trimmed || isSubmittingEdit) return;
 
+    setIsEditing(false);
+
     if (trimmed === message.content) {
-      setIsEditing(false);
       return;
     }
 
@@ -77,7 +79,6 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
       setIsSubmittingEdit(true);
       try {
         await onEdit(message.id, trimmed);
-        setIsEditing(false);
       } finally {
         setIsSubmittingEdit(false);
       }
@@ -159,12 +160,7 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
         <div className="flex-1 min-w-0 space-y-2.5">
           {/* Header Row: "Docsy AI" + Timestamp */}
           <div className="flex items-center gap-2 select-none">
-            {isRegenerating && (
-              <span className="flex items-center gap-1 text-[11px] text-indigo-400 font-medium">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Thinking...
-              </span>
-            )}
+            {isRegenerating && <ThinkingIndicator />}
           </div>
 
           {/* Clean Markdown Rendering directly on canvas */}

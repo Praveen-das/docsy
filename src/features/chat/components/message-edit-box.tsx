@@ -17,12 +17,23 @@ export function MessageEditBox({ value, onChange, onSave, onCancel }: MessageEdi
     textareaRef.current?.focus();
   }, []);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      onSave();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onCancel();
+    }
+  };
+
   return (
     <div className="w-full rounded-2xl edit-box-glow p-3 shadow-sm space-y-2">
       <textarea
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         className="w-full text-[13.5px] leading-relaxed text-zinc-200 bg-transparent resize-none focus:outline-none placeholder:text-zinc-600"
         rows={3}
       />
