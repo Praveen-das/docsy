@@ -30,37 +30,28 @@ function ConversationWorkspace() {
   const [selectDocOpen, setSelectDocOpen] = useState(false);
   const openUpload = useUIStore((state) => state.openUpload);
 
-  // Effective doc ID: if none in search params, use first document if exists
-  const effectiveDocId = docId || (documents.length > 0 ? documents[0].id : null);
-
   // Sync conversation selection with URL search parameters
   useEffect(() => {
-    if (!effectiveDocId) {
-      if (useConversationStore.getState().activeConversationId !== null) {
+    const currentActive = useConversationStore.getState().activeConversationId;
+
+    if (!docId) {
+      if (currentActive !== null) {
         setActiveConversation(null);
       }
       return;
     }
 
-    markDocumentAsOpened(effectiveDocId);
+    markDocumentAsOpened(docId);
 
-    const currentActive = useConversationStore.getState().activeConversationId;
-
-    if (convId) {
-      const found = conversations.find((c) => c.id === convId);
-      if (found) {
-        if (currentActive !== convId) {
-          setActiveConversation(convId);
-        }
-        return;
+    if (convId !== null) {
+      if (currentActive !== convId) {
+        setActiveConversation(convId);
       }
+      return;
     }
 
-    // When no conv param is in the URL, do not auto-activate any conversation
-    if (currentActive !== null) {
-      setActiveConversation(null);
-    }
-  }, [effectiveDocId, convId, conversations, markDocumentAsOpened, setActiveConversation]);
+    setActiveConversation(null);
+  }, [docId, convId, markDocumentAsOpened, setActiveConversation]);
 
   const handleDocumentSelected = (doc: Document) => {
     setSelectDocOpen(false);
@@ -69,18 +60,18 @@ function ConversationWorkspace() {
 
   return (
     <>
-      {effectiveDocId ? (
+      {docId ? (
         <ConversationLayout
           chatPanel={
             <ChatView
-              documentId={effectiveDocId}
+              documentId={docId}
               isViewerOpen={isViewerOpen}
               onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
             />
           }
           // pdfViewer={
           //   <PdfViewer
-          //     activeDocumentId={effectiveDocId}
+          //     activeDocumentId={docId}
           //     onClose={() => setIsViewerOpen(false)}
           //   />
           // }

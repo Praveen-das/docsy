@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getConversation, getMessages } from "@/services/conversation.service";
+import { getConversation } from "@/services/conversation.service";
 import { updateConversationTitleIfDefault } from "@/services/title.service";
 
 const postTitleSchema = z.object({

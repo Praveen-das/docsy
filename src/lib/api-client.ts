@@ -42,12 +42,52 @@ export const api = axios.create({
   },
 });
 
-// Request Interceptor: Auto-attach stream capability token from store
+const inFlightTokenFetches = new Map<string, Promise<string | null>>();
+
+function isConversationSubResource(url?: string): boolean {
+  if (!url) return false;
+  return /\/api\/conversations\/[a-zA-Z0-9_-]+\/.+/.test(url);
+}
+
+/**
+ * Resolves a conversation capability token:
+ * 1. Synchronous store lookup (<0.01ms)
+ * 2. On-demand JIT fetch only when conversation is accessed, deduplicating concurrent calls
+ */
+async function getOrFetchToken(convId: string): Promise<string | null> {
+  const cached = getTokenFn ? getTokenFn(convId) : undefined;
+  if (cached) return cached;
+
+  let fetchPromise = inFlightTokenFetches.get(convId);
+  if (!fetchPromise) {
+    fetchPromise = (async () => {
+      try {
+        const res = await axios.get<{ streamToken?: string }>(`/api/conversations/${convId}`, {
+          adapter: "fetch",
+        });
+        const freshToken = res.data?.streamToken || null;
+        if (freshToken && setTokenFn) {
+          setTokenFn(convId, freshToken);
+        }
+        return freshToken;
+      } catch {
+        return null;
+      } finally {
+        inFlightTokenFetches.delete(convId);
+      }
+    })();
+    inFlightTokenFetches.set(convId, fetchPromise);
+  }
+
+  return fetchPromise;
+}
+
+// Request Interceptor: Auto-attach stream capability token (store lookup or JIT fetch)
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     const convId = extractConversationId(config.url);
-    if (convId && getTokenFn && !config.headers["x-conversation-token"]) {
-      const token = getTokenFn(convId);
+    if (convId && isConversationSubResource(config.url) && !config.headers["x-conversation-token"]) {
+      const token = await getOrFetchToken(convId);
       if (token) {
         config.headers["x-conversation-token"] = token;
       }

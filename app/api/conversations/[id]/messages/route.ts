@@ -1,11 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  getMessages,
   getPaginatedMessages,
   persistMessage,
-  verifyConversationOwnership,
 } from "@/services/conversation.service";
 import { verifyConversationToken } from "@/lib/conversation-token";
 
@@ -44,7 +41,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const result = await getPaginatedMessages(userId, id, {
     limit,
     cursor: cursorParam,
-    token,
   });
 
   return NextResponse.json({
@@ -79,19 +75,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  // 2. Fallback: Authenticate via Clerk session if no valid conversation token
-  if (!userId) {
-    const clerkAuth = await auth();
-    userId = clerkAuth.userId;
-  }
-
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const isOwner = await verifyConversationOwnership(userId, id, token);
-  if (!isOwner) {
-    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
   }
 
   try {

@@ -13,6 +13,8 @@ export function createRealtimeStream(
   channelId: string,
   isSSE: boolean,
 ): ReadableStream {
+  let cleanup = () => {};
+
   return new ReadableStream({
     async start(controller) {
       let isClosed = false;
@@ -57,13 +59,31 @@ export function createRealtimeStream(
         safeEnqueue(isSSE ? ": keepalive\n\n" : encoder.encode(" "));
       }, HEARTBEAT_INTERVAL_MS);
 
+      cleanup = () => {
+        clearInterval(heartbeat);
+        safeClose();
+      };
+
       try {
         const channel = realtime.channel(channelId);
 
         await channel.history().on("ai.chunk", (chunk: any) => {
           if (isSSE) {
+            if (chunk.type === "typing") {
+              return;
+            }
+            if (chunk.type === "error") {
+              const errorPayload = {
+                type: "error",
+                errorText: chunk.errorText || chunk.error || "Stream failed",
+              };
+              safeEnqueue(`data: ${JSON.stringify(errorPayload)}\n\n`);
+              clearInterval(heartbeat);
+              safeClose();
+              return;
+            }
             safeEnqueue(`data: ${JSON.stringify(chunk)}\n\n`);
-            if (chunk.type === "finish" || chunk.type === "error") {
+            if (chunk.type === "finish") {
               clearInterval(heartbeat);
               safeClose();
             }
@@ -74,18 +94,20 @@ export function createRealtimeStream(
             case "typing":
               safeEnqueue(encoder.encode("\0"));
               break;
-            case "text-delta":
-              if (typeof chunk.text === "string") {
-                safeEnqueue(encoder.encode(chunk.text));
+            case "text-delta": {
+              const text = chunk.delta ?? chunk.text;
+              if (typeof text === "string") {
+                safeEnqueue(encoder.encode(text));
               }
               break;
+            }
             case "finish":
               clearInterval(heartbeat);
               safeClose();
               break;
             case "error":
               clearInterval(heartbeat);
-              safeError(new Error(chunk.error || "Stream failed"));
+              safeError(new Error(chunk.error || chunk.errorText || "Stream failed"));
               break;
           }
         });
@@ -93,6 +115,9 @@ export function createRealtimeStream(
         clearInterval(heartbeat);
         safeError(err);
       }
+    },
+    cancel() {
+      cleanup();
     },
   });
 }

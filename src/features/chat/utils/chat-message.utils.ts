@@ -1,20 +1,52 @@
 import { QueryClient } from "@tanstack/react-query";
+import type { UIMessage } from "ai";
 import { Message } from "@/types";
-import { useConversationStore } from "@/stores/conversation-store";
 import { getCachedMessages } from "../hooks/use-conversation-messages";
 
 /**
- * Retrieves all messages for a conversation combining cached React Query server history
- * and active in-memory Zustand session turns.
+ * Extracts plain text from AI SDK UIMessage parts or fallback content.
+ */
+export function getUIMessageText(msg: UIMessage): string {
+  if (msg.parts && Array.isArray(msg.parts)) {
+    const text = msg.parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map((p) => p.text)
+      .join("");
+    if (text) return text;
+  }
+  return typeof (msg as any).content === "string" ? (msg as any).content : "";
+}
+
+/**
+ * Converts AI SDK UIMessage to canonical internal Message model.
+ */
+export function uiMessageToMessage(msg: UIMessage | Message): Message {
+  if ("conversationId" in msg && typeof msg.content === "string") {
+    return msg as Message;
+  }
+  return {
+    id: msg.id,
+    conversationId: "",
+    role: msg.role === "user" ? "user" : "assistant",
+    content: getUIMessageText(msg as UIMessage),
+    createdAt:
+      (msg as any).createdAt instanceof Date
+        ? (msg as any).createdAt.toISOString()
+        : typeof (msg as any).createdAt === "string"
+        ? (msg as any).createdAt
+        : new Date().toISOString(),
+  };
+}
+
+/**
+ * Retrieves all messages for a conversation from cached React Query server history.
  */
 export function getAllConversationMessages(
   queryClient: QueryClient,
   conversationId: string
 ): Message[] {
   if (!conversationId) return [];
-  const cached = getCachedMessages(queryClient, conversationId);
-  const session = useConversationStore.getState().sessionMessages[conversationId] || [];
-  return [...cached, ...session];
+  return getCachedMessages(queryClient, conversationId);
 }
 
 /**

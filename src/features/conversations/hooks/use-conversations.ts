@@ -28,8 +28,10 @@ export function useConversations() {
     queryFn: async () => {
       try {
         const data = await conversationService.fetchConversations();
+        const convList = data.conversations || [];
+
         const result = {
-          conversations: data.conversations || [],
+          conversations: convList,
           pinnedIds: data.pinnedIds || [],
         };
         // Save to IndexedDB offline storage

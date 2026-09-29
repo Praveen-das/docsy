@@ -26,22 +26,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [conversations, pinnedIds] = await Promise.all([
-    listConversations(userId),
-    listPinnedConversationIds(userId),
-  ]);
-  const withTokens = await Promise.all(
-    conversations.map(async (conv) => ({
-      ...conv,
-      streamToken: await signConversationToken({
-        userId,
-        conversationId: conv.id,
-        documentIds: conv.documentIds,
-      }),
-    }))
-  );
+  const [conversations, pinnedIds] = await Promise.all([listConversations(userId), listPinnedConversationIds(userId)]);
 
-  return NextResponse.json({ conversations: withTokens, pinnedIds });
+  return NextResponse.json({ conversations, pinnedIds });
 }
 
 /**
@@ -59,18 +46,10 @@ export async function POST(request: NextRequest) {
     const parsed = createConversationSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid request", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const conv = await createConversation(
-      userId,
-      parsed.data.documentIds,
-      parsed.data.title,
-      parsed.data.id
-    );
+    const conv = await createConversation(userId, parsed.data.documentIds, parsed.data.title, parsed.data.id);
 
     const streamToken = await signConversationToken({
       userId,
@@ -89,13 +68,10 @@ export async function POST(request: NextRequest) {
         updatedAt: conv.updatedAt.toISOString(),
         streamToken,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (err) {
-    return NextResponse.json(
-      { error: "Failed to create conversation" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 });
   }
 }
 
@@ -113,9 +89,6 @@ export async function DELETE() {
     const count = await deleteAllConversations(userId);
     return NextResponse.json({ success: true, count });
   } catch {
-    return NextResponse.json(
-      { error: "Failed to delete conversations" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete conversations" }, { status: 500 });
   }
 }

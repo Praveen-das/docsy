@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { VList, VListHandle } from "virtua";
 import { Loader2 } from "lucide-react";
-import { Message } from "@/types";
+import { Message, PaginatedMessagesResponse } from "@/types";
 import { EmptyChatState } from "./empty-chat-state";
 import { ChatMessageItem } from "./chat-message-item";
 
@@ -14,9 +14,6 @@ const SCROLL_BOTTOM_THRESHOLD = 80;
 
 /** Pixel threshold from top to trigger loading older messages */
 const SCROLL_TOP_THRESHOLD = 150;
-
-/** Stable timestamp so the streaming bubble doesn't trigger ChatMessageItem re-renders */
-const STREAMING_CREATED_AT = new Date(0).toISOString();
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -91,11 +88,28 @@ function HistoryBeginningMarker() {
   );
 }
 
+function MessageListLoading() {
+  return (
+    <div className="flex flex-1 items-center justify-center">
+      <Loader2 className="h-6 w-6 animate-spin text-zinc-400 dark:text-zinc-500" />
+    </div>
+  );
+}
+
+function MessageListEmpty({ onSelectStarterQuestion }: { onSelectStarterQuestion?: (question: string) => void }) {
+  return (
+    <div className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-6 sm:pb-40">
+      <div className="mx-auto w-full max-w-2xl h-full flex flex-col justify-center">
+        <EmptyChatState onSelectQuestion={onSelectStarterQuestion} />
+      </div>
+    </div>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────
 
 export interface MessageListProps {
-  messages: Message[];
-  pendingMessages?: Message[];
+  pages?: PaginatedMessagesResponse[];
   isLoadingMessages?: boolean;
   isAiTyping?: boolean;
   streamingContent?: string | null;
@@ -116,8 +130,7 @@ export interface MessageListProps {
 // ─── Component ───────────────────────────────────────────────
 
 export function MessageList({
-  messages,
-  pendingMessages = [],
+  pages,
   isLoadingMessages = false,
   isAiTyping = false,
   streamingContent = null,
@@ -135,20 +148,25 @@ export function MessageList({
   const listRef = useRef<VListHandle>(null);
   const isStuckToBottomRef = useRef(true);
 
-  // Position tracking refs for prepend scroll anchoring
-  const prevFirstMsgIdRef = useRef<string | null>(null);
-  const prevScrollHeightRef = useRef<number>(0);
-  const prevScrollOffsetRef = useRef<number>(0);
-  const isPrependingRef = useRef(false);
+  const displayPages = pages ?? [];
 
-  const showStreaming = Boolean(streamingContent) && !regeneratingMessageId;
+  const lastHistoryMsg = displayPages.at(-1)?.messages?.findLast(isDisplayable);
 
-  const displayHistory = messages.filter(isDisplayable);
-  const displayPending = pendingMessages.filter(isDisplayable);
-  const messageCount = displayHistory.length + displayPending.length;
+  // Count total displayable messages without allocating flat arrays
+  let historyCount = 0;
+  for (const page of displayPages) {
+    for (const msg of page.messages ?? []) {
+      if (isDisplayable(msg)) historyCount++;
+    }
+  }
 
-  const showBeginningMarker = !hasMoreMessages && displayHistory.length > 0;
-  const totalChildCount = messageCount + +showStreaming + +isAiTyping + +showBeginningMarker;
+  const messageCount = historyCount;
+  const hasActiveStreamingText = Boolean(
+    !regeneratingMessageId && streamingContent && streamingContent.trim().length > 0,
+  );
+  const showTypingIndicator = isAiTyping && !hasActiveStreamingText && !regeneratingMessageId;
+  const showBeginningMarker = !hasMoreMessages && historyCount > 0;
+  const totalChildCount = messageCount + +hasActiveStreamingText + +showTypingIndicator + +showBeginningMarker;
 
   // ── Scroll tracking & upward trigger ──────────────────────
 
@@ -171,54 +189,6 @@ export function MessageList({
     }
   }, [hasMoreMessages, isLoadingOlderMessages, isErrorOlderMessages, onLoadOlderMessages]);
 
-  // ── Preserve scroll position when older messages are prepended ─
-
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-
-    const currentFirstMsgId = displayHistory[0]?.id ?? null;
-    const prevFirstMsgId = prevFirstMsgIdRef.current;
-
-    // Check if items were prepended to history:
-    // First message ID changed AND previous first message ID is still present
-    const wasPrepended = Boolean(
-      prevFirstMsgId &&
-      currentFirstMsgId &&
-      currentFirstMsgId !== prevFirstMsgId &&
-      displayHistory.some((m) => m.id === prevFirstMsgId),
-    );
-
-    if (wasPrepended) {
-      isPrependingRef.current = true;
-      const newScrollHeight = list.scrollSize;
-      const delta = newScrollHeight - prevScrollHeightRef.current;
-      if (delta > 0) {
-        // Offset scrollTop by the exact delta height of newly prepended items
-        list.scrollTo(prevScrollOffsetRef.current + delta);
-      }
-      // Re-measure after next paint in case virtua updates dynamic item sizes
-      requestAnimationFrame(() => {
-        const currentList = listRef.current;
-        if (currentList) {
-          const updatedScrollHeight = currentList.scrollSize;
-          const updatedDelta = updatedScrollHeight - prevScrollHeightRef.current;
-          if (
-            updatedDelta > 0 &&
-            Math.abs(currentList.scrollOffset - (prevScrollOffsetRef.current + updatedDelta)) > 2
-          ) {
-            currentList.scrollTo(prevScrollOffsetRef.current + updatedDelta);
-          }
-        }
-        isPrependingRef.current = false;
-      });
-    }
-
-    prevFirstMsgIdRef.current = currentFirstMsgId;
-    prevScrollHeightRef.current = list.scrollSize;
-    prevScrollOffsetRef.current = list.scrollOffset;
-  }, [displayHistory]);
-
   // ── Snap to bottom for new incoming/outgoing messages ────
 
   const prevLastMessageIdRef = useRef<string | null>(null);
@@ -226,8 +196,7 @@ export function MessageList({
   const isInitialMountRef = useRef(true);
 
   useEffect(() => {
-    const currentLastMessage = displayPending[displayPending.length - 1] || displayHistory[displayHistory.length - 1];
-    const currentLastId = currentLastMessage?.id ?? null;
+    const currentLastId = hasActiveStreamingText ? "streaming-assistant-row" : (lastHistoryMsg?.id ?? null);
 
     const isAppendedMessage = Boolean(
       currentLastId && currentLastId !== prevLastMessageIdRef.current && messageCount > prevMessageCountRef.current,
@@ -248,9 +217,6 @@ export function MessageList({
       return;
     }
 
-    // Do not scroll to bottom if older messages were prepended
-    if (isPrependingRef.current) return;
-
     if (isAppendedMessage) {
       // Outgoing message from user or AI turn: stick to bottom if user is already near bottom
       if (isStuckToBottomRef.current) {
@@ -260,33 +226,31 @@ export function MessageList({
           });
         });
       }
-    } else if (isStuckToBottomRef.current && (showStreaming || isAiTyping)) {
+    } else if (isStuckToBottomRef.current && (hasActiveStreamingText || isAiTyping || Boolean(regeneratingMessageId))) {
       requestAnimationFrame(() => {
         listRef.current?.scrollToIndex(totalChildCount - 1, {
           align: "end",
         });
       });
     }
-  }, [totalChildCount, messageCount, showStreaming, streamingContent, isAiTyping, displayHistory, displayPending]);
+  }, [
+    totalChildCount,
+    messageCount,
+    hasActiveStreamingText,
+    streamingContent,
+    isAiTyping,
+    regeneratingMessageId,
+    lastHistoryMsg,
+  ]);
 
   // ── Early returns ────────────────────────────────────────
 
   if (isLoadingMessages && messageCount === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-400 dark:text-zinc-500" />
-      </div>
-    );
+    return <MessageListLoading />;
   }
 
-  if (messageCount === 0 && !showStreaming) {
-    return (
-      <div className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-6 sm:pb-40">
-        <div className="mx-auto w-full max-w-2xl h-full flex flex-col justify-center">
-          <EmptyChatState onSelectQuestion={onSelectStarterQuestion} />
-        </div>
-      </div>
-    );
+  if (messageCount === 0 && !isAiTyping) {
+    return <MessageListEmpty onSelectStarterQuestion={onSelectStarterQuestion} />;
   }
 
   // ── Main render ──────────────────────────────────────────
@@ -324,52 +288,43 @@ export function MessageList({
       <VList
         ref={listRef}
         className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-4.5 sm:pb-40"
-        shift={false}
+        // shift
         onScroll={handleScroll}
       >
         {showBeginningMarker && <HistoryBeginningMarker key="history-beginning-marker" />}
 
-        {displayHistory.map((msg) => (
-          <MessageRow
-            key={msg.id}
-            message={msg}
-            isRegenerating={regeneratingMessageId === msg.id}
-            streamingContent={streamingContent}
-            onEditMessage={onEditMessage}
-            onRegenerateMessage={onRegenerateMessage}
-            onRetryMessage={onRetryMessage}
-            onShareMessage={onShareMessage}
-          />
-        ))}
+        {displayPages.map((page) =>
+          page.messages?.map((msg) =>
+            isDisplayable(msg) ? (
+              <MessageRow
+                key={msg.id}
+                message={msg}
+                isRegenerating={regeneratingMessageId === msg.id}
+                streamingContent={streamingContent}
+                onEditMessage={onEditMessage}
+                onRegenerateMessage={onRegenerateMessage}
+                onRetryMessage={onRetryMessage}
+                onShareMessage={onShareMessage}
+              />
+            ) : null,
+          ),
+        )}
 
-        {displayPending.map((msg) => (
+        {hasActiveStreamingText && (
           <MessageRow
-            key={msg.id}
-            message={msg}
-            isRegenerating={regeneratingMessageId === msg.id}
-            streamingContent={streamingContent}
-            onEditMessage={onEditMessage}
-            onRegenerateMessage={onRegenerateMessage}
-            onRetryMessage={onRetryMessage}
-            onShareMessage={onShareMessage}
-          />
-        ))}
-
-        {showStreaming && (
-          <MessageRow
-            key="streaming-ai-message"
-            isStreaming={true}
+            key="streaming-assistant-row"
             message={{
-              id: "streaming-ai-message",
+              id: "streaming-assistant-row",
               conversationId: "",
               role: "assistant",
-              content: streamingContent ?? "",
-              createdAt: STREAMING_CREATED_AT,
+              content: streamingContent!,
+              createdAt: new Date().toISOString(),
             }}
+            isStreaming
           />
         )}
 
-        {isAiTyping && <TypingIndicator />}
+        {showTypingIndicator && <TypingIndicator />}
       </VList>
     </div>
   );

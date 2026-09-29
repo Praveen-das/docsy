@@ -9,7 +9,7 @@ export const conversationService = {
    * Fetches all conversations and pinned IDs for the authenticated user.
    */
   async fetchConversations(): Promise<{ conversations: Conversation[]; pinnedIds: string[] }> {
-    const res = await api.get<{ conversations: Conversation[]; pinnedIds: string[] }>("/api/conversations");
+    const res = await api.get<{ conversations: Conversation[]; pinnedIds: string[] }>("/api/conversations", {});
     return res.data;
   },
 
@@ -19,7 +19,7 @@ export const conversationService = {
   async createConversation(
     id: string,
     documentIds: string[],
-    title: string
+    title: string,
   ): Promise<Conversation & { streamToken?: string }> {
     const res = await api.post<Conversation & { streamToken?: string }>("/api/conversations", {
       id,
@@ -65,7 +65,7 @@ export const conversationService = {
   async generateConversationTitle(
     convId: string,
     userMessage?: string,
-    assistantMessage?: string
+    assistantMessage?: string,
   ): Promise<string | undefined> {
     const res = await api.post<{ title?: string }>(`/api/conversations/${convId}/title`, {
       userMessage,

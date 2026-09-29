@@ -1,6 +1,6 @@
 import { serve } from "@upstash/workflow/nextjs";
 import { WorkflowAbort } from "@upstash/workflow";
-import { streamText } from "ai";
+import { streamText, toUIMessageStream } from "ai";
 
 import { realtime } from "@/lib/realtime";
 import { getChatModel } from "@/lib/ai";
@@ -79,21 +79,40 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
         messages: ragResult.promptMessages,
       });
 
+      const stream = toUIMessageStream({
+        stream: result.stream,
+        generateMessageId: () => messageId,
+      });
+
       let fullText = "";
+      const reader = stream.getReader();
 
-      for await (const chunk of result.textStream) {
-        fullText += chunk;
-        await channel.emit("ai.chunk", { type: "text-delta", text: chunk });
+      try {
+        while (true) {
+          const { done, value: chunk } = await reader.read();
+          if (done) break;
+
+          if (chunk.type === "text-delta" && "delta" in chunk) {
+            fullText += chunk.delta;
+          }
+          await channel.emit("ai.chunk", chunk);
+        }
+      } finally {
+        reader.releaseLock();
       }
-
-      await channel.emit("ai.chunk", { type: "finish" });
 
       // Persist or in-place update assistant message in database
       await persistUserPromise;
       if (replaceAssistantMessageId) {
         await updateMessage(userId, conversationId, replaceAssistantMessageId, fullText);
       } else {
-        await persistMessage({ conversationId, role: "assistant", content: fullText });
+        const isUuid = messageId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId);
+        await persistMessage({
+          ...(isUuid ? { id: messageId } : {}),
+          conversationId,
+          role: "assistant",
+          content: fullText,
+        });
       }
 
       logger.info("chat.completed", {
@@ -106,7 +125,11 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
       return { success: true, fullText };
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      await channel.emit("ai.chunk", { type: "error", error: errorMessage });
+      await channel.emit("ai.chunk", {
+        type: "error",
+        errorText: errorMessage,
+        error: errorMessage,
+      });
       logger.error("chat.workflow_ai_generation_failed", {
         userId,
         conversationId,

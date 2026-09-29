@@ -4,21 +4,32 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { registerTokenHandlers } from "@/lib/api-client";
 import { Message, Document } from "@/types";
-import { createMessage, createClientConversation } from "@/features/chat/utils/message-factory";
 import { conversationService } from "@/features/chat/services/conversation.service";
 import { conversationPollingService } from "@/features/chat/services/conversation-polling.service";
-import { streamChatResponse } from "@/features/chat/services/chat-stream.client";
+import { streamChatResponse, resumeChatStream } from "@/features/chat/services/chat-stream.client";
+import { createMessage } from "@/features/chat/utils/message-factory";
 import { STORAGE_KEY_CUSTOM_PROMPT } from "@/features/settings/constants/prompt-presets";
 import { updateConversationInCache } from "@/features/conversations/hooks/use-conversations";
+import { getQueryClient } from "@/lib/query-client";
+import {
+  appendMessageToCache,
+  updateMessageInCache,
+} from "@/features/chat/hooks/use-conversation-messages";
 
-// Re-export factories for backward compatibility with existing consumers
-export { createMessage, createClientConversation };
+export interface ActiveStreamInfo {
+  convId: string;
+  assistantMessageId: string;
+  streamChannelId: string;
+  replaceAssistantMessageId?: string;
+  userMessage?: Message;
+  startedAt: number;
+}
 
 export interface ConversationUIState {
   activeConversationId: string | null;
   drafts: Record<string, string>;
-  sessionMessages: Record<string, Message[]>;
   streamTokens: Record<string, string>;
+  activeStreams: Record<string, ActiveStreamInfo>;
   isLoadingAi: boolean;
   isAiTyping: boolean;
   streamingContent: string | null;
@@ -29,15 +40,12 @@ export interface ConversationUIState {
   switchConversation: (targetConvId: string, currentDraft?: string) => void;
   saveDraft: (convId: string, draft: string) => void;
   setStreamToken: (convId: string, token: string) => void;
+  setStreamTokens: (tokens: Record<string, string>) => void;
   getStreamToken: (convId: string) => string | undefined;
-  clearSessionMessages: (convId: string) => void;
+  setActiveStream: (convId: string, streamInfo: ActiveStreamInfo) => void;
+  clearActiveStream: (convId: string) => void;
   pollConversationTitle: (convId: string, initialTitle: string) => void;
   syncConversationTitle: (convId: string) => Promise<void>;
-  sendMessage: (
-    convId: string,
-    content: string,
-    options?: { priorMessages?: Message[]; activeDoc?: Document } | Document,
-  ) => Promise<void>;
   editMessage: (convId: string, messageId: string, newContent: string) => Promise<void>;
   regenerateMessage: (
     convId: string,
@@ -47,7 +55,125 @@ export interface ConversationUIState {
       conversationHistory?: { role: "user" | "assistant"; content: string }[];
     },
   ) => Promise<void>;
+  sendMessage: (
+    convId: string,
+    content: string,
+    options?: {
+      conversationHistory?: { role: "user" | "assistant"; content: string }[];
+    },
+  ) => Promise<void>;
+  resumeActiveStream: (convId: string) => Promise<void>;
   resetToDefaults: () => void;
+}
+
+/** In-flight lock to prevent duplicate stream listeners per conversation */
+const inFlightStreams = new Set<string>();
+
+/** In-memory storage for active stream text to avoid cross-conversation clobbering */
+const streamingChunks = new Map<string, string>();
+
+let isWindowUnloading = false;
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    isWindowUnloading = true;
+  });
+}
+
+/**
+ * Creates standardized stream lifecycle callbacks shared between fresh execution and resumption.
+ */
+function createStreamCallbacks({
+  convId,
+  assistantMessageId,
+  replaceAssistantMessageId,
+  set,
+  get,
+}: {
+  convId: string;
+  assistantMessageId: string;
+  replaceAssistantMessageId?: string;
+  set: (
+    next:
+      | Partial<ConversationUIState>
+      | ((state: ConversationUIState) => Partial<ConversationUIState>),
+  ) => void;
+  get: () => ConversationUIState;
+}) {
+  return {
+    onTyping: () => {
+      if (get().activeConversationId === convId) {
+        set({
+          isLoadingAi: false,
+          isAiTyping: true,
+          streamingContent: null,
+        });
+      }
+    },
+
+    onChunk: (accumulatedText: string) => {
+      streamingChunks.set(convId, accumulatedText);
+      if (get().activeConversationId === convId) {
+        set({
+          streamingContent: accumulatedText,
+          isAiTyping: false,
+        });
+      }
+    },
+
+    onComplete: (fullText: string) => {
+      streamingChunks.delete(convId);
+      set((state) => {
+        const updatedStreams = { ...state.activeStreams };
+        delete updatedStreams[convId];
+
+        const isCurrent = state.activeConversationId === convId;
+        return {
+          activeStreams: updatedStreams,
+          ...(isCurrent
+            ? {
+                streamingContent: null,
+                isLoadingAi: false,
+                isAiTyping: false,
+                regeneratingMessageId: null,
+              }
+            : {}),
+        };
+      });
+
+      updateConversationInCache(convId, {
+        lastMessageSnippet: fullText.slice(0, 100),
+        updatedAt: new Date().toISOString(),
+      });
+
+      const queryClient = getQueryClient();
+      if (replaceAssistantMessageId) {
+        updateMessageInCache(queryClient, convId, replaceAssistantMessageId, fullText);
+      } else {
+        appendMessageToCache(queryClient, convId, {
+          id: assistantMessageId,
+          conversationId: convId,
+          role: "assistant",
+          content: fullText,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    },
+
+    onError: () => {
+      streamingChunks.delete(convId);
+      if (!isWindowUnloading) {
+        get().clearActiveStream(convId);
+      }
+      if (get().activeConversationId === convId) {
+        set({
+          streamingContent: null,
+          isLoadingAi: false,
+          isAiTyping: false,
+          regeneratingMessageId: null,
+        });
+      }
+    },
+  };
 }
 
 /**
@@ -56,20 +182,28 @@ export interface ConversationUIState {
 async function executeChatStream({
   convId,
   assistantMessageId,
+  streamChannelId: customChannelId,
   content,
   conversationHistory,
   skipUserPersistence,
   replaceAssistantMessageId,
+  userMessage,
   set,
   get,
 }: {
   convId: string;
   assistantMessageId: string;
+  streamChannelId?: string;
   content: string;
   conversationHistory: { role: "user" | "assistant"; content: string }[];
   skipUserPersistence?: boolean;
   replaceAssistantMessageId?: string;
-  set: (fn: (state: ConversationUIState) => Partial<ConversationUIState>) => void;
+  userMessage?: Message;
+  set: (
+    next:
+      | Partial<ConversationUIState>
+      | ((state: ConversationUIState) => Partial<ConversationUIState>),
+  ) => void;
   get: () => ConversationUIState;
 }): Promise<void> {
   const conversationToken = get().getStreamToken(convId);
@@ -77,102 +211,50 @@ async function executeChatStream({
   const customPrompt =
     typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY_CUSTOM_PROMPT) || undefined : undefined;
 
-  await streamChatResponse({
-    convId,
-    assistantMessageId,
-    content,
-    conversationHistory,
-    conversationToken,
-    skipUserPersistence,
-    replaceAssistantMessageId,
-    customPrompt,
+  const streamChannelId =
+    customChannelId || (replaceAssistantMessageId ? `regen-${assistantMessageId}-${Date.now()}` : assistantMessageId);
 
-    onTyping: () => {
-      set(() => ({
-        isLoadingAi: false,
-        isAiTyping: true,
-        streamingContent: null,
-      }));
+  // Track active stream in persistent state for reload resumption
+  set((state) => ({
+    activeStreams: {
+      ...state.activeStreams,
+      [convId]: {
+        convId,
+        assistantMessageId,
+        streamChannelId,
+        replaceAssistantMessageId,
+        userMessage,
+        startedAt: Date.now(),
+      },
     },
+  }));
 
-    onChunk: (accumulatedText) => {
-      set((state) => {
-        // If this is an in-place regeneration, update the existing session message
-        if (replaceAssistantMessageId) {
-          const currentSession = state.sessionMessages[convId] || [];
-          return {
-            sessionMessages: {
-              ...state.sessionMessages,
-              [convId]: currentSession.map((m) => (m.id === targetId ? { ...m, content: accumulatedText } : m)),
-            },
-            streamingContent: accumulatedText,
-            isAiTyping: false,
-          };
-        }
+  inFlightStreams.add(convId);
 
-        // For new generations, streamingContent powers the dedicated streaming bubble in MessageList.
-        // Avoid pushing into sessionMessages during streaming to prevent duplicate rendering.
-        return {
-          streamingContent: accumulatedText,
-          isAiTyping: false,
-        };
-      });
-    },
+  try {
+    const callbacks = createStreamCallbacks({
+      convId,
+      assistantMessageId,
+      replaceAssistantMessageId,
+      set,
+      get,
+    });
 
-    onComplete: (fullText) => {
-      set((state) => {
-        const currentSession = state.sessionMessages[convId] || [];
-        const existingIdx = currentSession.findIndex((m) => m.id === targetId);
-
-        let updatedSession: Message[];
-        if (existingIdx !== -1) {
-          updatedSession = currentSession.map((m) => (m.id === targetId ? { ...m, content: fullText } : m));
-        } else {
-          const aiMsg = createMessage(convId, "assistant", fullText, {
-            id: targetId,
-          });
-          updatedSession = [...currentSession, aiMsg];
-        }
-
-        updateConversationInCache(convId, {
-          lastMessageSnippet: fullText.slice(0, 100),
-          updatedAt: new Date().toISOString(),
-        });
-
-        return {
-          sessionMessages: {
-            ...state.sessionMessages,
-            [convId]: updatedSession,
-          },
-          streamingContent: null,
-          isLoadingAi: false,
-          isAiTyping: false,
-          regeneratingMessageId: null,
-        };
-      });
-    },
-
-    onError: (errorDetail) => {
-      set((state) => {
-        const currentSession = state.sessionMessages[convId] || [];
-        const errorContent = errorDetail.startsWith("⚠️") ? errorDetail : `⚠️ **Request Notice**: ${errorDetail}`;
-        const errorMsg = createMessage(convId, "assistant", errorContent, {
-          id: targetId,
-        });
-
-        return {
-          sessionMessages: {
-            ...state.sessionMessages,
-            [convId]: [...currentSession.filter((m) => m.id !== targetId), errorMsg],
-          },
-          streamingContent: null,
-          isLoadingAi: false,
-          isAiTyping: false,
-          regeneratingMessageId: null,
-        };
-      });
-    },
-  });
+    await streamChatResponse({
+      convId,
+      assistantMessageId,
+      streamChannelId,
+      content,
+      conversationHistory,
+      conversationToken,
+      skipUserPersistence,
+      replaceAssistantMessageId,
+      customPrompt,
+      ...callbacks,
+    });
+  } finally {
+    inFlightStreams.delete(convId);
+  }
 }
 
 /**
@@ -184,26 +266,26 @@ export const useConversationStore = create<ConversationUIState>()(
     (set, get) => ({
       activeConversationId: null,
       drafts: {},
-      sessionMessages: {},
       streamTokens: {},
+      activeStreams: {},
       isLoadingAi: false,
       isAiTyping: false,
       streamingContent: null,
       regeneratingMessageId: null,
 
       setActiveConversation: (convId: string | null) => {
-        const prevId = get().activeConversationId;
-        if (prevId === convId) return;
-        set((state) => {
-          const updatedSession = { ...state.sessionMessages };
-          if (prevId) {
-            delete updatedSession[prevId];
-          }
-          return {
-            activeConversationId: convId,
-            sessionMessages: updatedSession,
-            streamingContent: null,
-          };
+        const state = get();
+        if (state.activeConversationId === convId) return;
+
+        const targetStream = convId ? state.activeStreams[convId] : undefined;
+        const activeContent = convId ? streamingChunks.get(convId) || null : null;
+
+        set({
+          activeConversationId: convId,
+          streamingContent: activeContent,
+          isLoadingAi: Boolean(targetStream && !activeContent),
+          isAiTyping: false,
+          regeneratingMessageId: targetStream?.replaceAssistantMessageId || null,
         });
       },
 
@@ -216,27 +298,58 @@ export const useConversationStore = create<ConversationUIState>()(
         }));
       },
 
+      setStreamTokens: (tokens: Record<string, string>) => {
+        set((s) => ({
+          streamTokens: {
+            ...s.streamTokens,
+            ...tokens,
+          },
+        }));
+      },
+
       getStreamToken: (convId: string) => {
         return get().streamTokens[convId];
+      },
+
+      setActiveStream: (convId: string, streamInfo: ActiveStreamInfo) => {
+        set((s) => ({
+          activeStreams: {
+            ...s.activeStreams,
+            [convId]: streamInfo,
+          },
+        }));
+      },
+
+      clearActiveStream: (convId: string) => {
+        inFlightStreams.delete(convId);
+        streamingChunks.delete(convId);
+        set((s) => {
+          const updated = { ...s.activeStreams };
+          delete updated[convId];
+          return { activeStreams: updated };
+        });
       },
 
       switchConversation: (targetConvId: string, currentDraft?: string) => {
         const state = get();
         const updatedDrafts = { ...state.drafts };
-        const updatedSession = { ...state.sessionMessages };
 
         if (state.activeConversationId) {
           if (typeof currentDraft === "string") {
             updatedDrafts[state.activeConversationId] = currentDraft;
           }
-          delete updatedSession[state.activeConversationId];
         }
+
+        const targetStream = state.activeStreams[targetConvId];
+        const activeContent = streamingChunks.get(targetConvId) || null;
 
         set({
           activeConversationId: targetConvId,
           drafts: updatedDrafts,
-          sessionMessages: updatedSession,
-          streamingContent: null,
+          streamingContent: activeContent,
+          isLoadingAi: Boolean(targetStream && !activeContent),
+          isAiTyping: false,
+          regeneratingMessageId: targetStream?.replaceAssistantMessageId || null,
         });
       },
 
@@ -245,15 +358,6 @@ export const useConversationStore = create<ConversationUIState>()(
           drafts: {
             ...state.drafts,
             [convId]: draft,
-          },
-        }));
-      },
-
-      clearSessionMessages: (convId: string) => {
-        set((state) => ({
-          sessionMessages: {
-            ...state.sessionMessages,
-            [convId]: [],
           },
         }));
       },
@@ -275,79 +379,12 @@ export const useConversationStore = create<ConversationUIState>()(
         });
       },
 
-      sendMessage: async (
-        convId: string,
-        content: string,
-        options?: { priorMessages?: Message[]; activeDoc?: Document } | Document,
-      ) => {
-        const state = get();
-        const now = new Date().toISOString();
-
-        let priorMessages: Message[] | undefined;
-        if (options && "priorMessages" in options) {
-          priorMessages = options.priorMessages;
-        }
-
-        const userMsg = createMessage(convId, "user", content, { createdAt: now });
-        const existingSession = state.sessionMessages[convId] || [];
-        const updatedSession = [...existingSession, userMsg];
-        const updatedDrafts = { ...state.drafts, [convId]: "" };
-
-        updateConversationInCache(convId, {
-          lastMessageSnippet: content,
-          updatedAt: now,
-        });
-
-        // Save user message immediately & set loading state
-        set({
-          sessionMessages: {
-            ...state.sessionMessages,
-            [convId]: updatedSession,
-          },
-          drafts: updatedDrafts,
-          isLoadingAi: true,
-          streamingContent: null,
-          regeneratingMessageId: null,
-        });
-
-        const placeholderAiMsg = createMessage(convId, "assistant");
-        const assistantMessageId = placeholderAiMsg.id;
-
-        const allPrior = priorMessages ?? existingSession;
-        const conversationHistory = allPrior
-          .filter((m) => m.role === "user" || m.role === "assistant")
-          .slice(-10)
-          .map((m) => ({
-            role: m.role as "user" | "assistant",
-            content: m.content,
-          }));
-
-        await executeChatStream({
-          convId,
-          assistantMessageId,
-          content,
-          conversationHistory,
-          set,
-          get,
-        });
-      },
-
       editMessage: async (convId: string, messageId: string, newContent: string) => {
-        set((state) => {
-          const currentSession = state.sessionMessages[convId];
-          if (!currentSession) return {};
-          return {
-            sessionMessages: {
-              ...state.sessionMessages,
-              [convId]: currentSession.map((m) => (m.id === messageId ? { ...m, content: newContent } : m)),
-            },
-          };
-        });
-
         try {
           await conversationService.editMessage(convId, messageId, newContent);
         } catch (err) {
           console.error("Failed to edit message on server:", err);
+          throw err;
         }
       },
 
@@ -359,16 +396,23 @@ export const useConversationStore = create<ConversationUIState>()(
           conversationHistory?: { role: "user" | "assistant"; content: string }[];
         },
       ) => {
-        set({
-          isLoadingAi: true,
-          regeneratingMessageId: assistantMessageId,
-          streamingContent: null,
-        });
+        if (inFlightStreams.has(convId)) return;
+
+        const streamChannelId = `regen-${assistantMessageId}-${Date.now()}`;
+
+        if (get().activeConversationId === convId) {
+          set({
+            isLoadingAi: true,
+            regeneratingMessageId: assistantMessageId,
+            streamingContent: null,
+          });
+        }
 
         const history = options.conversationHistory?.slice(-10) || [];
         await executeChatStream({
           convId,
           assistantMessageId,
+          streamChannelId,
           content: options.promptContent,
           conversationHistory: history,
           skipUserPersistence: true,
@@ -378,12 +422,86 @@ export const useConversationStore = create<ConversationUIState>()(
         });
       },
 
+      sendMessage: async (
+        convId: string,
+        content: string,
+        options?: {
+          conversationHistory?: { role: "user" | "assistant"; content: string }[];
+        },
+      ) => {
+        if (inFlightStreams.has(convId)) return;
+
+        const assistantMessageId = crypto.randomUUID();
+        const streamChannelId = assistantMessageId;
+        const userMessage = createMessage(convId, "user", content);
+
+        // Optimistically add user message to React Query cache immediately
+        appendMessageToCache(getQueryClient(), convId, userMessage);
+
+        if (get().activeConversationId === convId) {
+          set({
+            isLoadingAi: true,
+            isAiTyping: false,
+            streamingContent: null,
+            regeneratingMessageId: null,
+          });
+        }
+
+        const history = options?.conversationHistory || [];
+        await executeChatStream({
+          convId,
+          assistantMessageId,
+          streamChannelId,
+          content,
+          conversationHistory: history,
+          userMessage,
+          set,
+          get,
+        });
+      },
+
+      resumeActiveStream: async (convId: string) => {
+        const streamInfo = get().activeStreams[convId];
+        if (!streamInfo || inFlightStreams.has(convId)) return;
+
+        // Expire streams older than 10 mins
+        if (Date.now() - streamInfo.startedAt > 10 * 60 * 1000) {
+          get().clearActiveStream(convId);
+          return;
+        }
+
+        inFlightStreams.add(convId);
+        if (get().activeConversationId === convId) {
+          set({ isLoadingAi: true, streamingContent: null });
+        }
+
+        try {
+          const callbacks = createStreamCallbacks({
+            convId,
+            assistantMessageId: streamInfo.assistantMessageId,
+            replaceAssistantMessageId: streamInfo.replaceAssistantMessageId,
+            set,
+            get,
+          });
+
+          await resumeChatStream({
+            convId,
+            streamChannelId: streamInfo.streamChannelId,
+            ...callbacks,
+          });
+        } finally {
+          inFlightStreams.delete(convId);
+        }
+      },
+
       resetToDefaults: () => {
+        inFlightStreams.clear();
+        streamingChunks.clear();
         conversationPollingService.clearAllTitlePolling();
         set({
-          sessionMessages: {},
           drafts: {},
           activeConversationId: null,
+          activeStreams: {},
           isLoadingAi: false,
           isAiTyping: false,
           streamingContent: null,
@@ -396,7 +514,21 @@ export const useConversationStore = create<ConversationUIState>()(
       partialize: (state) => ({
         drafts: state.drafts,
         activeConversationId: state.activeConversationId,
+        streamTokens: state.streamTokens,
+        activeStreams: state.activeStreams,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        const now = Date.now();
+        const active = state.activeStreams || {};
+        const cleaned: Record<string, ActiveStreamInfo> = {};
+        for (const [id, stream] of Object.entries(active)) {
+          if (now - stream.startedAt < 10 * 60 * 1000) {
+            cleaned[id] = stream;
+          }
+        }
+        state.activeStreams = cleaned;
+      },
     },
   ),
 );

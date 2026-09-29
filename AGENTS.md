@@ -30,6 +30,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Clarity**: Use descriptive, consistent naming and idioms standard to the codebase.
 - **Dead code**: Eliminate unused imports, variables, unreachable branches, and redundant state immediately.
 
+## First-Principles Problem Solving & Simplicity
+
+- **Question the existence of the code before optimizing it**: When facing an inefficient transformation, abstraction, or adapter, NEVER start by optimizing the transformation. First ask: _Why does this transformation exist at all? Can the producer or consumer natively handle the data without any intermediate layer?_
+- **Check framework/library native capabilities first**: Verify if the underlying library already has native features specifically designed for the problem before writing custom logic.
+- **Delete over patch**: Prefer ripping out entire layers of boilerplate/glue code over optimizing micro-algorithms inside unnecessary wrappers.
+
 ## Performance & Optimization
 
 - **Targeted optimization**: Optimize rendering, network calls, and expensive computations only when obvious or measured; avoid premature micro-optimizations.

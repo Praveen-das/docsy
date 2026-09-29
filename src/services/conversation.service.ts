@@ -14,8 +14,6 @@ import {
   CACHE_TTL,
 } from "@/lib/cache";
 import { CACHE_KEYS } from "@/lib/cache-keys";
-import { verifyConversationToken } from "@/lib/conversation-token";
-
 import type {
   ConversationRecord,
   MessageRecord,
@@ -293,21 +291,12 @@ export async function deleteConversation(
 // --- Messages ---
 
 /**
- * Verifies conversation ownership, preferring fast in-memory JWT cryptographic validation (<0.05ms)
- * and falling back to cached/DB lookup if token is missing or invalid.
+ * Verifies conversation ownership against cache/DB.
  */
 export async function verifyConversationOwnership(
   userId: string,
-  convId: string,
-  token?: string
+  convId: string
 ): Promise<boolean> {
-  if (token) {
-    const payload = await verifyConversationToken(token);
-    if (payload && payload.userId === userId && payload.conversationId === convId) {
-      return true;
-    }
-  }
-
   const conv = await getConversation(userId, convId);
   return Boolean(conv);
 }
@@ -356,14 +345,11 @@ export function decodeCursor(cursor: string): { createdAt: Date; id: string } | 
 export async function getPaginatedMessages(
   userId: string,
   convId: string,
-  options: { limit?: number; cursor?: string; token?: string } = {}
+  options: {
+    limit?: number;
+    cursor?: string;
+  } = {}
 ): Promise<PaginatedMessagesResult> {
-  // Fast path: Verify conversation ownership via JWT, falling back to cache/DB
-  const isOwner = await verifyConversationOwnership(userId, convId, options.token);
-  if (!isOwner) {
-    return { messages: [], nextCursor: null, hasMore: false };
-  }
-
   const limit = Math.max(1, Math.min(options.limit ?? 30, 100));
   const { cursor } = options;
 
@@ -437,11 +423,9 @@ export async function getPaginatedMessages(
  */
 export async function getMessages(
   userId: string,
-  convId: string,
-  token?: string
+  convId: string
 ): Promise<MessageRecord[]> {
-  // Fast path: Verify conversation ownership via JWT, falling back to cache/DB
-  const isOwner = await verifyConversationOwnership(userId, convId, token);
+  const isOwner = await verifyConversationOwnership(userId, convId);
   if (!isOwner) return [];
 
   const cacheKey = CACHE_KEYS.conversationMessages(convId);
@@ -545,15 +529,11 @@ export async function updateMessage(
   userId: string,
   convId: string,
   messageId: string,
-  content: string,
-  token?: string
+  content: string
 ): Promise<MessageRecord | null> {
   if (!UUID_REGEX.test(messageId) || !UUID_REGEX.test(convId)) {
     return null;
   }
-
-  const isOwner = await verifyConversationOwnership(userId, convId, token);
-  if (!isOwner) return null;
 
   const rows = await db.execute<{
     id: string;
@@ -614,15 +594,11 @@ export async function updateMessage(
 export async function deleteMessage(
   userId: string,
   convId: string,
-  messageId: string,
-  token?: string
+  messageId: string
 ): Promise<boolean> {
   if (!UUID_REGEX.test(messageId) || !UUID_REGEX.test(convId)) {
     return false;
   }
-
-  const isOwner = await verifyConversationOwnership(userId, convId, token);
-  if (!isOwner) return false;
 
   const result = await db
     .delete(messages)

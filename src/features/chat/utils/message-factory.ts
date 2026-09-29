@@ -9,9 +9,13 @@ export function createMessage(
   content = "",
   options?: { id?: string; createdAt?: string }
 ): Message {
-  const prefix = role === "user" ? "user" : role === "assistant" ? "ai" : "sys";
+  const generatedId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `msg-${role}-${Date.now()}`;
+
   return {
-    id: options?.id || `msg-${prefix}-${Date.now()}`,
+    id: options?.id || generatedId,
     conversationId,
     role,
     content,

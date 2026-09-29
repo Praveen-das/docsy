@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { updateMessage, deleteMessage } from "@/services/conversation.service";
@@ -25,18 +24,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   let userId: string | null = null;
 
-  // 1. Fast-path: Extract verified userId directly from JWT capability token (<0.05ms)
+  // Strict capability token verification (<0.05ms)
   if (token) {
     const payload = await verifyConversationToken(token);
     if (payload && payload.conversationId === id) {
       userId = payload.userId;
     }
-  }
-
-  // 2. Fallback: Authenticate via Clerk session if no valid conversation token
-  if (!userId) {
-    const clerkAuth = await auth();
-    userId = clerkAuth.userId;
   }
 
   if (!userId) {
@@ -51,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid message payload" }, { status: 400 });
     }
 
-    const updated = await updateMessage(userId, id, messageId, parsed.data.content, token);
+    const updated = await updateMessage(userId, id, messageId, parsed.data.content);
 
     if (!updated) {
       return NextResponse.json({ error: "Message not found or update unauthorized" }, { status: 404 });
@@ -83,6 +76,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   let userId: string | null = null;
 
+  // Strict capability token verification (<0.05ms)
   if (token) {
     const payload = await verifyConversationToken(token);
     if (payload && payload.conversationId === id) {
@@ -91,15 +85,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   if (!userId) {
-    const clerkAuth = await auth();
-    userId = clerkAuth.userId;
-  }
-
-  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const success = await deleteMessage(userId, id, messageId, token);
+  const success = await deleteMessage(userId, id, messageId);
 
   if (!success) {
     return NextResponse.json({ error: "Message not found or delete unauthorized" }, { status: 404 });

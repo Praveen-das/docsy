@@ -43,11 +43,9 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
 
   const formattedTime = formatTime(message.createdAt) || "10:24 AM";
   const displayContent = isRegenerating && streamingContent !== null ? streamingContent : message.content;
-  const isStreamingActive = isStreaming || isRegenerating || message.id === "streaming-ai-message";
+  const isStreamingActive = isStreaming || isRegenerating;
   const isErrorMessage =
     !isUser && (message.content.startsWith("⚠️ **Request Notice**:") || message.content.startsWith("⚠️"));
-
-  const displayName = user?.fullName || user?.firstName || "Praveen Das";
 
   // Keep draft in sync
   useEffect(() => {

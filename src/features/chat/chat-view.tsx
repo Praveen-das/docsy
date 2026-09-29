@@ -1,45 +1,26 @@
 "use client";
 
-import React, { useCallback, useMemo } from "react";
-import { Message } from "@/types";
+import { useCallback, useMemo } from "react";
 import { ChatHeader } from "./components/chat-header";
 import { MessageList } from "./components/message-list";
 import { ChatComposer } from "./components/chat-composer";
 import { ChatProvider } from "./context/chat-context";
 import { useChatConversation } from "./hooks/use-chat-conversation";
 import { useChatDraft } from "./hooks/use-chat-draft";
-import { useDocuments } from "@/features/documents/hooks/use-documents";
 import BottomGlow from "@/components/ui/BottomGlow";
 
 export interface ChatViewProps {
-  conversationId?: string;
-  conversationTitle?: string;
   documentId?: string;
   isViewerOpen?: boolean;
   onToggleViewer?: () => void;
-  onCitationClick?: (pageNumber: number) => void;
-  // Optional overrides for standalone usage and testing
-  messages?: Message[];
-  isLoading?: boolean;
-  onSendMessage?: (content: string) => void;
 }
 
-export function ChatView({
-  conversationId: propConversationId,
-  conversationTitle: propConversationTitle,
-  documentId: propDocumentId,
-  isViewerOpen = true,
-  onToggleViewer,
-  onCitationClick,
-  messages: propMessages,
-  isLoading: propIsLoading,
-  onSendMessage: propOnSendMessage,
-}: ChatViewProps) {
+export function ChatView({ documentId, isViewerOpen = true, onToggleViewer }: ChatViewProps) {
   const {
     activeConvId,
     title,
-    historyMessages,
-    pendingMessages,
+    primaryDoc,
+    pages,
     isLoading,
     isAiTyping,
     streamingContent,
@@ -54,22 +35,12 @@ export function ChatView({
     handleRetryMessage,
     handleShareMessage,
     regeneratingMessageId,
-    handleDelete,
-  } = useChatConversation({
-    conversationId: propConversationId,
-    conversationTitle: propConversationTitle,
-    documentId: propDocumentId,
-    propMessages,
-    propIsLoading,
-    propOnSendMessage,
-  });
+  } = useChatConversation({ documentId });
 
   const { inputText, handleInputChange, clearInput } = useChatDraft(activeConvId);
 
-  const { data: documents = [] } = useDocuments();
-  const activeDoc = propDocumentId ? documents.find((d) => d.id === propDocumentId) : undefined;
-  const documentName = activeDoc?.originalName || "System Design Notes.pdf";
-  const pageCount = activeDoc?.pageCount || 24;
+  const documentName = primaryDoc?.originalName || "System Design Notes.pdf";
+  const pageCount = primaryDoc?.pageCount || 24;
 
   const handleSubmit = useCallback(() => {
     handleSendMessage(inputText, clearInput);
@@ -106,8 +77,7 @@ export function ChatView({
         {/* Main Chat Body Container */}
         <div className="relative flex flex-1 flex-col overflow-hidden min-h-0 z-20">
           <MessageList
-            messages={historyMessages}
-            pendingMessages={pendingMessages}
+            pages={pages}
             isLoadingMessages={isLoadingMessages}
             isAiTyping={isAiTyping}
             streamingContent={streamingContent}
