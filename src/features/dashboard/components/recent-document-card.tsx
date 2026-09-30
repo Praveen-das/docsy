@@ -12,6 +12,7 @@ import { DashboardDocumentItem } from "./recent-documents-section";
 export interface RecentDocumentCardProps {
   document: Document | (DashboardDocumentItem & Partial<Document>);
   onOpenDoc: (docId: string, isReal: boolean) => void;
+  onDelete?: (doc: Document) => void;
   className?: string;
 }
 
@@ -20,7 +21,7 @@ export interface RecentDocumentCardProps {
  * Features dynamic mouse spotlight, specular highlights, photorealistic 3D Red PDF Badge,
  * formatted relative time, and responsive tactile mobile interaction.
  */
-export function RecentDocumentCard({ document: doc, onOpenDoc, className }: RecentDocumentCardProps) {
+export function RecentDocumentCard({ document: doc, onOpenDoc, onDelete, className }: RecentDocumentCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isReal = "isReal" in doc ? Boolean(doc.isReal) : doc.status === "READY";
   const isReady = ("status" in doc && doc.status === "READY") || isReal;
@@ -61,6 +62,7 @@ export function RecentDocumentCard({ document: doc, onOpenDoc, className }: Rece
             isOpen={isMenuOpen}
             document={doc as Document}
             onOpenConversations={() => onOpenDoc(doc.id, isReady)}
+            onDelete={onDelete}
             onClose={() => setIsMenuOpen(false)}
           />
         </div>

@@ -25,9 +25,12 @@ export function useChatConversation({ documentId: propDocumentId }: UseChatConve
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
+  const urlConvId = searchParams?.get("conv") || "";
+  const storeActiveId = useConversationStore((state) => state.activeConversationId) || "";
+  const activeConvId = urlConvId || storeActiveId;
+
   // Zustand selectors: reactive values grouped with useShallow, stable action references selected individually
   const {
-    activeConvId,
     regeneratingMessageId,
     isLoadingAi,
     isAiTyping,
@@ -35,7 +38,6 @@ export function useChatConversation({ documentId: propDocumentId }: UseChatConve
     activeStreams,
   } = useConversationStore(
     useShallow((state) => ({
-      activeConvId: state.activeConversationId || "",
       regeneratingMessageId: state.regeneratingMessageId,
       isLoadingAi: state.isLoadingAi,
       isAiTyping: state.isAiTyping,

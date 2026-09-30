@@ -3,8 +3,9 @@
 import React from "react";
 import { Plus, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { UploadDocIcon } from "./upload-doc-icon";
+import type { UploadState } from "../../hooks/use-document-upload";
 
-export type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
+export type { UploadState };
 
 export interface UploadCoreContentProps {
   uploadState: UploadState;

@@ -10,8 +10,6 @@ import { cn } from "@/lib/utils";
 import { HeaderUserMenu } from "./header-user-menu";
 
 export interface HeaderProps {
-  onToggleSidebar?: () => void;
-  onOpenSearch?: () => void;
   title?: string;
   className?: string;
 }
@@ -29,7 +27,7 @@ export interface HeaderProps {
  * - `ThemeToggle (variant="minimal")`: Subtle sun toggle
  * - `HeaderUserMenu`: Avatar, displayName, and account settings dropdown
  */
-export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps) {
+export function Header({ className }: HeaderProps = {}) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
 
@@ -45,11 +43,11 @@ export function Header({ onToggleSidebar, onOpenSearch, className }: HeaderProps
       <ProgressiveBlur className="h-16 sm:h-[100px]" />
 
       {/* Mobile Navigation Toggle */}
-      <HeaderMobileNavToggle onToggle={onToggleSidebar} />
+      <HeaderMobileNavToggle />
 
       {/* Center Search Pill - Displayed strictly on the home page */}
       <div className="hidden sm:flex flex-1 justify-center max-w-[460px] min-w-0">
-        {isHomePage && <HeaderSearchBar onOpen={onOpenSearch} />}
+        {isHomePage && <HeaderSearchBar />}
       </div>
 
       {/* Right Controls: Theme Switcher & User Profile Pill */}

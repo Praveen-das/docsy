@@ -143,6 +143,35 @@ export function useDocumentUpload() {
     [uploadState]
   );
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setUploadState((curr) => (curr !== "uploading" && curr !== "success" ? "dragging" : curr));
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setUploadState((curr) => (curr === "dragging" ? "idle" : curr));
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      if (uploadState === "uploading" || uploadState === "success") return;
+
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        uploadFile(e.dataTransfer.files[0]);
+      } else {
+        setUploadState("idle");
+      }
+    },
+    [uploadFile, uploadState]
+  );
+
+  const isDragging = uploadState === "dragging";
+  const isUploading = uploadState === "uploading";
+  const isSuccess = uploadState === "success";
+  const isError = uploadState === "error";
+
   return {
     fileInputRef,
     uploadState,
@@ -154,5 +183,12 @@ export function useDocumentUpload() {
     resetState,
     handleFileInputChange,
     triggerUploadClick,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    isDragging,
+    isUploading,
+    isSuccess,
+    isError,
   };
 }

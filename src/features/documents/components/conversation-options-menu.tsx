@@ -8,10 +8,12 @@ import {
   useDeleteConversation,
   useTogglePinConversation,
 } from "@/features/conversations/hooks/use-conversations";
+import { getConversationPath } from "@/features/conversations/utils/conversation-url";
 
 export interface ConversationOptionsMenuProps {
   /** The conversation this menu operates on. */
   conversationId: string;
+  documentId?: string;
   isOpen: boolean;
   onClose: () => void;
 
@@ -25,22 +27,12 @@ export interface ConversationOptionsMenuProps {
   /** Pin state — required when showPin is true. */
   isPinned?: boolean;
 
-  /**
-   * Optional override callbacks.
-   * When provided, these run INSTEAD of the default implementation.
-   * Useful when the parent needs to coordinate local UI state (e.g. inline rename editor).
-   */
-  onOpenInNewWindow?: () => void;
-  onShare?: () => void;
-  onRename?: () => void;
-  onPin?: () => void;
-  onDelete?: () => void;
-
   className?: string;
 }
 
 export function ConversationOptionsMenu({
   conversationId,
+  documentId,
   isOpen,
   onClose,
   showOpenInNewWindow = false,
@@ -49,48 +41,36 @@ export function ConversationOptionsMenu({
   showPin = false,
   showDelete = false,
   isPinned,
-  onOpenInNewWindow,
-  onShare,
-  onRename,
-  onPin,
-  onDelete,
   className,
 }: ConversationOptionsMenuProps) {
   const { mutate: renameConversation } = useRenameConversation();
   const { mutate: deleteConversation } = useDeleteConversation();
   const { mutate: togglePinConversation } = useTogglePinConversation();
 
-  // --- Default implementations ---
-
   const handleOpenInNewWindow = useCallback(() => {
-    if (onOpenInNewWindow) return onOpenInNewWindow();
-    window.open(`/conversation/${conversationId}`, "_blank");
-  }, [conversationId, onOpenInNewWindow]);
+    const url = getConversationPath(conversationId, documentId);
+    window.open(url, "_blank");
+  }, [conversationId, documentId]);
 
   const handleShare = useCallback(() => {
-    if (onShare) return onShare();
-    // Default: copy link to clipboard
-    navigator.clipboard.writeText(`${window.location.origin}/conversation/${conversationId}`);
-  }, [conversationId, onShare]);
+    const path = getConversationPath(conversationId, documentId);
+    navigator.clipboard.writeText(`${window.location.origin}${path}`);
+  }, [conversationId, documentId]);
 
   const handleRename = useCallback(() => {
-    if (onRename) return onRename();
-    // Default: prompt-based rename
     const newTitle = window.prompt("Rename conversation");
     if (newTitle?.trim()) {
       renameConversation({ convId: conversationId, newTitle: newTitle.trim() });
     }
-  }, [conversationId, onRename, renameConversation]);
+  }, [conversationId, renameConversation]);
 
   const handlePin = useCallback(() => {
-    if (onPin) return onPin();
     togglePinConversation(conversationId);
-  }, [onPin, togglePinConversation, conversationId]);
+  }, [togglePinConversation, conversationId]);
 
   const handleDelete = useCallback(() => {
-    if (onDelete) return onDelete();
     deleteConversation(conversationId);
-  }, [conversationId, onDelete, deleteConversation]);
+  }, [conversationId, deleteConversation]);
 
   // --- Build menu sections ---
 

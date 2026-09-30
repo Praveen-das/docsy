@@ -24,6 +24,7 @@ import { ConversationListRow, ConversationItemData } from "@/features/conversati
 import { ConversationGridCard } from "@/features/conversations/components/conversation-grid-card";
 import { ConversationsEmptyState } from "@/features/conversations/components/conversations-empty-state";
 import { useConversationsData } from "@/features/conversations/hooks/use-conversations-data";
+import { getConversationPath } from "@/features/conversations/utils/conversation-url";
 
 export default function ConversationsPage() {
   const router = useRouter();
@@ -79,7 +80,7 @@ export default function ConversationsPage() {
 
   const handleOpenConversation = (item: ConversationItemData) => {
     setActiveItemId(item.id);
-    router.push(`/conversation?doc=${item.docId}&conv=${item.id}`);
+    router.push(getConversationPath(item.id, item.docId));
   };
 
   const handleDelete = () => {
@@ -97,7 +98,9 @@ export default function ConversationsPage() {
 
   const handleShare = (id: string) => {
     if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(`${window.location.origin}/conversation/${id}`);
+      const item = filteredItems.find((i) => i.id === id);
+      const path = getConversationPath(id, item?.docId);
+      navigator.clipboard.writeText(`${window.location.origin}${path}`);
     }
   };
 

@@ -190,6 +190,18 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
                 )}
               </button>
 
+              {/* Share button */}
+              {onShare && (
+                <button
+                  type="button"
+                  onClick={() => onShare(message)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span className="text-xs">Share</span>
+                </button>
+              )}
+
               {/* Regenerate button */}
               {onRegenerate && (
                 <button

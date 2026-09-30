@@ -14,7 +14,6 @@ export interface ConversationItemProps {
   isCollapsed: boolean;
   onSelect: () => void;
   onDelete: () => void;
-  onRename?: (newTitle: string) => void;
 }
 
 export function ConversationItem({
@@ -23,7 +22,6 @@ export function ConversationItem({
   isCollapsed,
   onSelect,
   onDelete,
-  onRename,
 }: ConversationItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(conversation.title);
@@ -51,11 +49,7 @@ export function ConversationItem({
     e?.preventDefault();
     const trimmed = editTitle.trim();
     if (trimmed && trimmed !== conversation.title) {
-      if (onRename) {
-        onRename(trimmed);
-      } else {
-        renameConversation({ convId: conversation.id, newTitle: trimmed });
-      }
+      renameConversation({ convId: conversation.id, newTitle: trimmed });
     }
     setIsEditing(false);
   };

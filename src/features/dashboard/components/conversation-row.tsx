@@ -11,13 +11,23 @@ export interface ConversationRowProps {
   id: string;
   title: string;
   docName: string;
+  docId?: string;
   preview: string;
   timeText: string;
   isPinned?: boolean;
   onClick: () => void;
 }
 
-export function ConversationRow({ id, title, docName, preview, timeText, isPinned: isPinnedProp, onClick }: ConversationRowProps) {
+export function ConversationRow({
+  id,
+  title,
+  docName,
+  docId,
+  preview,
+  timeText,
+  isPinned: isPinnedProp,
+  onClick,
+}: ConversationRowProps) {
   const { pinnedIds } = useConversations();
   const isPinned = isPinnedProp ?? pinnedIds.has(id);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -69,6 +79,7 @@ export function ConversationRow({ id, title, docName, preview, timeText, isPinne
           </button>
           <ConversationOptionsMenu
             conversationId={id}
+            documentId={docId}
             isOpen={isMenuOpen}
             onClose={() => setIsMenuOpen(false)}
             showShare

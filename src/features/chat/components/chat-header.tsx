@@ -7,6 +7,7 @@ import { ConversationOptionsMenu } from "@/features/documents/components/convers
 
 export interface ChatHeaderProps {
   conversationId: string;
+  documentId?: string;
   conversationTitle: string;
   documentName?: string;
   pageCount?: number;
@@ -18,6 +19,7 @@ export interface ChatHeaderProps {
 
 export function ChatHeader({
   conversationId,
+  documentId,
   conversationTitle,
   documentName = "System Design Notes.pdf",
   pageCount = 24,
@@ -86,15 +88,13 @@ export function ChatHeader({
 
           <ConversationOptionsMenu
             conversationId={conversationId}
+            documentId={documentId}
             isOpen={isMenuOpen}
             onClose={() => setIsMenuOpen(false)}
+            showOpenInNewWindow
             showShare
             showRename
             showDelete
-            onRename={() => {
-              setIsEditingTitle(true);
-              setEditedTitle(conversationTitle);
-            }}
           />
         </div>
       </div>

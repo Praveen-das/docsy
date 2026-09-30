@@ -7,24 +7,18 @@ import { useUIStore } from "@/stores/ui-store";
 
 export interface HeaderSearchBarProps {
   className?: string;
-  onOpen?: () => void;
 }
 
 /**
  * Self-contained search bar pill matching the reference design.
- * Uses `useUIStore` selector for zero-prop-drilling trigger,
- * while still supporting an optional local callback if overridden.
+ * Uses `useUIStore` to trigger search modal.
  * Handles `Cmd+K` / `Ctrl+K` keyboard shortcut globally.
  */
-export function HeaderSearchBar({ className, onOpen }: HeaderSearchBarProps) {
+export function HeaderSearchBar({ className }: HeaderSearchBarProps) {
   const openSearch = useUIStore((state) => state.openSearch);
 
   const handleClick = () => {
-    if (onOpen) {
-      onOpen();
-    } else {
-      openSearch();
-    }
+    openSearch();
   };
 
   useEffect(() => {

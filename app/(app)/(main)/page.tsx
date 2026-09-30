@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
-import { useDocuments } from "@/features/documents/hooks/use-documents";
+import { useDocuments, useDeleteDocument } from "@/features/documents/hooks/use-documents";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { formatRelativeTime } from "@/lib/format-time";
 import { DashboardHero } from "@/features/dashboard/components/dashboard-hero";
+import { DeleteDocumentDialog } from "@/features/documents/components/delete-document-dialog";
 import {
   RecentDocumentsSection,
   DashboardDocumentItem,
@@ -105,12 +106,29 @@ const REFERENCE_CONVERSATIONS: DashboardConversationItem[] = [
 export default function HomePage() {
   const router = useRouter();
   const { data: documents = [] } = useDocuments();
+  const { mutateAsync: deleteDocument } = useDeleteDocument();
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
   const { conversations } = useConversations();
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
   const openUpload = useUIStore((state) => state.openUpload);
+
+  const [docToDelete, setDocToDelete] = useState<Document | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteConfirm = async () => {
+    if (!docToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteDocument(docToDelete.id);
+      setDocToDelete(null);
+    } catch {
+      // Error handled in mutation hook
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const displayDocuments: (Document | DashboardDocumentItem)[] =
     documents.length > 0 ? documents.slice(0, 4) : REFERENCE_DOCS;
@@ -158,7 +176,11 @@ export default function HomePage() {
         <DashboardHero />
 
         {/* Recent Documents */}
-        <RecentDocumentsSection documents={displayDocuments} onOpenDoc={handleOpenDoc} />
+        <RecentDocumentsSection
+          documents={displayDocuments}
+          onOpenDoc={handleOpenDoc}
+          onDelete={setDocToDelete}
+        />
 
         {/* Recent Conversations */}
         <RecentConversationsSection conversations={displayConversations} onOpenConv={handleOpenConv} />
@@ -174,6 +196,15 @@ export default function HomePage() {
       >
         <Plus className="h-6 w-6 stroke-[2.5]" />
       </button>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteDocumentDialog
+        isOpen={Boolean(docToDelete)}
+        isDeleting={isDeleting}
+        document={docToDelete}
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDocToDelete(null)}
+      />
 
       {/* Subtle Atmospheric Bottom Glow */}
       <BottomGlow />

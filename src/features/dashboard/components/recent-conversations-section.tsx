@@ -36,6 +36,7 @@ export function RecentConversationsSection({ conversations, onOpenConv }: Recent
             id={conv.id}
             title={conv.title}
             docName={conv.docName}
+            docId={conv.docId}
             preview={conv.preview}
             timeText={conv.timeText}
             onClick={() => onOpenConv(conv.id, conv.docId, conv.isReal)}

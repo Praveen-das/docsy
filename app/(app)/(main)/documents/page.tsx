@@ -123,6 +123,8 @@ export default function DocumentsPage() {
                   conversationCount={getDocConversationsCount(doc.id)}
                   isChecking={checkingDocId === doc.id}
                   onOpenConversations={setConversationsDoc}
+                  onCheckStatus={handleForceCheck}
+                  onReprocess={handleReprocess}
                   onDelete={setDocToDelete}
                   onOpenDocument={markDocumentAsOpened}
                 />

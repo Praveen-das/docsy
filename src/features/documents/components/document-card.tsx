@@ -18,6 +18,8 @@ export interface DocumentCardProps {
   onOpenConversations: (doc: Document) => void;
   onDelete: (doc: Document) => void;
   onOpenDocument: (docId: string) => void;
+  onCheckStatus?: (docId: string) => void;
+  onReprocess?: (docId: string) => void;
 }
 
 export function DocumentCard({
@@ -27,6 +29,8 @@ export function DocumentCard({
   onOpenConversations,
   onDelete,
   onOpenDocument,
+  onCheckStatus,
+  onReprocess,
 }: DocumentCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -114,7 +118,14 @@ export function DocumentCard({
           </span>
         </button>
 
-        <DocumentActionButton document={doc} isChecking={isChecking} onOpen={onOpenDocument} size="sm" />
+        <DocumentActionButton
+          document={doc}
+          isChecking={isChecking}
+          onCheckStatus={onCheckStatus}
+          onReprocess={onReprocess}
+          onOpen={onOpenDocument}
+          size="sm"
+        />
       </div>
     </GlowCard>
   );

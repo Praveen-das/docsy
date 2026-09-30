@@ -7,9 +7,17 @@ interface LogEntry {
   data?: Record<string, unknown>;
 }
 
+const COLORS = {
+  reset: "\x1b[0m",
+  info: "\x1b[36m",  // Cyan
+  warn: "\x1b[33m",  // Yellow
+  error: "\x1b[31m", // Red
+  debug: "\x1b[35m", // Magenta
+} as const;
+
 /**
  * Structured logger for lifecycle events.
- * Outputs JSON lines to stdout for easy parsing by log aggregators.
+ * Outputs formatted logs with level colors to stdout/stderr.
  */
 function log(level: LogLevel, event: string, data?: Record<string, unknown>) {
   const entry: LogEntry = {
@@ -19,7 +27,8 @@ function log(level: LogLevel, event: string, data?: Record<string, unknown>) {
     ...(data && { data }),
   };
 
-  const output = JSON.stringify(entry);
+  const color = COLORS[level];
+  const output = `${color}${JSON.stringify(entry)}${COLORS.reset}`;
 
   switch (level) {
     case "error":

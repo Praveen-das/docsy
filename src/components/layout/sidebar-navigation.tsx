@@ -33,7 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: SidebarNavigationProps) {
+export function SidebarNavigation({ isCollapsed, onClose }: SidebarNavigationProps) {
   const { data: subscription, isLoading } = useSubscription();
 
   const pathname = usePathname();
@@ -64,17 +64,13 @@ export function SidebarNavigation({ isCollapsed, onClose, onOpenSearch }: Sideba
     (item: NavItem) => {
       if (item.isSearch) {
         onClose?.();
-        if (onOpenSearch) {
-          onOpenSearch();
-        } else {
-          openSearch();
-        }
+        openSearch();
         return;
       }
 
       onClose?.();
     },
-    [onClose, onOpenSearch, openSearch],
+    [onClose, openSearch],
   );
 
   return (

@@ -21,12 +21,10 @@ function ConversationSidebarWithDoc({ isOpen, onClose }: { isOpen?: boolean; onC
 export interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
-  onOpenUpload?: () => void;
-  onOpenSearch?: () => void;
   title?: string;
 }
 
-export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: SidebarProps = {}) {
+export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const pathname = usePathname();
   const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
@@ -48,11 +46,7 @@ export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: Sidebar
     return () => clearTimeout(timer);
   }, []);
 
-  const isConversationMode =
-    pathname === "/conversation" ||
-    pathname.startsWith("/conversation/") ||
-    pathname === "/chat" ||
-    pathname.startsWith("/chat/");
+  const isConversationMode = pathname.startsWith("/conversation");
 
   if (isConversationMode) {
     return (
@@ -92,7 +86,7 @@ export function Sidebar({ isOpen, onClose, onOpenUpload, onOpenSearch }: Sidebar
         />
 
         {/* Navigation Menu & Upgrade to Pro Card */}
-        <SidebarNavigation isCollapsed={isCollapsed} onClose={effectiveOnClose} onOpenSearch={onOpenSearch} />
+        <SidebarNavigation isCollapsed={isCollapsed} onClose={effectiveOnClose} />
       </aside>
     </>
   );

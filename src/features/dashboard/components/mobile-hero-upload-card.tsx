@@ -1,52 +1,25 @@
 "use client";
 
-import React from "react";
 import { Plus, ChevronRight, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { useDocumentUpload } from "../hooks/use-document-upload";
 
 export function MobileHeroUploadCard() {
   const {
     fileInputRef,
-    uploadState,
-    setUploadState,
     progress,
     errorMessage,
     fileName,
-    uploadFile,
     resetState,
     handleFileInputChange,
     triggerUploadClick,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    isDragging,
+    isUploading,
+    isSuccess,
+    isError,
   } = useDocumentUpload();
-
-  const isUploading = uploadState === "uploading";
-  const isSuccess = uploadState === "success";
-  const isError = uploadState === "error";
-  const isDragging = uploadState === "dragging";
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!isUploading && !isSuccess) {
-      setUploadState("dragging");
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (isDragging) {
-      setUploadState("idle");
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (isUploading || isSuccess) return;
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      uploadFile(e.dataTransfer.files[0]);
-    } else {
-      setUploadState("idle");
-    }
-  };
 
   return (
     <div

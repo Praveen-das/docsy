@@ -7,6 +7,7 @@ import { ChatComposer } from "./components/chat-composer";
 import { ChatProvider } from "./context/chat-context";
 import { useChatConversation } from "./hooks/use-chat-conversation";
 import { useChatDraft } from "./hooks/use-chat-draft";
+import { useRenameConversation } from "@/features/conversations/hooks/use-conversations";
 import BottomGlow from "@/components/ui/BottomGlow";
 
 export interface ChatViewProps {
@@ -37,6 +38,7 @@ export function ChatView({ documentId, isViewerOpen = true, onToggleViewer }: Ch
     regeneratingMessageId,
   } = useChatConversation({ documentId });
 
+  const { mutate: renameConversation } = useRenameConversation();
   const { inputText, handleInputChange, clearInput } = useChatDraft(activeConvId);
 
   const documentName = primaryDoc?.originalName || "System Design Notes.pdf";
@@ -66,12 +68,18 @@ export function ChatView({ documentId, isViewerOpen = true, onToggleViewer }: Ch
         {/* Top Header matching Image 2 */}
         <ChatHeader
           conversationId={activeConvId || ""}
+          documentId={documentId || primaryDoc?.id}
           conversationTitle={title || "Summarize the key findings"}
           documentName={documentName}
           pageCount={pageCount}
           lastUpdated="2 hours ago"
           isViewerOpen={isViewerOpen}
           onToggleViewer={onToggleViewer}
+          onRenameTitle={(newTitle) => {
+            if (activeConvId) {
+              renameConversation({ convId: activeConvId, newTitle });
+            }
+          }}
         />
 
         {/* Main Chat Body Container */}

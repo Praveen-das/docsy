@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { MessageSquare, Clock, ArrowRight, Trash2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { MessageSquare, Clock, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/format-time";
-import { handleGlowMouseEnter, handleGlowMouseMove, handleGlowMouseLeave } from "@/lib/interactive-glow";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useConversations, useDeleteConversation } from "@/features/conversations/hooks/use-conversations";
 import { DeleteConversationDialog } from "@/features/conversations/components/delete-conversation-dialog";
+import { getConversationPath } from "@/features/conversations/utils/conversation-url";
 import { Conversation } from "@/types";
 
 export interface SidebarRecentsProps {
@@ -85,8 +85,13 @@ export const RecentsRow = React.memo(function RecentsRow({
 
 export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { conversations } = useConversations();
-  const activeConversationId = useConversationStore((state) => state.activeConversationId);
+
+  const urlConvId = searchParams?.get("conv");
+  const storeActiveId = useConversationStore((state) => state.activeConversationId);
+  const activeConversationId = urlConvId ?? storeActiveId;
+
   const switchConversation = useConversationStore((state) => state.switchConversation);
   const { mutate: deleteConversation } = useDeleteConversation();
 
@@ -102,12 +107,7 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   const handleSelectConversation = useCallback(
     (conv: Conversation) => {
       switchConversation(conv.id);
-      const docId = conv.documentIds[0];
-      if (docId) {
-        router.push(`/conversation?doc=${docId}&conv=${conv.id}`);
-      } else {
-        router.push(`/conversation?conv=${conv.id}`);
-      }
+      router.push(getConversationPath(conv.id, conv.documentIds[0]));
       onClose?.();
     },
     [router, switchConversation, onClose],

@@ -3,15 +3,11 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChatView } from "@/features/chat/chat-view";
-import { PdfViewer } from "@/features/pdf-viewer/pdf-viewer";
 import { Document } from "@/types";
 import { ConversationLayout } from "@/features/conversations/components/conversation-layout";
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
 import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
-import { useDocuments } from "@/features/documents/hooks/use-documents";
-import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { FileText, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,39 +15,16 @@ function ConversationWorkspace() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const docId = searchParams.get("doc");
-  const convId = searchParams.get("conv");
 
-  const { data: documents = [] } = useDocuments();
-  const { conversations } = useConversations();
-  const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
   const [isViewerOpen, setIsViewerOpen] = useState(true);
   const [selectDocOpen, setSelectDocOpen] = useState(false);
   const openUpload = useUIStore((state) => state.openUpload);
 
-  // Sync conversation selection with URL search parameters
   useEffect(() => {
-    const currentActive = useConversationStore.getState().activeConversationId;
-
-    if (!docId) {
-      if (currentActive !== null) {
-        setActiveConversation(null);
-      }
-      return;
-    }
-
-    markDocumentAsOpened(docId);
-
-    if (convId !== null) {
-      if (currentActive !== convId) {
-        setActiveConversation(convId);
-      }
-      return;
-    }
-
-    setActiveConversation(null);
-  }, [docId, convId, markDocumentAsOpened, setActiveConversation]);
+    if (docId) markDocumentAsOpened(docId);
+  }, [docId, markDocumentAsOpened]);
 
   const handleDocumentSelected = (doc: Document) => {
     setSelectDocOpen(false);
@@ -69,12 +42,6 @@ function ConversationWorkspace() {
               onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
             />
           }
-          // pdfViewer={
-          //   <PdfViewer
-          //     activeDocumentId={docId}
-          //     onClose={() => setIsViewerOpen(false)}
-          //   />
-          // }
           isViewerOpen={isViewerOpen}
           onToggleViewer={() => setIsViewerOpen((prev) => !prev)}
         />

@@ -16,9 +16,10 @@ export interface DashboardDocumentItem {
 export interface RecentDocumentsSectionProps {
   documents: (Document | (DashboardDocumentItem & Partial<Document>))[];
   onOpenDoc: (docId: string, isReal: boolean) => void;
+  onDelete?: (doc: Document) => void;
 }
 
-export function RecentDocumentsSection({ documents, onOpenDoc }: RecentDocumentsSectionProps) {
+export function RecentDocumentsSection({ documents, onOpenDoc, onDelete }: RecentDocumentsSectionProps) {
   if (documents.length === 0) {
     return null;
   }
@@ -34,7 +35,12 @@ export function RecentDocumentsSection({ documents, onOpenDoc }: RecentDocuments
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {documents.map((doc) => (
-          <RecentDocumentCard key={doc.id} document={doc} onOpenDoc={onOpenDoc} />
+          <RecentDocumentCard
+            key={doc.id}
+            document={doc}
+            onOpenDoc={onOpenDoc}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </div>

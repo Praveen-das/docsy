@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Conversation } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
 import { useConversations, useDeleteConversation } from "../hooks/use-conversations";
-import { ConversationItem } from "./conversation-item";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
-import { Search } from "lucide-react";
 import { RecentsRow } from "@/components/layout/sidebar-recents";
+import { getConversationPath } from "@/features/conversations/utils/conversation-url";
 
 export interface ConversationListProps {
   documentId?: string | null;
@@ -16,8 +15,6 @@ export interface ConversationListProps {
   onClose?: () => void;
   conversations?: Conversation[];
   activeConversationId?: string | null;
-  onSelectConversation?: (id: string) => void;
-  onCreateConversation?: () => void;
 }
 
 export function ConversationList({
@@ -26,12 +23,10 @@ export function ConversationList({
   onClose,
   conversations: propConversations,
   activeConversationId: propActiveConversationId,
-  onSelectConversation,
-  onCreateConversation,
 }: ConversationListProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-
+  const searchParams = useSearchParams();
+  const urlConvId = searchParams?.get("conv");
   const { conversations: storeConversations } = useConversations();
   const storeActiveId = useConversationStore((state) => state.activeConversationId);
   const switchConversation = useConversationStore((state) => state.switchConversation);
@@ -39,7 +34,7 @@ export function ConversationList({
 
   const [convToDelete, setConvToDelete] = useState<Conversation | null>(null);
 
-  const rawConversations =
+  const conversations =
     propConversations ??
     (documentId
       ? storeConversations
@@ -47,37 +42,17 @@ export function ConversationList({
           .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       : storeConversations);
 
-  const filteredConversations = rawConversations.filter((c) =>
-    c.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const activeId = propActiveConversationId !== undefined ? propActiveConversationId : storeActiveId;
+  const activeId = propActiveConversationId !== undefined ? propActiveConversationId : (urlConvId ?? storeActiveId);
 
   const handleSelect = (convId: string) => {
-    if (onSelectConversation) {
-      onSelectConversation(convId);
-      return;
-    }
     switchConversation(convId);
-    if (documentId) {
-      router.push(`/conversation?doc=${documentId}&conv=${convId}`);
-    } else {
-      router.push(`/conversation?conv=${convId}`);
-    }
+    router.push(getConversationPath(convId, documentId));
     onClose?.();
   };
 
   const handleCreate = () => {
-    if (onCreateConversation) {
-      onCreateConversation();
-      return;
-    }
     useConversationStore.getState().setActiveConversation(null);
-    if (documentId) {
-      router.push(`/conversation?doc=${documentId}`);
-    } else {
-      router.push(`/conversation`);
-    }
+    router.push(getConversationPath(null, documentId));
     onClose?.();
   };
 
@@ -88,14 +63,14 @@ export function ConversationList({
           <>
             <div className="flex items-center justify-between px-2.5 text-[9.5px] font-bold tracking-widest text-zinc-500 uppercase">
               <span>CONVERSATIONS</span>
-              <span className="font-mono text-zinc-500 text-[10px]">{filteredConversations.length}</span>
+              <span className="font-mono text-zinc-500 text-[10px]">{conversations.length}</span>
             </div>
           </>
         )}
 
         {/* Conversation Items List */}
         <div className="space-y-1 pt-1">
-          {filteredConversations.length === 0 ? (
+          {conversations.length === 0 ? (
             <div className="py-4 px-2 text-center">
               <p className="text-xs text-zinc-500">No conversations yet.</p>
               <button
@@ -106,7 +81,7 @@ export function ConversationList({
               </button>
             </div>
           ) : (
-            filteredConversations.map((conv) => (
+            conversations.map((conv) => (
               <RecentsRow
                 isActive={conv.id === activeId}
                 key={conv.id}
