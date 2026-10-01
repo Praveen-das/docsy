@@ -157,7 +157,7 @@ Duplication reduced from **5.15% (1,509 lines)** to **0 clone groups** on `npx f
 ### 5.2 Large Monolithic Components ("God Components")
 - `SelectDocumentModal` in `src/features/documents/components/select-document-modal.tsx`: 🟢 RESOLVED. Decomposed into `useDocumentSearch` (`use-document-search.ts`), `SearchDocumentResultItem` & `SearchConversationResultItem` (`search-result-items.tsx`), and `SearchModalEmptyStates` (`search-modal-empty-states.tsx`). Removed from refactoring targets and large functions list.
 - `ConversationsToolbar` in `src/features/conversations/components/conversations-toolbar.tsx`: 🟢 RESOLVED. Decomposed into `ConversationDocFilterMenu`, `ConversationSortMenu`, and `ConversationViewSwitcher` (`conversations-toolbar-menus.tsx`). Removed from refactoring targets and large functions list.
-- `UploadModal` in `src/features/documents/upload-modal.tsx`: **348 lines**
+- `UploadModal` in `src/features/documents/upload-modal.tsx`: 🟢 RESOLVED. Decomposed into `useDocumentUploadModal` (`use-document-upload-modal.ts`), `UploadDropzone` (`upload-dropzone.tsx`), `UploadFilePreview` (`upload-file-preview.tsx`), `UploadIdleView` (`upload-idle-view.tsx`), and `UploadProgressView` / `UploadFailedView` (`upload-status-views.tsx`). LOC dropped from 382 to 114; removed from top large functions.
 - `PricingPage` in `app/pricing/page.tsx`: **266 lines**
 
 ---
