@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessageSquare, Clock, Trash2 } from "lucide-react";
@@ -86,7 +86,12 @@ export const RecentsRow = React.memo(function RecentsRow({
 export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { conversations } = useConversations();
+  const { conversations, isLoading } = useConversations();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const urlConvId = searchParams?.get("conv");
   const storeActiveId = useConversationStore((state) => state.activeConversationId);
@@ -112,6 +117,37 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
     },
     [router, switchConversation, onClose],
   );
+
+  if (!mounted || isLoading) {
+    if (isCollapsed) {
+      return (
+        <div className="flex-1 min-h-0 flex flex-col py-2 border-t border-white/[0.06] overflow-hidden">
+          <div className="flex justify-center mb-1 shrink-0">
+            <div className="h-10 w-10 flex items-center justify-center text-zinc-600">
+              <Clock className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col items-center gap-1.5 py-1">
+            <div className="h-9 w-9 rounded-xl bg-white/[0.03] animate-pulse" />
+            <div className="h-9 w-9 rounded-xl bg-white/[0.03] animate-pulse" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex-1 min-h-0 flex flex-col mx-2 pt-4 pb-4 border-t border-white/[0.06] select-none overflow-hidden">
+        <div className="flex items-center justify-between px-2.5 pb-3 text-[10px] font-bold tracking-widest text-zinc-500 uppercase shrink-0">
+          <span className="flex items-center gap-1.5 text-zinc-400">RECENT CONVERSATIONS</span>
+        </div>
+        <div className="space-y-1.5 px-1 py-1">
+          <div className="h-9 rounded-xl bg-white/[0.03] animate-pulse" />
+          <div className="h-9 rounded-xl bg-white/[0.03] animate-pulse" />
+          <div className="h-9 rounded-xl bg-white/[0.03] animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   if (isCollapsed) {
     return (

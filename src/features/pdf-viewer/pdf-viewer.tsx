@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Document as DocumentType, MockPdfPage } from "@/types";
 import { mockPdfDocumentPages } from "@/lib/mock-data";
-import { PdfPageCanvas } from "./components/pdf-page-canvas";
+// import { PdfPageCanvas } from "./components/pdf-page-canvas";
 import { useDocuments } from "@/features/documents/hooks/use-documents";
 import {
   ChevronUp,
@@ -24,16 +24,11 @@ export interface PdfViewerProps {
   onClose?: () => void;
 }
 
-export function PdfViewer({
-  documents: propDocuments,
-  activeDocumentId: propActiveDocId,
-  onClose,
-}: PdfViewerProps) {
+export function PdfViewer({ documents: propDocuments, activeDocumentId: propActiveDocId, onClose }: PdfViewerProps) {
   const { data: storeDocuments = [] } = useDocuments();
   const documents = propDocuments || storeDocuments;
   const activeDocId = propActiveDocId || "";
-  const currentDoc =
-    (activeDocId ? documents.find((d) => d.id === activeDocId) : undefined) || documents[0];
+  const currentDoc = (activeDocId ? documents.find((d) => d.id === activeDocId) : undefined) || documents[0];
 
   const [activeTab, setActiveTab] = useState<"document" | "citations" | "notes">("document");
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,7 +84,7 @@ export function PdfViewer({
               "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
               activeTab === "document"
                 ? "bg-[#141624] text-white border border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.15)]"
-                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                : "text-zinc-400 hover:text-white hover:bg-white/5",
             )}
           >
             Document
@@ -103,13 +98,11 @@ export function PdfViewer({
               "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
               activeTab === "citations"
                 ? "bg-[#141624] text-white border border-indigo-500/30"
-                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                : "text-zinc-400 hover:text-white hover:bg-white/5",
             )}
           >
             <span>Citations</span>
-            <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.2 text-[10px] font-mono text-indigo-300">
-              3
-            </span>
+            <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.2 text-[10px] font-mono text-indigo-300">3</span>
           </button>
 
           {/* Tab: Notes */}
@@ -120,7 +113,7 @@ export function PdfViewer({
               "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
               activeTab === "notes"
                 ? "bg-[#141624] text-white border border-indigo-500/30"
-                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                : "text-zinc-400 hover:text-white hover:bg-white/5",
             )}
           >
             Notes
@@ -175,9 +168,7 @@ export function PdfViewer({
             <Minus className="h-3.5 w-3.5" />
           </button>
 
-          <span className="text-zinc-300 font-medium min-w-[36px] text-center">
-            {zoomLevel}%
-          </span>
+          <span className="text-zinc-300 font-medium min-w-[36px] text-center">{zoomLevel}%</span>
 
           <button
             type="button"
@@ -200,24 +191,31 @@ export function PdfViewer({
 
       {/* ─── DOCUMENT CANVAS ─────────────────────────────────────── */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
-        {activeTab === "document" && (
+        {/*{activeTab === "document" && (
           <PdfPageCanvas
             documentName={currentDoc?.originalName}
             currentPage={currentPage}
             activePageData={activePageData}
             zoomLevel={zoomLevel}
           />
-        )}
+        )}*/}
 
         {activeTab === "citations" && (
           <div className="flex-1 p-6 overflow-y-auto space-y-3">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Document Citations
-            </h4>
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Document Citations</h4>
             {[
-              { page: 6, text: "A well-designed system should gracefully handle increased load by scaling out, not just scaling up." },
-              { page: 12, text: "Database comparison matrix detailing transactional consistency and horizontal scalability." },
-              { page: 18, text: "Event-driven architecture using Kafka message brokers decouples operational throughput." },
+              {
+                page: 6,
+                text: "A well-designed system should gracefully handle increased load by scaling out, not just scaling up.",
+              },
+              {
+                page: 12,
+                text: "Database comparison matrix detailing transactional consistency and horizontal scalability.",
+              },
+              {
+                page: 18,
+                text: "Event-driven architecture using Kafka message brokers decouples operational throughput.",
+              },
             ].map((c) => (
               <div
                 key={c.page}
@@ -239,9 +237,7 @@ export function PdfViewer({
 
         {activeTab === "notes" && (
           <div className="flex-1 p-6 overflow-y-auto">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2">
-              Personal Notes
-            </h4>
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2">Personal Notes</h4>
             <textarea
               placeholder="Take notes while reviewing this document..."
               className="w-full h-48 rounded-xl border border-white/10 bg-[#0f111a] p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500/40 resize-none"
@@ -273,7 +269,7 @@ export function PdfViewer({
                     "w-12 h-16 rounded-md bg-white border flex flex-col p-1 justify-between transition-all duration-150 overflow-hidden shadow-xs",
                     currentPage === pNum
                       ? "ring-2 ring-indigo-500 border-indigo-400 scale-105 shadow-[0_0_12px_rgba(99,102,241,0.4)]"
-                      : "border-zinc-300 opacity-70 group-hover:opacity-100"
+                      : "border-zinc-300 opacity-70 group-hover:opacity-100",
                   )}
                 >
                   <div className="w-full h-1 bg-zinc-800 rounded-xs" />
@@ -290,7 +286,7 @@ export function PdfViewer({
                 <span
                   className={cn(
                     "text-[10px] font-mono",
-                    currentPage === pNum ? "text-indigo-400 font-bold" : "text-zinc-500"
+                    currentPage === pNum ? "text-indigo-400 font-bold" : "text-zinc-500",
                   )}
                 >
                   {pNum}

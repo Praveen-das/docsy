@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Sidebar } from "@/components/layout/sidebar";
+import { Sidebar, SidebarFallback } from "@/components/layout/sidebar";
 import { UploadModal } from "@/features/documents/upload-modal";
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
 import { SettingsModal } from "@/features/settings/components/settings-modal";
@@ -13,7 +13,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#08090d] text-[#f4f4f5] transition-colors duration-150">
       {/* Desktop & Mobile Sidebar */}
-      <Sidebar />
+      <Suspense fallback={<SidebarFallback />}>
+        <Sidebar />
+      </Suspense>
 
       {/* Main Content Viewport */}
       <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden relative">{children}</div>

@@ -2,8 +2,8 @@
 
 import React, { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { OfflineBanner } from "@/features/offline/components/offline-banner";
-import { backgroundSyncService } from "@/features/offline/services/background-sync.service";
+// import { OfflineBanner } from "@/features/offline/components/offline-banner";
+// import { backgroundSyncService } from "@/features/offline/services/background-sync.service";
 import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { useConversations } from "@/features/conversations/hooks/use-conversations";
 
@@ -72,16 +72,16 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
-    backgroundSyncService.scheduleSync({
-      user,
-      documents,
-      conversations,
-    });
+    // backgroundSyncService.scheduleSync({
+    //   user,
+    //   documents,
+    //   conversations,
+    // });
   }, [user, documents, conversations]);
 
   return (
     <>
-      <OfflineBanner />
+      {/* <OfflineBanner /> */}
       {children}
     </>
   );

@@ -75,3 +75,35 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
     </>
   );
 }
+
+export function SidebarFallback() {
+  return (
+    <aside
+      aria-hidden="true"
+      className="hidden lg:flex flex-col bg-[#07080c] select-none lg:static lg:h-full shrink-0 overflow-hidden lg:w-64"
+    >
+      <div className="flex h-20 shrink-0 items-center px-5 gap-3.5">
+        <div className="h-8 w-8 rounded-xl bg-white/[0.06] animate-pulse" />
+        <div className="h-5 w-20 rounded-md bg-white/[0.06] animate-pulse" />
+      </div>
+
+      <div className="flex-1 flex flex-col pt-4 pb-5 gap-3 px-2">
+        <div className="space-y-2">
+          <div className="h-10 rounded-xl bg-white/[0.04] animate-pulse" />
+          <div className="h-10 rounded-xl bg-white/[0.04] animate-pulse" />
+          <div className="h-10 rounded-xl bg-white/[0.04] animate-pulse" />
+        </div>
+
+        <div className="flex-1 min-h-0 mx-2 pt-4 border-t border-white/[0.06] space-y-2.5">
+          <div className="h-3 w-16 rounded bg-white/[0.05] animate-pulse" />
+          <div className="space-y-2 pt-1">
+            <div className="h-8 rounded-lg bg-white/[0.03] animate-pulse" />
+            <div className="h-8 rounded-lg bg-white/[0.03] animate-pulse" />
+            <div className="h-8 rounded-lg bg-white/[0.03] animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+

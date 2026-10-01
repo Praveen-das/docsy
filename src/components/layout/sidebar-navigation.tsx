@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/ui-store";
 
@@ -100,7 +100,9 @@ export function SidebarNavigation({ isCollapsed, onClose }: SidebarNavigationPro
       </nav>
 
       {/* Recents Section (scrollable) */}
-      <SidebarRecents isCollapsed={isCollapsed} onClose={onClose} />
+      <Suspense fallback={null}>
+        <SidebarRecents isCollapsed={isCollapsed} onClose={onClose} />
+      </Suspense>
 
       {/* Upgrade to Pro Card */}
       {!isProUser && (
