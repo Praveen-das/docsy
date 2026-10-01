@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Document, Conversation } from "@/types";
+import type { Document, Conversation } from "@/types";
 import { useDocuments } from "../hooks/use-documents";
 import { useConversations } from "@/features/conversations/hooks/use-conversations";
+import { useDocumentSearch } from "../hooks/use-document-search";
 import { useUIStore } from "@/stores/ui-store";
-import { formatRelativeTime } from "@/lib/format-time";
-import { FileText, Search, ArrowRight, Plus, X, MessageSquare, AlertCircle, Loader2 } from "lucide-react";
-import { cn, formatFileSize } from "@/lib/utils";
+import { Search, Plus, X } from "lucide-react";
 import { GlowContainer } from "@/components/ui/glow-container";
-import { GlowCard } from "@/components/ui/glow-card";
 import { ModalBackdrop, useModalDismiss } from "@/components/ui/modal-backdrop";
+import {
+  SearchDocumentResultItem,
+  SearchConversationResultItem,
+} from "./search-result-items";
+import { SearchModalEmptyStates } from "./search-modal-empty-states";
 
 export interface SelectDocumentModalProps {
   isOpen?: boolean;
@@ -57,39 +60,13 @@ export function SelectDocumentModal({
 
   useModalDismiss(effectiveIsOpen, effectiveOnClose);
 
-  const query = searchQuery.trim().toLowerCase();
-
-  const filteredDocuments = useMemo(() => {
-    if (!query) return [];
-    return documents.filter((doc) => doc.originalName.toLowerCase().includes(query));
-  }, [documents, query]);
-
-  const filteredConversations = useMemo(() => {
-    if (!query) return [];
-    return conversations.filter(
-      (c) =>
-        c.title.toLowerCase().includes(query) ||
-        (c.lastMessageSnippet && c.lastMessageSnippet.toLowerCase().includes(query))
-    );
-  }, [conversations, query]);
-
-  const documentMap = useMemo(() => {
-    const map = new Map<string, Document>();
-    for (const doc of documents) {
-      map.set(doc.id, doc);
-    }
-    return map;
-  }, [documents]);
-
-  const conversationCountMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const conv of conversations) {
-      for (const docId of conv.documentIds) {
-        map[docId] = (map[docId] || 0) + 1;
-      }
-    }
-    return map;
-  }, [conversations]);
+  const {
+    query,
+    filteredDocuments,
+    filteredConversations,
+    documentMap,
+    conversationCountMap,
+  } = useDocumentSearch(documents, conversations, searchQuery);
 
   const handleSelectDocument = (doc: Document) => {
     if (onSelectDocument) {
@@ -108,11 +85,13 @@ export function SelectDocumentModal({
 
   if (!effectiveIsOpen) return null;
 
+  const hasResults = filteredDocuments.length > 0 || filteredConversations.length > 0;
+  const showEmptyState = (isLoadingDocs && documents.length === 0) || !query || !hasResults;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-4 sm:p-6 select-none">
       <ModalBackdrop onClose={effectiveOnClose} />
 
-      {/* Modal Container */}
       <GlowContainer
         role="dialog"
         aria-modal="true"
@@ -182,35 +161,14 @@ export function SelectDocumentModal({
 
           {/* Results List */}
           <div className="max-h-[min(420px,55dvh)] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-            {isLoadingDocs && documents.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 sm:py-12 text-[#8b95a8]">
-                <Loader2 className="h-7 w-7 animate-spin text-indigo-400 mb-2" />
-                <p className="text-xs sm:text-[13.5px] font-medium">Loading...</p>
-              </div>
-            ) : !query ? (
-              /* Empty initial prompt state before user types */
-              <div className="py-12 sm:py-16 text-center select-none">
-                <div className="mx-auto flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/[0.06] text-[#727f9d] mb-3 shadow-inner">
-                  <Search className="h-5 w-5 sm:h-6 sm:w-6" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-[#f1f3f9]">Search Docsy</h3>
-                <p className="text-[11px] sm:text-xs text-[#7d879d] mt-1 max-w-xs mx-auto leading-relaxed px-4">
-                  Type to search across all uploaded documents and past conversations.
-                </p>
-              </div>
-            ) : filteredDocuments.length === 0 && filteredConversations.length === 0 ? (
-              /* No matches found */
-              <div className="py-12 sm:py-16 text-center select-none">
-                <AlertCircle className="mx-auto h-7 w-7 sm:h-8 sm:w-8 text-[#727f9d] mb-2" />
-                <p className="text-xs sm:text-sm font-medium text-[#f1f3f9]">No results found</p>
-                <p className="text-[11px] sm:text-xs text-[#7d879d] mt-1 px-4">
-                  No documents or conversations match &ldquo;{searchQuery}&rdquo;.
-                </p>
-              </div>
+            {showEmptyState ? (
+              <SearchModalEmptyStates
+                isLoading={isLoadingDocs && documents.length === 0}
+                query={query}
+                searchQuery={searchQuery}
+              />
             ) : (
-              /* Matches found: separate lists for Documents & Conversations */
               <div className="space-y-4">
-                {/* Documents Section */}
                 {filteredDocuments.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1">
@@ -219,63 +177,18 @@ export function SelectDocumentModal({
                       </span>
                     </div>
                     <div className="space-y-1.5">
-                      {filteredDocuments.map((doc) => {
-                        const convCount = conversationCountMap[doc.id] || 0;
-                        const isReady = doc.status === "READY" || !doc.status;
-
-                        return (
-                          <GlowCard
-                            key={doc.id}
-                            onClick={() => handleSelectDocument(doc)}
-                            hasHoverEffect={false}
-                            className="group relative flex items-center justify-between rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all duration-150 cursor-pointer active:scale-[0.99]"
-                          >
-                            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2 flex-1">
-                              <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-[#171b2e] border border-white/[0.08] text-[#a3b8fc] group-hover:scale-105 transition-transform shadow-inner">
-                                <FileText className="h-4 w-4 stroke-[1.8]" />
-                              </div>
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 sm:gap-2">
-                                  <span className="truncate text-xs sm:text-[13.5px] font-semibold text-[#f1f3f9] group-hover:text-white transition-colors">
-                                    {doc.originalName}
-                                  </span>
-                                  {!isReady && (
-                                    <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9.5px] sm:text-[10px] font-medium text-amber-400 shrink-0">
-                                      {doc.status}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="mt-0.5 flex flex-wrap items-center gap-1 sm:gap-2 text-[10.5px] sm:text-[11.5px] text-[#7d879d]">
-                                  <span>{doc.pageCount || 1} pgs</span>
-                                  <span>•</span>
-                                  <span>{formatFileSize(doc.fileSize)}</span>
-                                  <span>•</span>
-                                  <span>{formatRelativeTime(doc.createdAt || doc.updatedAt)}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                              {convCount > 0 && (
-                                <div className="hidden xs:flex items-center gap-1 text-[11px] text-[#7d879d] bg-white/[0.03] border border-white/[0.05] px-2 py-0.5 rounded-lg">
-                                  <MessageSquare className="h-3 w-3 text-[#8b95a8]" />
-                                  <span>{convCount}</span>
-                                </div>
-                              )}
-                              <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/[0.04] text-[#7d879d] border border-white/[0.06] group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-all">
-                                <ArrowRight className="h-3 w-3 sm:h-3.5 w-3.5" />
-                              </div>
-                            </div>
-                          </GlowCard>
-                        );
-                      })}
+                      {filteredDocuments.map((doc) => (
+                        <SearchDocumentResultItem
+                          key={doc.id}
+                          doc={doc}
+                          convCount={conversationCountMap[doc.id] || 0}
+                          onSelect={handleSelectDocument}
+                        />
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Conversations Section */}
                 {filteredConversations.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1">
@@ -284,56 +197,14 @@ export function SelectDocumentModal({
                       </span>
                     </div>
                     <div className="space-y-1.5">
-                      {filteredConversations.map((conv) => {
-                        const linkedDoc = conv.documentIds?.[0] ? documentMap.get(conv.documentIds[0]) : undefined;
-
-                        return (
-                          <GlowCard
-                            key={conv.id}
-                            onClick={() => handleSelectConversation(conv)}
-                            hasHoverEffect={false}
-                            className="group relative flex items-center justify-between rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all duration-150 cursor-pointer active:scale-[0.99]"
-                          >
-                            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2 flex-1">
-                              <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:scale-105 transition-transform shadow-inner">
-                                <MessageSquare className="h-4 w-4 stroke-[1.8]" />
-                              </div>
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 sm:gap-2">
-                                  <span className="truncate text-xs sm:text-[13.5px] font-semibold text-[#f1f3f9] group-hover:text-white transition-colors">
-                                    {conv.title}
-                                  </span>
-                                </div>
-
-                                {conv.lastMessageSnippet && (
-                                  <p className="truncate text-[11px] sm:text-[12px] text-[#818ea8] mt-0.5">
-                                    {conv.lastMessageSnippet}
-                                  </p>
-                                )}
-
-                                <div className="mt-0.5 flex flex-wrap items-center gap-1 sm:gap-2 text-[10.5px] sm:text-[11.5px] text-[#7d879d]">
-                                  {linkedDoc && (
-                                    <>
-                                      <span className="text-indigo-400/90 truncate max-w-[150px]">
-                                        {linkedDoc.originalName}
-                                      </span>
-                                      <span>•</span>
-                                    </>
-                                  )}
-                                  <span>{formatRelativeTime(conv.updatedAt)}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                              <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/[0.04] text-[#7d879d] border border-white/[0.06] group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-all">
-                                <ArrowRight className="h-3 w-3 sm:h-3.5 w-3.5" />
-                              </div>
-                            </div>
-                          </GlowCard>
-                        );
-                      })}
+                      {filteredConversations.map((conv) => (
+                        <SearchConversationResultItem
+                          key={conv.id}
+                          conv={conv}
+                          linkedDoc={conv.documentIds?.[0] ? documentMap.get(conv.documentIds[0]) : undefined}
+                          onSelect={handleSelectConversation}
+                        />
+                      ))}
                     </div>
                   </div>
                 )}

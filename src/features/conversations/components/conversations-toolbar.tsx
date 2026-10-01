@@ -1,10 +1,14 @@
 "use client";
 
-import React, { useRef, useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, List, Grid, Search, X, SlidersHorizontal, FileText } from "lucide-react";
+import React, { useRef, useEffect, useState } from "react";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FilterTabs, FilterPills, FilterTabOption } from "@/components/ui/filter-tabs";
-import { CompactMenu, CompactMenuItem } from "@/components/ui/compact-menu";
+import { FilterTabs, FilterPills, type FilterTabOption } from "@/components/ui/filter-tabs";
+import {
+  ConversationDocFilterMenu,
+  ConversationSortMenu,
+  ConversationViewSwitcher,
+} from "./conversations-toolbar-menus";
 
 export type ConversationFilterTab = "all" | "recent" | "pinned";
 export type ConversationSortOption = "newest" | "oldest" | "title";
@@ -14,12 +18,6 @@ const FILTER_TABS: FilterTabOption<ConversationFilterTab>[] = [
   { id: "recent", label: "Recent" },
   { id: "pinned", label: "Pinned" },
 ];
-
-const SORT_LABELS: Record<ConversationSortOption, string> = {
-  newest: "Last updated",
-  oldest: "Oldest first",
-  title: "Title (A-Z)",
-};
 
 export interface ConversationsToolbarProps {
   activeTab: ConversationFilterTab;
@@ -71,60 +69,10 @@ export function ConversationsToolbar({
       return () => clearTimeout(timer);
     }
   }, [searchExpanded]);
-  const sortMenuItems = useMemo<CompactMenuItem[]>(
-    () => [
-      {
-        label: "Last updated",
-        onClick: () => onSortChange("newest"),
-        variant: sortBy === "newest" ? "accent" : "default",
-        showChevron: false,
-        icon: sortBy === "newest" ? Check : undefined,
-      },
-      {
-        label: "Oldest first",
-        onClick: () => onSortChange("oldest"),
-        variant: sortBy === "oldest" ? "accent" : "default",
-        showChevron: false,
-        icon: sortBy === "oldest" ? Check : undefined,
-      },
-      {
-        label: "Title (A-Z)",
-        onClick: () => onSortChange("title"),
-        variant: sortBy === "title" ? "accent" : "default",
-        showChevron: false,
-        icon: sortBy === "title" ? Check : undefined,
-      },
-    ],
-    [sortBy, onSortChange],
-  );
-
-  const docMenuSections = useMemo(
-    () => [
-      {
-        items: [
-          {
-            label: "All Documents",
-            onClick: () => onDocFilterChange("all"),
-            variant: (selectedDocFilter === "all" ? "accent" : "default") as "accent" | "default",
-            showChevron: false,
-            icon: selectedDocFilter === "all" ? Check : undefined,
-          },
-          ...uniqueDocNames.map((name) => ({
-            label: name,
-            onClick: () => onDocFilterChange(name),
-            variant: (selectedDocFilter === name ? "accent" : "default") as "accent" | "default",
-            showChevron: false,
-            icon: selectedDocFilter === name ? Check : undefined,
-          })),
-        ],
-      },
-    ],
-    [selectedDocFilter, uniqueDocNames, onDocFilterChange],
-  );
 
   return (
     <div className="w-full space-y-3">
-      {/* ─── MOBILE TOOLBAR: Full-width search bar + Pills & Filter/Sort Dropdowns ─── */}
+      {/* ─── MOBILE TOOLBAR ─── */}
       <div className="flex sm:hidden flex-col gap-3 w-full">
         {/* Full-width Search Input */}
         <div className="relative flex items-center w-full">
@@ -150,102 +98,48 @@ export function ConversationsToolbar({
 
         {/* Filter Pills + Document Dropdown + Sort Button */}
         <div className="flex items-center justify-between gap-2 w-full">
-          {/* Status Pills */}
-          <FilterPills<ConversationFilterTab> options={FILTER_TABS} activeTab={activeTab} onTabChange={onTabChange} />
+          <FilterPills<ConversationFilterTab>
+            options={FILTER_TABS}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+          />
 
-          {/* Mobile "By Document" Filter Capsule */}
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleDocDropdown();
-              }}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full text-xs font-medium px-3 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95 border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
-                selectedDocFilter !== "all" && "border-indigo-500/40 text-indigo-300 bg-indigo-500/10",
-              )}
-            >
-              <FileText className="h-3 w-3 text-[#818ea8]" />
-              <span className="truncate max-w-[100px]">
-                {selectedDocFilter === "all" ? "Document" : selectedDocFilter}
-              </span>
-              <ChevronDown className="h-3 w-3 text-[#727f9d]" />
-            </button>
+          <ConversationDocFilterMenu
+            selectedDocFilter={selectedDocFilter}
+            uniqueDocNames={uniqueDocNames}
+            isOpen={isDocDropdownOpen}
+            onToggle={onToggleDocDropdown}
+            onSelect={onDocFilterChange}
+            isMobile
+          />
 
-            <CompactMenu
-              isOpen={isDocDropdownOpen}
-              onClose={() => onToggleDocDropdown(false)}
-              width="w-56"
-              align="left"
-              sections={docMenuSections}
-            />
-          </div>
-        </div>
-
-        {/* Sort Sliders Button on Mobile */}
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSortOpen();
-            }}
-            className={cn(
-              "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95",
-              (isSortOpen || sortBy !== "newest") && "border-indigo-500/40 text-indigo-400 bg-indigo-500/10",
-            )}
-            title="Sort conversations"
-            aria-label="Sort conversations"
-          >
-            <SlidersHorizontal className="h-4 w-4 stroke-[1.8]" />
-            {sortBy !== "newest" && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-indigo-500" />}
-          </button>
-
-          <CompactMenu
+          <ConversationSortMenu
+            sortBy={sortBy}
+            onSortChange={onSortChange}
             isOpen={isSortOpen}
-            onClose={() => onToggleSortOpen(false)}
-            width="w-44"
-            align="right"
-            sections={[{ items: sortMenuItems }]}
+            onToggle={onToggleSortOpen}
+            isMobile
           />
         </div>
       </div>
 
-      {/* ─── DESKTOP TOOLBAR: FilterTabs, Document Capsule, Sort Dropdown & Switcher ─── */}
+      {/* ─── DESKTOP TOOLBAR ─── */}
       <div className="hidden sm:flex flex-row items-center justify-between gap-3 pt-1 w-full">
-        {/* Left Controls: Filter Tabs + By Document Dropdown */}
+        {/* Left Controls: Filter Tabs + By Document Dropdown + Search */}
         <div className="flex items-center gap-2.5 flex-nowrap">
-          <FilterTabs<ConversationFilterTab> options={FILTER_TABS} activeTab={activeTab} onTabChange={onTabChange} />
+          <FilterTabs<ConversationFilterTab>
+            options={FILTER_TABS}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+          />
 
-          {/* "By Document" Filter Capsule Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleDocDropdown();
-              }}
-              className={cn(
-                "flex items-center gap-1.5 h-9 px-3 rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-xs font-medium",
-                "text-[#818ea8] hover:text-[#f1f3f9] hover:border-white/15 shadow-inner backdrop-blur-md transition-all cursor-pointer select-none active:scale-[0.98]",
-                selectedDocFilter !== "all" && "text-white border-white/20 bg-white/5",
-              )}
-            >
-              <span className="truncate max-w-[140px]">
-                {selectedDocFilter === "all" ? "By Document" : selectedDocFilter}
-              </span>
-              <ChevronDown className="h-3 w-3 text-[#727f9d]" />
-            </button>
-
-            <CompactMenu
-              isOpen={isDocDropdownOpen}
-              onClose={() => onToggleDocDropdown(false)}
-              width="w-56"
-              align="left"
-              sections={docMenuSections}
-            />
-          </div>
+          <ConversationDocFilterMenu
+            selectedDocFilter={selectedDocFilter}
+            uniqueDocNames={uniqueDocNames}
+            isOpen={isDocDropdownOpen}
+            onToggle={onToggleDocDropdown}
+            onSelect={onDocFilterChange}
+          />
 
           {/* Expandable Search Input */}
           <div className="relative flex items-center">
@@ -284,7 +178,9 @@ export function ConversationsToolbar({
                 aria-label="Search conversations"
               >
                 <Search className="h-4 w-4 stroke-[2]" />
-                {searchQuery && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-indigo-500" />}
+                {searchQuery && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-indigo-500" />
+                )}
               </button>
             )}
           </div>
@@ -292,61 +188,17 @@ export function ConversationsToolbar({
 
         {/* Right Controls: Sort Dropdown & View Mode Switcher */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Sort Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSortOpen();
-              }}
-              className="flex items-center gap-2 h-9 px-3 rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-xs font-medium text-[#f1f5f9] hover:text-white hover:border-white/15 shadow-inner backdrop-blur-md will-change-transform transition-all cursor-pointer select-none active:scale-[0.98]"
-            >
-              <span className="text-[12px] text-[#818ea8]">⇅</span>
-              <span>{SORT_LABELS[sortBy]}</span>
-              <ChevronDown className="h-3 w-3 text-[#727f9d]" />
-            </button>
+          <ConversationSortMenu
+            sortBy={sortBy}
+            onSortChange={onSortChange}
+            isOpen={isSortOpen}
+            onToggle={onToggleSortOpen}
+          />
 
-            <CompactMenu
-              isOpen={isSortOpen}
-              onClose={() => onToggleSortOpen(false)}
-              width="w-44"
-              align="right"
-              sections={[{ items: sortMenuItems }]}
-            />
-          </div>
-
-          {/* View Switcher Capsule (List vs Grid) */}
-          <div className="flex items-center h-9 rounded-xl bg-[#0c1017]/90 border border-white/[0.08] p-1 shadow-inner backdrop-blur-md will-change-transform">
-            <button
-              type="button"
-              onClick={() => onViewModeChange("list")}
-              className={cn(
-                "flex items-center justify-center h-7 w-7 rounded-lg transition-all cursor-pointer",
-                viewMode === "list"
-                  ? "bg-indigo-600 text-white shadow-xs shadow-indigo-600/30"
-                  : "text-[#818ea8] hover:text-white",
-              )}
-              title="List view"
-              aria-label="List view"
-            >
-              <List className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange("grid")}
-              className={cn(
-                "flex items-center justify-center h-7 w-7 rounded-lg transition-all cursor-pointer",
-                viewMode === "grid"
-                  ? "bg-indigo-600 text-white shadow-xs shadow-indigo-600/30"
-                  : "text-[#818ea8] hover:text-white",
-              )}
-              title="Grid view"
-              aria-label="Grid view"
-            >
-              <Grid className="h-3.5 w-3.5" />
-            </button>
-          </div>
+          <ConversationViewSwitcher
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
         </div>
       </div>
     </div>

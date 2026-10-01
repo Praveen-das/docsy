@@ -2,7 +2,6 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { HeaderSearchBar } from "./header-search-bar";
 import { HeaderMobileNavToggle } from "./header-mobile-nav-toggle";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
@@ -58,4 +57,3 @@ export function Header({ className }: HeaderProps = {}) {
     </header>
   );
 }
-

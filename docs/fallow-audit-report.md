@@ -155,9 +155,10 @@ Duplication reduced from **5.15% (1,509 lines)** to **0 clone groups** on `npx f
 4. **`src/services/document.service.ts`**: 🟢 RESOLVED. Extracted storage cleanup, vector deletions, and missing status resolution pipeline into `document-status.helper.ts`. Purged uncalled `updateDocumentMetadata`, eliminating CRITICAL cyclomatic 10 and reducing file LOC from 638 to 365.
 
 ### 5.2 Large Monolithic Components ("God Components")
-- `UploadModal` in `src/features/documents/upload-modal.tsx`: **405 lines**
-- `ConversationsToolbar` in `src/features/conversations/components/conversations-toolbar.tsx`: **290 lines**
-- `PricingPage` in `app/pricing/page.tsx`: **281 lines**
+- `SelectDocumentModal` in `src/features/documents/components/select-document-modal.tsx`: 🟢 RESOLVED. Decomposed into `useDocumentSearch` (`use-document-search.ts`), `SearchDocumentResultItem` & `SearchConversationResultItem` (`search-result-items.tsx`), and `SearchModalEmptyStates` (`search-modal-empty-states.tsx`). Removed from refactoring targets and large functions list.
+- `ConversationsToolbar` in `src/features/conversations/components/conversations-toolbar.tsx`: 🟢 RESOLVED. Decomposed into `ConversationDocFilterMenu`, `ConversationSortMenu`, and `ConversationViewSwitcher` (`conversations-toolbar-menus.tsx`). Removed from refactoring targets and large functions list.
+- `UploadModal` in `src/features/documents/upload-modal.tsx`: **348 lines**
+- `PricingPage` in `app/pricing/page.tsx`: **266 lines**
 
 ---
 
