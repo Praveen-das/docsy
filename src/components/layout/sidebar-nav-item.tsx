@@ -5,7 +5,7 @@ import { handleGlowMouseEnter, handleGlowMouseMove, handleGlowMouseLeave } from 
 import type { NavItem } from "./sidebar-navigation.types";
 import { useRouter } from "next/router";
 
-export const NAV_MUTED_COLOR = "text-(--sidebar-nav-muted)";
+const NAV_MUTED_COLOR = "text-(--sidebar-nav-muted)";
 
 export interface SidebarNavItemProps {
   item: NavItem;

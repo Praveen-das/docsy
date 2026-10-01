@@ -5,7 +5,7 @@ import { WifiOff, Wifi, CloudOff } from "lucide-react";
 import { useNetworkStatus } from "../hooks/use-network-status";
 import { cn } from "@/lib/utils";
 
-export function OfflineBanner() {
+function OfflineBanner() {
   const { isOffline, wasOffline } = useNetworkStatus();
 
   if (!isOffline && !wasOffline) return null;

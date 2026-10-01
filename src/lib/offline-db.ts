@@ -16,7 +16,7 @@ export interface AuthSnapshot {
 const DB_NAME = "docsy_offline_v1";
 const DB_VERSION = 1;
 
-export const STORES = {
+const STORES = {
   DOCUMENTS: "documents",
   CONVERSATIONS: "conversations",
   MESSAGES: "messages",
@@ -25,7 +25,7 @@ export const STORES = {
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
-export function openOfflineDB(): Promise<IDBDatabase> {
+function openOfflineDB(): Promise<IDBDatabase> {
   if (typeof window === "undefined" || !("indexedDB" in window)) {
     return Promise.reject(new Error("IndexedDB is not supported in this environment"));
   }
@@ -193,7 +193,7 @@ export async function saveAuthSnapshot(snapshot: AuthSnapshot): Promise<void> {
   });
 }
 
-export async function getAuthSnapshot(): Promise<AuthSnapshot | null> {
+async function getAuthSnapshot(): Promise<AuthSnapshot | null> {
   const db = await openOfflineDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORES.AUTH, "readonly");
@@ -210,7 +210,7 @@ export async function getAuthSnapshot(): Promise<AuthSnapshot | null> {
 
 // ─── Reset / Clear Cache ──────────────────────────────────────────
 
-export async function clearOfflineCache(): Promise<void> {
+async function clearOfflineCache(): Promise<void> {
   const db = await openOfflineDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(

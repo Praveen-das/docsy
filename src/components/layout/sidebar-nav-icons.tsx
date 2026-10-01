@@ -52,7 +52,7 @@ export function NavConversationsIcon({ className }: { className?: string }) {
   );
 }
 
-export function NavSearchIcon({ className }: { className?: string }) {
+function NavSearchIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"

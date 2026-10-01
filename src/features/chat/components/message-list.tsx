@@ -1,27 +1,18 @@
 "use client";
 
-import React, { useRef, useEffect, useCallback } from "react";
-import { VList, VListHandle } from "virtua";
+import React from "react";
+import { VList } from "virtua";
 import { Loader2 } from "lucide-react";
-import { Message, PaginatedMessagesResponse } from "@/types";
+import type { Message, PaginatedMessagesResponse } from "@/types";
 import { EmptyChatState } from "./empty-chat-state";
 import { ChatMessageItem } from "./chat-message-item";
 import { ThinkingIndicator } from "./thinking-indicator";
+import { MessageListBanners } from "./message-list-banners";
+import { useMessageListScroll } from "../hooks/use-message-list-scroll";
 
-// ─── Constants ───────────────────────────────────────────────
-
-/** Pixel threshold to consider the user "at the bottom" of the scroll container */
-const SCROLL_BOTTOM_THRESHOLD = 80;
-
-/** Pixel threshold from top to trigger loading older messages */
-const SCROLL_TOP_THRESHOLD = 150;
-
-// ─── Helpers ─────────────────────────────────────────────────
-
-/** Filters out empty placeholder assistant messages (no visible content) */
-const isDisplayable = (message: Message) => message.role !== "assistant" || message.content.trim().length > 0;
-
-// ─── Sub-components ──────────────────────────────────────────
+/** Filters out empty placeholder assistant messages */
+const isDisplayable = (message: Message) =>
+  message.role !== "assistant" || message.content.trim().length > 0;
 
 function MessageRow({
   message,
@@ -84,7 +75,11 @@ function MessageListLoading() {
   );
 }
 
-function MessageListEmpty({ onSelectStarterQuestion }: { onSelectStarterQuestion?: (question: string) => void }) {
+function MessageListEmpty({
+  onSelectStarterQuestion,
+}: {
+  onSelectStarterQuestion?: (question: string) => void;
+}) {
   return (
     <div className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-6 sm:pb-40">
       <div className="mx-auto w-full max-w-2xl h-full flex flex-col justify-center">
@@ -94,8 +89,6 @@ function MessageListEmpty({ onSelectStarterQuestion }: { onSelectStarterQuestion
   );
 }
 
-// ─── Props ───────────────────────────────────────────────────
-
 export interface MessageListProps {
   pages?: PaginatedMessagesResponse[];
   isLoadingMessages?: boolean;
@@ -103,19 +96,15 @@ export interface MessageListProps {
   streamingContent?: string | null;
   regeneratingMessageId?: string | null;
   onSelectStarterQuestion?: (question: string) => void;
-  // Infinite scroll controls
   hasMoreMessages?: boolean;
   isLoadingOlderMessages?: boolean;
   isErrorOlderMessages?: boolean;
   onLoadOlderMessages?: () => void;
-  // Message actions
   onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
   onRegenerateMessage?: (messageId: string) => Promise<void>;
   onRetryMessage?: (messageId: string) => Promise<void>;
   onShareMessage?: (message: Message) => Promise<boolean> | boolean;
 }
-
-// ─── Component ───────────────────────────────────────────────
 
 export function MessageList({
   pages,
@@ -133,105 +122,37 @@ export function MessageList({
   onRetryMessage,
   onShareMessage,
 }: MessageListProps) {
-  const listRef = useRef<VListHandle>(null);
-  const isStuckToBottomRef = useRef(true);
-
   const displayPages = pages ?? [];
-
   const lastHistoryMsg = displayPages.at(-1)?.messages?.findLast(isDisplayable);
 
-  // Count total displayable messages without allocating flat arrays
-  let historyCount = 0;
+  let messageCount = 0;
   for (const page of displayPages) {
     for (const msg of page.messages ?? []) {
-      if (isDisplayable(msg)) historyCount++;
+      if (isDisplayable(msg)) messageCount++;
     }
   }
 
-  const messageCount = historyCount;
   const hasActiveStreamingText = Boolean(
     !regeneratingMessageId && streamingContent && streamingContent.trim().length > 0,
   );
   const showTypingIndicator = isAiTyping && !hasActiveStreamingText && !regeneratingMessageId;
-  const showBeginningMarker = !hasMoreMessages && historyCount > 0;
-  const totalChildCount = messageCount + +hasActiveStreamingText + +showTypingIndicator + +showBeginningMarker;
+  const showBeginningMarker = !hasMoreMessages && messageCount > 0;
+  const totalChildCount =
+    messageCount + +hasActiveStreamingText + +showTypingIndicator + +showBeginningMarker;
 
-  // ── Scroll tracking & upward trigger ──────────────────────
-
-  const handleScroll = useCallback(() => {
-    const list = listRef.current;
-    if (!list) return;
-
-    const distFromBottom = list.scrollSize - list.scrollOffset - list.viewportSize;
-    isStuckToBottomRef.current = distFromBottom < SCROLL_BOTTOM_THRESHOLD;
-
-    // Trigger sequential older message load when user scrolls near the top
-    if (
-      list.scrollOffset <= SCROLL_TOP_THRESHOLD &&
-      hasMoreMessages &&
-      !isLoadingOlderMessages &&
-      !isErrorOlderMessages &&
-      onLoadOlderMessages
-    ) {
-      onLoadOlderMessages();
-    }
-  }, [hasMoreMessages, isLoadingOlderMessages, isErrorOlderMessages, onLoadOlderMessages]);
-
-  // ── Snap to bottom for new incoming/outgoing messages ────
-
-  const prevLastMessageIdRef = useRef<string | null>(null);
-  const prevMessageCountRef = useRef(messageCount);
-  const isInitialMountRef = useRef(true);
-
-  useEffect(() => {
-    const currentLastId = hasActiveStreamingText ? "streaming-assistant-row" : (lastHistoryMsg?.id ?? null);
-
-    const isAppendedMessage = Boolean(
-      currentLastId && currentLastId !== prevLastMessageIdRef.current && messageCount > prevMessageCountRef.current,
-    );
-
-    prevLastMessageIdRef.current = currentLastId;
-    prevMessageCountRef.current = messageCount;
-
-    // Initial mount: snap to bottom of conversation
-    if (isInitialMountRef.current && messageCount > 0) {
-      isInitialMountRef.current = false;
-      isStuckToBottomRef.current = true;
-      requestAnimationFrame(() => {
-        listRef.current?.scrollToIndex(totalChildCount - 1, {
-          align: "end",
-        });
-      });
-      return;
-    }
-
-    if (isAppendedMessage) {
-      // Outgoing message from user or AI turn: stick to bottom if user is already near bottom
-      if (isStuckToBottomRef.current) {
-        requestAnimationFrame(() => {
-          listRef.current?.scrollToIndex(totalChildCount - 1, {
-            align: "end",
-          });
-        });
-      }
-    } else if (isStuckToBottomRef.current && (hasActiveStreamingText || isAiTyping || Boolean(regeneratingMessageId))) {
-      requestAnimationFrame(() => {
-        listRef.current?.scrollToIndex(totalChildCount - 1, {
-          align: "end",
-        });
-      });
-    }
-  }, [
-    totalChildCount,
+  const { listRef, handleScroll } = useMessageListScroll({
     messageCount,
+    totalChildCount,
     hasActiveStreamingText,
     streamingContent,
     isAiTyping,
     regeneratingMessageId,
-    lastHistoryMsg,
-  ]);
-
-  // ── Early returns ────────────────────────────────────────
+    lastHistoryMsgId: lastHistoryMsg?.id,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    isErrorOlderMessages,
+    onLoadOlderMessages,
+  });
 
   if (isLoadingMessages && messageCount === 0) {
     return <MessageListLoading />;
@@ -241,42 +162,17 @@ export function MessageList({
     return <MessageListEmpty onSelectStarterQuestion={onSelectStarterQuestion} />;
   }
 
-  // ── Main render ──────────────────────────────────────────
-
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
-      {/* Floating top loading indicator when fetching earlier history */}
-      {isLoadingOlderMessages && (
-        <div className="pointer-events-none absolute top-3 left-0 right-0 z-20 flex justify-center">
-          <div className="flex items-center gap-2 rounded-full border border-zinc-200/90 bg-white/90 px-3.5 py-1 text-xs font-medium text-zinc-600 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90 dark:text-zinc-300">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600 dark:text-blue-400" />
-            <span>Loading earlier messages...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Floating top error banner with retry option */}
-      {isErrorOlderMessages && (
-        <div className="absolute top-3 left-0 right-0 z-20 flex justify-center px-4">
-          <div className="flex items-center gap-2 rounded-full border border-red-200 bg-red-50/95 px-3.5 py-1 text-xs font-medium text-red-700 shadow-sm backdrop-blur-md dark:border-red-900/40 dark:bg-red-950/90 dark:text-red-300">
-            <span>Failed to load earlier messages.</span>
-            {onLoadOlderMessages && (
-              <button
-                type="button"
-                onClick={onLoadOlderMessages}
-                className="cursor-pointer font-semibold underline hover:no-underline ml-1"
-              >
-                Retry
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      <MessageListBanners
+        isLoadingOlderMessages={isLoadingOlderMessages}
+        isErrorOlderMessages={isErrorOlderMessages}
+        onLoadOlderMessages={onLoadOlderMessages}
+      />
 
       <VList
         ref={listRef}
         className="flex-1 overflow-y-auto [overflow-y:overlay] [scrollbar-gutter:stable_both-edges] p-4 pb-36 sm:p-4.5 sm:pb-40"
-        // shift
         onScroll={handleScroll}
       >
         {showBeginningMarker && <HistoryBeginningMarker key="history-beginning-marker" />}

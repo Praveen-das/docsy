@@ -3,19 +3,19 @@
 import React, { useRef, useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, List, Grid, Search, X, SlidersHorizontal, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FilterTabs, FilterTabOption } from "@/components/ui/filter-tabs";
+import { FilterTabs, FilterPills, FilterTabOption } from "@/components/ui/filter-tabs";
 import { CompactMenu, CompactMenuItem } from "@/components/ui/compact-menu";
 
 export type ConversationFilterTab = "all" | "recent" | "pinned";
 export type ConversationSortOption = "newest" | "oldest" | "title";
 
-export const FILTER_TABS: FilterTabOption<ConversationFilterTab>[] = [
+const FILTER_TABS: FilterTabOption<ConversationFilterTab>[] = [
   { id: "all", label: "All" },
   { id: "recent", label: "Recent" },
   { id: "pinned", label: "Pinned" },
 ];
 
-export const SORT_LABELS: Record<ConversationSortOption, string> = {
+const SORT_LABELS: Record<ConversationSortOption, string> = {
   newest: "Last updated",
   oldest: "Oldest first",
   title: "Title (A-Z)",
@@ -98,6 +98,30 @@ export function ConversationsToolbar({
     [sortBy, onSortChange],
   );
 
+  const docMenuSections = useMemo(
+    () => [
+      {
+        items: [
+          {
+            label: "All Documents",
+            onClick: () => onDocFilterChange("all"),
+            variant: (selectedDocFilter === "all" ? "accent" : "default") as "accent" | "default",
+            showChevron: false,
+            icon: selectedDocFilter === "all" ? Check : undefined,
+          },
+          ...uniqueDocNames.map((name) => ({
+            label: name,
+            onClick: () => onDocFilterChange(name),
+            variant: (selectedDocFilter === name ? "accent" : "default") as "accent" | "default",
+            showChevron: false,
+            icon: selectedDocFilter === name ? Check : undefined,
+          })),
+        ],
+      },
+    ],
+    [selectedDocFilter, uniqueDocNames, onDocFilterChange],
+  );
+
   return (
     <div className="w-full space-y-3">
       {/* ─── MOBILE TOOLBAR: Full-width search bar + Pills & Filter/Sort Dropdowns ─── */}
@@ -127,104 +151,64 @@ export function ConversationsToolbar({
         {/* Filter Pills + Document Dropdown + Sort Button */}
         <div className="flex items-center justify-between gap-2 w-full">
           {/* Status Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-0.5">
-            {FILTER_TABS.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => onTabChange(tab.id)}
-                  className={cn(
-                    "rounded-full text-xs font-medium px-3.5 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95",
-                    isActive
-                      ? "border border-indigo-500/50 bg-indigo-500/15 text-white shadow-[0_0_12px_rgba(99,102,241,0.25)]"
-                      : "border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+          <FilterPills<ConversationFilterTab> options={FILTER_TABS} activeTab={activeTab} onTabChange={onTabChange} />
 
-            {/* Mobile "By Document" Filter Capsule */}
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleDocDropdown();
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full text-xs font-medium px-3 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95 border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
-                  selectedDocFilter !== "all" && "border-indigo-500/40 text-indigo-300 bg-indigo-500/10",
-                )}
-              >
-                <FileText className="h-3 w-3 text-[#818ea8]" />
-                <span className="truncate max-w-[100px]">
-                  {selectedDocFilter === "all" ? "Document" : selectedDocFilter}
-                </span>
-                <ChevronDown className="h-3 w-3 text-[#727f9d]" />
-              </button>
-
-              <CompactMenu
-                isOpen={isDocDropdownOpen}
-                onClose={() => onToggleDocDropdown(false)}
-                width="w-56"
-                align="left"
-                sections={[
-                  {
-                    items: [
-                      {
-                        label: "All Documents",
-                        onClick: () => onDocFilterChange("all"),
-                        variant: selectedDocFilter === "all" ? "accent" : "default",
-                        showChevron: false,
-                        icon: selectedDocFilter === "all" ? Check : undefined,
-                      },
-                      ...uniqueDocNames.map((name) => ({
-                        label: name,
-                        onClick: () => onDocFilterChange(name),
-                        variant: (selectedDocFilter === name ? "accent" : "default") as "accent" | "default",
-                        showChevron: false,
-                        icon: selectedDocFilter === name ? Check : undefined,
-                      })),
-                    ],
-                  },
-                ]}
-              />
-            </div>
-          </div>
-
-          {/* Sort Sliders Button on Mobile */}
+          {/* Mobile "By Document" Filter Capsule */}
           <div className="relative shrink-0">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleSortOpen();
+                onToggleDocDropdown();
               }}
               className={cn(
-                "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95",
-                (isSortOpen || sortBy !== "newest") && "border-indigo-500/40 text-indigo-400 bg-indigo-500/10",
+                "flex items-center gap-1.5 rounded-full text-xs font-medium px-3 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95 border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
+                selectedDocFilter !== "all" && "border-indigo-500/40 text-indigo-300 bg-indigo-500/10",
               )}
-              title="Sort conversations"
-              aria-label="Sort conversations"
             >
-              <SlidersHorizontal className="h-4 w-4 stroke-[1.8]" />
-              {sortBy !== "newest" && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-indigo-500" />
-              )}
+              <FileText className="h-3 w-3 text-[#818ea8]" />
+              <span className="truncate max-w-[100px]">
+                {selectedDocFilter === "all" ? "Document" : selectedDocFilter}
+              </span>
+              <ChevronDown className="h-3 w-3 text-[#727f9d]" />
             </button>
 
             <CompactMenu
-              isOpen={isSortOpen}
-              onClose={() => onToggleSortOpen(false)}
-              width="w-44"
-              align="right"
-              sections={[{ items: sortMenuItems }]}
+              isOpen={isDocDropdownOpen}
+              onClose={() => onToggleDocDropdown(false)}
+              width="w-56"
+              align="left"
+              sections={docMenuSections}
             />
           </div>
+        </div>
+
+        {/* Sort Sliders Button on Mobile */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSortOpen();
+            }}
+            className={cn(
+              "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95",
+              (isSortOpen || sortBy !== "newest") && "border-indigo-500/40 text-indigo-400 bg-indigo-500/10",
+            )}
+            title="Sort conversations"
+            aria-label="Sort conversations"
+          >
+            <SlidersHorizontal className="h-4 w-4 stroke-[1.8]" />
+            {sortBy !== "newest" && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-indigo-500" />}
+          </button>
+
+          <CompactMenu
+            isOpen={isSortOpen}
+            onClose={() => onToggleSortOpen(false)}
+            width="w-44"
+            align="right"
+            sections={[{ items: sortMenuItems }]}
+          />
         </div>
       </div>
 
@@ -232,11 +216,7 @@ export function ConversationsToolbar({
       <div className="hidden sm:flex flex-row items-center justify-between gap-3 pt-1 w-full">
         {/* Left Controls: Filter Tabs + By Document Dropdown */}
         <div className="flex items-center gap-2.5 flex-nowrap">
-          <FilterTabs<ConversationFilterTab>
-            options={FILTER_TABS}
-            activeTab={activeTab}
-            onTabChange={onTabChange}
-          />
+          <FilterTabs<ConversationFilterTab> options={FILTER_TABS} activeTab={activeTab} onTabChange={onTabChange} />
 
           {/* "By Document" Filter Capsule Dropdown */}
           <div className="relative">
@@ -263,26 +243,7 @@ export function ConversationsToolbar({
               onClose={() => onToggleDocDropdown(false)}
               width="w-56"
               align="left"
-              sections={[
-                {
-                  items: [
-                    {
-                      label: "All Documents",
-                      onClick: () => onDocFilterChange("all"),
-                      variant: selectedDocFilter === "all" ? "accent" : "default",
-                      showChevron: false,
-                      icon: selectedDocFilter === "all" ? Check : undefined,
-                    },
-                    ...uniqueDocNames.map((name) => ({
-                      label: name,
-                      onClick: () => onDocFilterChange(name),
-                      variant: (selectedDocFilter === name ? "accent" : "default") as "accent" | "default",
-                      showChevron: false,
-                      icon: selectedDocFilter === name ? Check : undefined,
-                    })),
-                  ],
-                },
-              ]}
+              sections={docMenuSections}
             />
           </div>
 

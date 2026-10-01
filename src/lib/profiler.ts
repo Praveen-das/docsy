@@ -1,7 +1,7 @@
 /**
  * ANSI Color codes and labels for distinctive performance profiling in terminal logs.
  */
-export const TIMERS = {
+const TIMERS = {
   auth: "\x1b[1;95m⚡ [AUTH]\x1b[0m",
   conv: "\x1b[1;94m🔍 [GET_CONVERSATION]\x1b[0m",
   quota: "\x1b[1;93m📊 [DAILY_QUOTA_CHECK]\x1b[0m",

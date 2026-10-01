@@ -192,7 +192,7 @@ export async function getConversation(userId: string, convId: string) {
 /**
  * Retrieve conversation by ID without requiring prior userId knowledge (used by background workflows).
  */
-export async function getConversationById(convId: string) {
+async function getConversationById(convId: string) {
   const [result, docLinks] = await Promise.all([
     db
       .select()
@@ -222,7 +222,7 @@ export async function getConversationById(convId: string) {
 /**
  * Get document IDs linked to a conversation (used by RAG pipeline).
  */
-export async function getConversationDocumentIds(
+async function getConversationDocumentIds(
   convId: string
 ): Promise<string[]> {
   const links = await db
@@ -293,7 +293,7 @@ export async function deleteConversation(
 /**
  * Verifies conversation ownership against cache/DB.
  */
-export async function verifyConversationOwnership(
+async function verifyConversationOwnership(
   userId: string,
   convId: string
 ): Promise<boolean> {
@@ -316,7 +316,7 @@ export interface PaginatedMessagesResult {
 /**
  * Encodes a message's timestamp and unique ID into an opaque, URL-safe cursor.
  */
-export function encodeCursor(message: { createdAt: Date | string; id: string }): string {
+function encodeCursor(message: { createdAt: Date | string; id: string }): string {
   const iso = typeof message.createdAt === "string" ? message.createdAt : message.createdAt.toISOString();
   return Buffer.from(`${iso}|${message.id}`).toString("base64url");
 }
@@ -324,7 +324,7 @@ export function encodeCursor(message: { createdAt: Date | string; id: string }):
 /**
  * Decodes a cursor string back into its constituent timestamp and message ID.
  */
-export function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
+function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
   try {
     const raw = Buffer.from(cursor, "base64url").toString("utf8");
     const [iso, id] = raw.split("|");
@@ -421,7 +421,7 @@ export async function getPaginatedMessages(
  * Uses JWT session token for instant in-memory ownership verification (<0.05ms)
  * with graceful fallback to DB/cache.
  */
-export async function getMessages(
+async function getMessages(
   userId: string,
   convId: string
 ): Promise<MessageRecord[]> {

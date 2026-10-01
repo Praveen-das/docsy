@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getAuthRouteContext } from "@/lib/api-auth";
 import {
   getConversation,
   renameConversation,
@@ -21,12 +21,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
+  const auth = await getAuthRouteContext(params);
+  if (auth.errorResponse) return auth.errorResponse;
+  const { userId, params: { id } } = auth;
   const conv = await getConversation(userId, id);
 
   if (!conv) {
@@ -56,12 +53,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
+  const auth = await getAuthRouteContext(params);
+  if (auth.errorResponse) return auth.errorResponse;
+  const { userId, params: { id } } = auth;
 
   try {
     const body = await request.json();
@@ -100,12 +94,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
+  const auth = await getAuthRouteContext(params);
+  if (auth.errorResponse) return auth.errorResponse;
+  const { userId, params: { id } } = auth;
   const deleted = await deleteConversation(userId, id);
 
   if (!deleted) {

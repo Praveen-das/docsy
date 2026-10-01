@@ -5,7 +5,6 @@ import { QueryMeter } from "./query-meter";
 import { StorageMeter } from "./storage-meter";
 import { DocumentsMeter } from "./documents-meter";
 
-export { formatStorageSize } from "./storage-meter";
 
 interface UsageMeterProps {
   queriesUsed: number;

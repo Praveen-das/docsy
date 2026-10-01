@@ -1,8 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getConversation } from "@/services/conversation.service";
 import { updateConversationTitleIfDefault } from "@/services/title.service";
+import { getAuthRouteContext } from "@/lib/api-auth";
 
 const postTitleSchema = z.object({
   userMessage: z.string().optional(),
@@ -19,12 +19,11 @@ interface RouteContext {
  * Returns the current title of the conversation.
  */
 export async function GET(_request: NextRequest, { params }: RouteContext) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await getAuthRouteContext(params);
+  if (!auth.success) return auth.errorResponse;
+  const { id: conversationId } = auth.params;
+  const { userId } = auth;
 
-  const { id: conversationId } = await params;
   const conv = await getConversation(userId, conversationId);
 
   if (!conv) {
@@ -39,12 +38,10 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
  * Generates and saves an AI title for the conversation on demand.
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id: conversationId } = await params;
+  const auth = await getAuthRouteContext(params);
+  if (!auth.success) return auth.errorResponse;
+  const { id: conversationId } = auth.params;
+  const { userId } = auth;
 
   // 1. Verify conversation ownership
   const conv = await getConversation(userId, conversationId);

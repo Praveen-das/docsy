@@ -59,5 +59,3 @@ export function getRedisClient(): Redis | null {
  * Singleton Redis client instance.
  */
 export const redis = getRedisClient();
-
-export default redis;

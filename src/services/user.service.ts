@@ -77,7 +77,7 @@ export async function updateUser(clerkUserId: string, name: string, email: strin
  * Atomically inserts a new user or updates name & email if the user already exists.
  * Prevents race conditions and guarantees synchronization.
  */
-export async function upsertUser(clerkUserId: string, name: string, email: string): Promise<UserRecord> {
+async function upsertUser(clerkUserId: string, name: string, email: string): Promise<UserRecord> {
   const [user] = await db
     .insert(users)
     .values({
@@ -104,7 +104,7 @@ export async function upsertUser(clerkUserId: string, name: string, email: strin
  * Ensure a Clerk user exists in our app database.
  * Atomically upserts the record to guarantee safety against race conditions.
  */
-export async function ensureUser(clerkUserId: string, name: string, email: string): Promise<UserRecord> {
+async function ensureUser(clerkUserId: string, name: string, email: string): Promise<UserRecord> {
   return upsertUser(clerkUserId, name, email);
 }
 

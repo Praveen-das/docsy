@@ -145,5 +145,3 @@ export function HeaderUserMenu({ className }: HeaderUserMenuProps) {
     </>
   );
 }
-
-export * from "./header-user-menu";

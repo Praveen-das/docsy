@@ -1,12 +1,12 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
+import { getCachedMessages } from "../services/message-cache.service";
 import { Message } from "@/types";
-import { getCachedMessages } from "../hooks/use-conversation-messages";
 
 /**
  * Extracts plain text from AI SDK UIMessage parts or fallback content.
  */
-export function getUIMessageText(msg: UIMessage): string {
+function getUIMessageText(msg: UIMessage): string {
   if (msg.parts && Array.isArray(msg.parts)) {
     const text = msg.parts
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
@@ -20,7 +20,7 @@ export function getUIMessageText(msg: UIMessage): string {
 /**
  * Converts AI SDK UIMessage to canonical internal Message model.
  */
-export function uiMessageToMessage(msg: UIMessage | Message): Message {
+function uiMessageToMessage(msg: UIMessage | Message): Message {
   if ("conversationId" in msg && typeof msg.content === "string") {
     return msg as Message;
   }
@@ -33,18 +33,15 @@ export function uiMessageToMessage(msg: UIMessage | Message): Message {
       (msg as any).createdAt instanceof Date
         ? (msg as any).createdAt.toISOString()
         : typeof (msg as any).createdAt === "string"
-        ? (msg as any).createdAt
-        : new Date().toISOString(),
+          ? (msg as any).createdAt
+          : new Date().toISOString(),
   };
 }
 
 /**
  * Retrieves all messages for a conversation from cached React Query server history.
  */
-export function getAllConversationMessages(
-  queryClient: QueryClient,
-  conversationId: string
-): Message[] {
+export function getAllConversationMessages(queryClient: QueryClient, conversationId: string): Message[] {
   if (!conversationId) return [];
   return getCachedMessages(queryClient, conversationId);
 }
@@ -55,7 +52,7 @@ export function getAllConversationMessages(
 export function extractConversationTurns(
   messages: Message[],
   uptoIndex?: number,
-  maxTurns = 10
+  maxTurns = 10,
 ): { role: "user" | "assistant"; content: string }[] {
   const sliceTarget = typeof uptoIndex === "number" ? messages.slice(0, uptoIndex) : messages;
   return sliceTarget
@@ -100,4 +97,22 @@ export async function shareMessageContent(message: Message): Promise<boolean> {
   }
 
   return false;
+}
+
+/**
+ * Traverses backwards from assistant message index to locate the preceding user prompt and prior history.
+ */
+export function findPrecedingUserTurn(
+  messages: Message[],
+  assistantIdx: number,
+): { promptContent: string; priorTurns: Message[] } | null {
+  for (let i = assistantIdx - 1; i >= 0; i--) {
+    if (messages[i].role === "user") {
+      return {
+        promptContent: messages[i].content,
+        priorTurns: messages.slice(0, i),
+      };
+    }
+  }
+  return null;
 }

@@ -10,7 +10,7 @@ export interface ThemeToggleProps {
   variant?: "segmented" | "minimal";
 }
 
-export function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
+function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
   const [mounted, setMounted] = useState(false);

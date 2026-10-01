@@ -18,7 +18,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
  * Get or create a Stripe Customer for a given Clerk user ID.
  * Stores the customer ID in the subscriptions table for future lookups.
  */
-export async function getOrCreateStripeCustomer(userId: string): Promise<string> {
+async function getOrCreateStripeCustomer(userId: string): Promise<string> {
   const sub = await getSubscriptionByUserId(userId);
 
   if (sub?.stripeCustomerId) {

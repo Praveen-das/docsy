@@ -30,9 +30,9 @@ function getUpstashRedisRest(): Redis {
   return Redis.fromEnv();
 }
 
-export const redis = getUpstashRedisRest();
+const redis = getUpstashRedisRest();
 
-export const schema = {
+const schema = {
   ai: {
     chunk: z.any(),
   },

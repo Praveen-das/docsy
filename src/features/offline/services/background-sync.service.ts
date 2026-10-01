@@ -141,4 +141,4 @@ class BackgroundSyncService {
   }
 }
 
-export const backgroundSyncService = new BackgroundSyncService();
+const backgroundSyncService = new BackgroundSyncService();

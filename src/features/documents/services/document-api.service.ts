@@ -46,4 +46,56 @@ export const documentApiService = {
     if (!res.ok) throw new Error(`Failed to toggle favorite (${res.status})`);
     return res.json();
   },
+
+  async uploadFile(
+    file: File,
+    onProgress?: (event: ProgressEvent) => void
+  ): Promise<{ documentId: string; signedUrl: string }> {
+    const urlRes = await fetch("/api/documents/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        fileSize: file.size,
+      }),
+    });
+
+    if (!urlRes.ok) {
+      let errDetail = "Failed to prepare upload";
+      try {
+        const errData = await urlRes.json();
+        if (errData.error) errDetail = errData.error;
+      } catch {
+        // ignore
+      }
+      throw new Error(errDetail);
+    }
+
+    const { documentId, signedUrl } = await urlRes.json();
+
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      if (onProgress) {
+        xhr.upload.onprogress = onProgress;
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Storage upload failed (${xhr.status})`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.ontimeout = () => reject(new Error("Upload timed out"));
+
+      xhr.open("PUT", signedUrl);
+      xhr.setRequestHeader("Content-Type", file.type || "application/pdf");
+      xhr.send(file);
+    });
+
+    return { documentId, signedUrl };
+  },
 };

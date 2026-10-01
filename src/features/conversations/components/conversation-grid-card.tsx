@@ -1,25 +1,14 @@
 "use client";
 
 import React from "react";
-import { MessageSquare, MoreVertical, ExternalLink, Pin, Share2, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlowCard } from "@/components/ui/glow-card";
-import { CompactMenu } from "@/components/ui/compact-menu";
 import { PinMarker } from "./pin-marker";
-import { ConversationItemData } from "./conversation-list-row";
+import { ConversationActionMenu } from "./conversation-action-menu";
+import { ConversationItemData, ConversationItemProps } from "./conversation-list-row";
 
-export interface ConversationGridCardProps {
-  item: ConversationItemData;
-  isSelected: boolean;
-  isMenuOpen: boolean;
-  onSelect: () => void;
-  onOpenMenu: () => void;
-  onCloseMenu: () => void;
-  onTogglePin: () => void;
-  onShare: () => void;
-  onRename: () => void;
-  onRequestDelete: () => void;
-}
+export type ConversationGridCardProps = ConversationItemProps;
 
 export function ConversationGridCard({
   item,
@@ -53,61 +42,17 @@ export function ConversationGridCard({
             </div>
           </div>
 
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isMenuOpen) {
-                  onCloseMenu();
-                } else {
-                  onOpenMenu();
-                }
-              }}
-              className="flex items-center justify-center h-8 w-8 rounded-lg text-[#525f7a] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-              aria-label="Options"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </button>
-
-            <CompactMenu
-              isOpen={isMenuOpen}
-              onClose={onCloseMenu}
-              width="w-44"
-              align="right"
-              sections={[
-                {
-                  items: [
-                    {
-                      label: "Open in chat",
-                      icon: ExternalLink,
-                      onClick: onSelect,
-                    },
-                    {
-                      label: item.isPinned ? "Unpin conversation" : "Pin conversation",
-                      icon: Pin,
-                      onClick: onTogglePin,
-                    },
-                    {
-                      label: "Share link",
-                      icon: Share2,
-                      onClick: onShare,
-                    },
-                    {
-                      label: "Rename",
-                      icon: Pencil,
-                      onClick: onRename,
-                    },
-                  ],
-                },
-              ]}
-              destructiveAction={{
-                label: "Delete conversation",
-                icon: Trash2,
-                onClick: onRequestDelete,
-              }}
-            />
-          </div>
+          <ConversationActionMenu
+            isPinned={item.isPinned}
+            isMenuOpen={isMenuOpen}
+            onOpenMenu={onOpenMenu}
+            onCloseMenu={onCloseMenu}
+            onSelect={onSelect}
+            onTogglePin={onTogglePin}
+            onShare={onShare}
+            onRename={onRename}
+            onRequestDelete={onRequestDelete}
+          />
         </div>
 
         <p className="text-[12px] text-[#818ea8] line-clamp-2 leading-relaxed">{item.preview}</p>

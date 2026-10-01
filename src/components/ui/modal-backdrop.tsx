@@ -23,4 +23,30 @@ export function ModalBackdrop({ className, onClose, onClick, ...props }: ModalBa
   );
 }
 
-export default ModalBackdrop;
+/**
+ * Hook to manage modal dismissal on Escape key press and prevent background scrolling.
+ */
+export function useModalDismiss(isOpen: boolean, onClose: () => void) {
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    const prevOverflow = typeof document !== "undefined" ? document.body.style.overflow : "";
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "hidden";
+    }
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = prevOverflow;
+      }
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+}

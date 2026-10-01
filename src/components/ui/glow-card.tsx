@@ -2,7 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { handleGlowMouseEnter, handleGlowMouseMove, handleGlowMouseLeave } from "@/lib/interactive-glow";
+import { bindGlowHandlers } from "@/lib/interactive-glow";
 
 export interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -17,27 +17,12 @@ export interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
   ({ children, className, hasHoverEffect = true, onMouseEnter, onMouseMove, onMouseLeave, ...props }, ref) => {
-    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-      handleGlowMouseEnter(e);
-      onMouseEnter?.(e);
-    };
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-      handleGlowMouseMove(e);
-      onMouseMove?.(e);
-    };
-
-    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-      handleGlowMouseLeave(e);
-      onMouseLeave?.(e);
-    };
+    const glowHandlers = bindGlowHandlers({ onMouseEnter, onMouseMove, onMouseLeave });
 
     return (
       <div
         ref={ref}
-        onMouseEnter={handleMouseEnter}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        {...glowHandlers}
         className={cn(
           "group relative isolate flex items-center justify-between rounded-[22px] border border-white/[0.07] bg-(--surface-card) px-5 py-4",
           hasHoverEffect && "hover:active-card-glow",

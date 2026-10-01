@@ -22,7 +22,6 @@ import {
 import { Document } from "@/types";
 import BottomGlow from "@/components/ui/BottomGlow";
 
-export { RedPdfBadge } from "@/features/dashboard/components/red-pdf-badge";
 
 // Exact sample items from the reference mockup
 const REFERENCE_DOCS: DashboardDocumentItem[] = [

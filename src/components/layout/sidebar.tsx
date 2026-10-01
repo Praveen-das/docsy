@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useUIStore } from "@/stores/ui-store";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarNavigation } from "./sidebar-navigation";
 import { ConversationSidebar } from "./conversation-sidebar";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
-
-// Module-scoped hydration flag: persists across client-side Next.js route transitions
-let isAppHydrated = false;
+import { useSidebarState } from "./use-sidebar-state";
 
 function ConversationSidebarWithDoc({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const searchParams = useSearchParams();
@@ -26,25 +23,14 @@ export interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const pathname = usePathname();
-  const isSidebarCollapsed = useUIStore((state) => state.isSidebarCollapsed);
-  const setSidebarCollapsed = useUIStore((state) => state.setSidebarCollapsed);
-  const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
-  const setMobileSidebarOpen = useUIStore((state) => state.setMobileSidebarOpen);
-
-  const effectiveIsOpen = isOpen ?? isMobileSidebarOpen;
-  const effectiveOnClose = onClose ?? (() => setMobileSidebarOpen(false));
-
-  const [mounted, setMounted] = useState(isAppHydrated);
-  const [enableTransitions, setEnableTransitions] = useState(isAppHydrated);
-
-  useEffect(() => {
-    isAppHydrated = true;
-    setMounted(true);
-    const timer = setTimeout(() => {
-      setEnableTransitions(true);
-    }, 50);
-    return () => clearTimeout(timer);
-  }, []);
+  const {
+    isSidebarCollapsed,
+    setSidebarCollapsed,
+    effectiveIsOpen,
+    effectiveOnClose,
+    isCollapsed,
+    enableTransitions,
+  } = useSidebarState(isOpen, onClose);
 
   const isConversationMode = pathname.startsWith("/conversation");
 
@@ -55,8 +41,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
       </Suspense>
     );
   }
-
-  const isCollapsed = mounted ? isSidebarCollapsed : false;
 
   return (
     <>

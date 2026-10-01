@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { ModalBackdrop } from "./modal-backdrop";
+import { ModalBackdrop, useModalDismiss } from "./modal-backdrop";
 
 export interface DialogProps {
   isOpen: boolean;
@@ -22,25 +22,7 @@ export function Dialog({ isOpen, onClose, title, description, children, classNam
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    const prevOverflow = document.body.style.overflow;
-
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+  useModalDismiss(isOpen, onClose);
 
   if (!isOpen || !mounted) return null;
 

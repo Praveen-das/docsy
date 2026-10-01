@@ -9,7 +9,7 @@ interface StorageMeterProps {
   storageLimitBytes: number;
 }
 
-export function formatStorageSize(bytes: number): string {
+function formatStorageSize(bytes: number): string {
   if (!bytes || bytes <= 0) return "0 MB";
   const kb = bytes / 1024;
   const mb = kb / 1024;

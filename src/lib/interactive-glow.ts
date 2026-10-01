@@ -124,3 +124,30 @@ export function handleGlowMouseLeave(e: React.MouseEvent<HTMLElement>): void {
     state.leaveTimeout = null;
   }
 }
+
+export interface GlowEventHandlers {
+  onMouseEnter?: React.MouseEventHandler<HTMLElement>;
+  onMouseMove?: React.MouseEventHandler<HTMLElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLElement>;
+}
+
+/**
+ * Creates mouse event handlers bound to the high-performance glow pipeline,
+ * chaining optional caller callbacks.
+ */
+export function bindGlowHandlers(handlers?: GlowEventHandlers) {
+  return {
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+      handleGlowMouseEnter(e);
+      handlers?.onMouseEnter?.(e);
+    },
+    onMouseMove: (e: React.MouseEvent<HTMLElement>) => {
+      handleGlowMouseMove(e);
+      handlers?.onMouseMove?.(e);
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+      handleGlowMouseLeave(e);
+      handlers?.onMouseLeave?.(e);
+    },
+  };
+}

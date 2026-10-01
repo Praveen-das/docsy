@@ -8,10 +8,10 @@ import { useConversations } from "@/features/conversations/hooks/use-conversatio
 import { useUIStore } from "@/stores/ui-store";
 import { formatRelativeTime } from "@/lib/format-time";
 import { FileText, Search, ArrowRight, Plus, X, MessageSquare, AlertCircle, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatFileSize } from "@/lib/utils";
 import { GlowContainer } from "@/components/ui/glow-container";
 import { GlowCard } from "@/components/ui/glow-card";
-import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { ModalBackdrop, useModalDismiss } from "@/components/ui/modal-backdrop";
 
 export interface SelectDocumentModalProps {
   isOpen?: boolean;
@@ -55,23 +55,7 @@ export function SelectDocumentModal({
     }
   }, [effectiveIsOpen]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && effectiveIsOpen) {
-        effectiveOnClose();
-      }
-    };
-
-    if (effectiveIsOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.body.style.overflow = "unset";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [effectiveIsOpen, effectiveOnClose]);
+  useModalDismiss(effectiveIsOpen, effectiveOnClose);
 
   const query = searchQuery.trim().toLowerCase();
 
@@ -120,14 +104,6 @@ export function SelectDocumentModal({
     const docId = conv.documentIds?.[0] || "";
     router.push(`/conversation?doc=${docId}&conv=${conv.id}`);
     effectiveOnClose();
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (!bytes || bytes === 0) return "0 KB";
-    const mb = bytes / (1024 * 1024);
-    if (mb >= 1) return `${mb.toFixed(1)} MB`;
-    const kb = Math.round(bytes / 1024);
-    return `${kb} KB`;
   };
 
   if (!effectiveIsOpen) return null;

@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuthRoute } from "@/lib/api-auth";
 import {
   getDocument,
   toggleFavoriteDocument,
@@ -9,19 +9,8 @@ import {
  * POST /api/documents/:id/favorite
  * Toggle favorite status for a document.
  */
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
-
-  // Verify document exists and belongs to user
-  const doc = await getDocument(userId, id);
+export const POST = withAuthRoute(async ({ userId, params }) => {
+  const doc = await getDocument(userId, params.id);
   if (!doc) {
     return NextResponse.json(
       { error: "Document not found" },
@@ -29,11 +18,11 @@ export async function POST(
     );
   }
 
-  const result = await toggleFavoriteDocument(userId, id);
+  const result = await toggleFavoriteDocument(userId, params.id);
 
   return NextResponse.json({
     success: true,
-    documentId: id,
+    documentId: params.id,
     isFavorite: result.isFavorite,
   });
-}
+});

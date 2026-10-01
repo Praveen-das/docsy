@@ -11,7 +11,7 @@ export interface PdfPageCanvasProps {
   zoomLevel: number;
 }
 
-export function PdfPageCanvas({
+function PdfPageCanvas({
   documentName = "System Design Notes.pdf",
   currentPage,
   activePageData,

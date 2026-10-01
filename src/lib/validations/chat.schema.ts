@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const historyMessageSchema = z.object({
+const historyMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string().max(10000),
 });

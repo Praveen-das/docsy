@@ -272,10 +272,7 @@ function GradientScene({
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3),
-    );
+    geo.setAttribute("position", new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
     geo.setAttribute("uv", new THREE.Float32BufferAttribute([0, 0, 2, 0, 0, 2], 2));
     return geo;
   }, []);
@@ -337,11 +334,7 @@ function GradientScene({
     u.wobbleStrength.value = reducedMotion ? config.wobbleStrength * 0.3 : config.wobbleStrength;
     u.wobbleSpeed.value = reducedMotion ? 0 : config.wobbleSpeed;
     u.uScaleFactor.value = config.scaleFactor;
-    u.iResolution.value.set(
-      size.width * viewport.dpr,
-      size.height * viewport.dpr,
-      size.width / size.height,
-    );
+    u.iResolution.value.set(size.width * viewport.dpr, size.height * viewport.dpr, size.width / size.height);
 
     // Read current spring scale smoothly on every frame without React re-renders
     const currentScale =
@@ -479,5 +472,3 @@ export function GradientOrb({
     </div>
   );
 }
-
-export default GradientOrb;

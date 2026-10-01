@@ -7,7 +7,7 @@ import { getQueryClient } from "@/lib/query-client";
 
 import { saveOfflineDocuments, getOfflineDocuments } from "@/lib/offline-db";
 
-export const DOCUMENT_QUERY_KEYS = {
+const DOCUMENT_QUERY_KEYS = {
   all: ["documents"] as const,
   detail: (id: string) => ["documents", id] as const,
 };
@@ -222,7 +222,7 @@ export function addOptimisticDocument(doc: Document) {
 /**
  * Update partial fields of a document in the query cache.
  */
-export function updateDocumentInCache(id: string, updates: Partial<Document>) {
+function updateDocumentInCache(id: string, updates: Partial<Document>) {
   const client = getQueryClient();
   client.setQueryData<Document[]>(DOCUMENT_QUERY_KEYS.all, (old = []) =>
     old.map((d) => (d.id === id ? { ...d, ...updates } : d))

@@ -10,7 +10,7 @@ import {
 } from "../constants/prompt-presets";
 import { settingsService } from "../services/settings.service";
 
-export const SETTINGS_QUERY_KEYS = {
+const SETTINGS_QUERY_KEYS = {
   userProfile: ["user-profile"] as const,
 };
 

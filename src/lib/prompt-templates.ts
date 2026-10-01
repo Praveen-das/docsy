@@ -3,7 +3,7 @@
  * Forces the LLM to answer strictly from provided context,
  * treats PDF content as untrusted, and prevents prompt injection (PRD §18, §29).
  */
-export const SYSTEM_PROMPT = `You are Docsy AI, a helpful document assistant. You answer questions about uploaded PDF documents using only the provided context.
+const SYSTEM_PROMPT = `You are Docsy AI, a helpful document assistant. You answer questions about uploaded PDF documents using only the provided context.
 
 CRITICAL RULES:
 1. ONLY use information from the DOCUMENT CONTEXT section below to answer questions.

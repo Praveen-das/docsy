@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { updateMessage, deleteMessage } from "@/services/conversation.service";
-import { verifyConversationToken } from "@/lib/conversation-token";
+import { getConversationTokenContext } from "@/lib/api-auth";
 
 const editMessageSchema = z.object({
   content: z.string().min(1).max(10000),
@@ -16,25 +16,10 @@ interface RouteParams {
  * Update an existing message's content (e.g. editing a user message).
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const { id, messageId } = await params;
-  const token =
-    request.headers.get("x-conversation-token") ||
-    request.nextUrl.searchParams.get("token") ||
-    undefined;
-
-  let userId: string | null = null;
-
-  // Strict capability token verification (<0.05ms)
-  if (token) {
-    const payload = await verifyConversationToken(token);
-    if (payload && payload.conversationId === id) {
-      userId = payload.userId;
-    }
-  }
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await getConversationTokenContext(request, params);
+  if (!auth.success) return auth.errorResponse;
+  const { id, messageId } = auth.params;
+  const { userId } = auth;
 
   try {
     const body = await request.json();
@@ -68,25 +53,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * Delete a message from the conversation.
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const { id, messageId } = await params;
-  const token =
-    request.headers.get("x-conversation-token") ||
-    request.nextUrl.searchParams.get("token") ||
-    undefined;
-
-  let userId: string | null = null;
-
-  // Strict capability token verification (<0.05ms)
-  if (token) {
-    const payload = await verifyConversationToken(token);
-    if (payload && payload.conversationId === id) {
-      userId = payload.userId;
-    }
-  }
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await getConversationTokenContext(request, params);
+  if (!auth.success) return auth.errorResponse;
+  const { id, messageId } = auth.params;
+  const { userId } = auth;
 
   const success = await deleteMessage(userId, id, messageId);
 

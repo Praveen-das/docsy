@@ -6,7 +6,7 @@ let qstashClient: Client | null = null;
 /**
  * Get or initialize the Upstash QStash client singleton.
  */
-export function getQStashClient(): Client {
+function getQStashClient(): Client {
   if (qstashClient) return qstashClient;
 
   const token = process.env.QSTASH_TOKEN;

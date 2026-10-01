@@ -29,6 +29,23 @@ const MAX_BATCH_SIZE = 50;
  *   ]
  * }
  */
+async function respondWithStatuses(userId: string, validIds: string[], logName: string) {
+  if (validIds.length === 0) {
+    return NextResponse.json({ statuses: [] });
+  }
+
+  try {
+    const statuses = await getDocumentStatuses(userId, validIds);
+    return NextResponse.json({ statuses });
+  } catch (err) {
+    logger.error(logName, {
+      userId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json({ error: "Failed to retrieve document statuses" }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
@@ -48,13 +65,7 @@ export async function POST(request: NextRequest) {
       .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
       .slice(0, MAX_BATCH_SIZE);
 
-    if (validIds.length === 0) {
-      return NextResponse.json({ statuses: [] });
-    }
-
-    const statuses = await getDocumentStatuses(userId, validIds);
-
-    return NextResponse.json({ statuses });
+    return respondWithStatuses(userId, validIds, "document.status_post_failed");
   } catch (err) {
     logger.error("document.status_post_failed", {
       userId,
@@ -74,33 +85,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const idsParam = searchParams.get("ids");
+  const searchParams = request.nextUrl.searchParams;
+  const idsParam = searchParams.get("ids");
 
-    if (!idsParam) {
-      return NextResponse.json({ error: "Missing 'ids' query parameter" }, { status: 400 });
-    }
-
-    const validIds = idsParam
-      .split(",")
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0)
-      .slice(0, MAX_BATCH_SIZE);
-
-    if (validIds.length === 0) {
-      return NextResponse.json({ statuses: [] });
-    }
-
-    const statuses = await getDocumentStatuses(userId, validIds);
-
-    return NextResponse.json({ statuses });
-  } catch (err) {
-    logger.error("document.status_get_failed", {
-      userId,
-      error: err instanceof Error ? err.message : String(err),
-    });
-
-    return NextResponse.json({ error: "Failed to retrieve document statuses" }, { status: 500 });
+  if (!idsParam) {
+    return NextResponse.json({ error: "Missing 'ids' query parameter" }, { status: 400 });
   }
+
+  const validIds = idsParam
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0)
+    .slice(0, MAX_BATCH_SIZE);
+
+  return respondWithStatuses(userId, validIds, "document.status_get_failed");
 }

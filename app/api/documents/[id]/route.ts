@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthRouteContext } from "@/lib/api-auth";
 import {
   getDocument,
   deleteDocument,
@@ -14,12 +14,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
+  const auth = await getAuthRouteContext(params);
+  if (auth.errorResponse) return auth.errorResponse;
+  const { userId, params: { id } } = auth;
   const [doc, isFav] = await Promise.all([
     getDocument(userId, id),
     isDocumentFavorite(userId, id),
@@ -58,12 +55,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
+  const auth = await getAuthRouteContext(params);
+  if (auth.errorResponse) return auth.errorResponse;
+  const { userId, params: { id } } = auth;
   const deleted = await deleteDocument(userId, id);
 
   if (!deleted) {

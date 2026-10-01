@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuthRoute } from "@/lib/api-auth";
 import {
   getConversation,
   togglePinConversation,
@@ -9,19 +9,8 @@ import {
  * POST /api/conversations/:id/pin
  * Toggle pin status for a conversation.
  */
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;
-
-  // Verify conversation exists and belongs to user
-  const conv = await getConversation(userId, id);
+export const POST = withAuthRoute(async ({ userId, params }) => {
+  const conv = await getConversation(userId, params.id);
   if (!conv) {
     return NextResponse.json(
       { error: "Conversation not found" },
@@ -29,11 +18,11 @@ export async function POST(
     );
   }
 
-  const result = await togglePinConversation(userId, id);
+  const result = await togglePinConversation(userId, params.id);
 
   return NextResponse.json({
     success: true,
-    conversationId: id,
+    conversationId: params.id,
     isPinned: result.isPinned,
   });
-}
+});

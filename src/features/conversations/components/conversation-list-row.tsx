@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { MessageSquare, MoreVertical, ExternalLink, Pin, Share2, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CompactMenu } from "@/components/ui/compact-menu";
 import { PinMarker } from "./pin-marker";
 import { GlowRow } from "@/components/ui/glow-row";
+import { ConversationActionMenu } from "./conversation-action-menu";
 
 export interface ConversationItemData {
   id: string;
@@ -31,6 +31,8 @@ export interface ConversationListRowProps {
   onRename: () => void;
   onRequestDelete: () => void;
 }
+
+export type ConversationItemProps = ConversationListRowProps;
 
 export function ConversationListRow({
   item,
@@ -89,61 +91,17 @@ export function ConversationListRow({
         </span>
 
         {/* 3-Dots Options Menu with Touch-Friendly Size */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isMenuOpen) {
-                onCloseMenu();
-              } else {
-                onOpenMenu();
-              }
-            }}
-            className="flex items-center justify-center h-8 w-8 rounded-lg text-[#525f7a] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-            aria-label="Options"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-
-          <CompactMenu
-            isOpen={isMenuOpen}
-            onClose={onCloseMenu}
-            width="w-44"
-            align="right"
-            sections={[
-              {
-                items: [
-                  {
-                    label: "Open in chat",
-                    icon: ExternalLink,
-                    onClick: onSelect,
-                  },
-                  {
-                    label: item.isPinned ? "Unpin conversation" : "Pin conversation",
-                    icon: Pin,
-                    onClick: onTogglePin,
-                  },
-                  {
-                    label: "Share link",
-                    icon: Share2,
-                    onClick: onShare,
-                  },
-                  {
-                    label: "Rename",
-                    icon: Pencil,
-                    onClick: onRename,
-                  },
-                ],
-              },
-            ]}
-            destructiveAction={{
-              label: "Delete conversation",
-              icon: Trash2,
-              onClick: onRequestDelete,
-            }}
-          />
-        </div>
+        <ConversationActionMenu
+          isPinned={item.isPinned}
+          isMenuOpen={isMenuOpen}
+          onOpenMenu={onOpenMenu}
+          onCloseMenu={onCloseMenu}
+          onSelect={onSelect}
+          onTogglePin={onTogglePin}
+          onShare={onShare}
+          onRename={onRename}
+          onRequestDelete={onRequestDelete}
+        />
       </div>
     </GlowRow>
   );

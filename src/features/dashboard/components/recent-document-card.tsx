@@ -7,7 +7,15 @@ import MenuButton from "@/components/ui/menu-button";
 import { Document } from "@/types";
 import { DocumentOptionsMenu } from "@/features/documents/components/document-options-menu";
 import { formatRelativeTime } from "@/lib/format-time";
-import { DashboardDocumentItem } from "./recent-documents-section";
+
+export interface DashboardDocumentItem {
+  id: string;
+  originalName: string;
+  pageCount: number;
+  fileSize: number;
+  timeText: string;
+  isReal: boolean;
+}
 
 export interface RecentDocumentCardProps {
   document: Document | (DashboardDocumentItem & Partial<Document>);

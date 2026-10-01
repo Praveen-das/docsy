@@ -4,7 +4,7 @@ import {
   getPaginatedMessages,
   persistMessage,
 } from "@/services/conversation.service";
-import { verifyConversationToken } from "@/lib/conversation-token";
+import { getConversationTokenContext } from "@/lib/api-auth";
 
 const sendMessageSchema = z.object({
   content: z.string().min(1).max(10000),
@@ -16,22 +16,10 @@ const sendMessageSchema = z.object({
  * Accepts optional query parameters: `limit` (default 30) and `cursor`.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const token = request.headers.get("x-conversation-token") || request.nextUrl.searchParams.get("token") || undefined;
-
-  let userId: string | null = null;
-
-  // 1. Fast-path: Extract verified userId directly from JWT capability token (<0.05ms)
-  if (token) {
-    const payload = await verifyConversationToken(token);
-    if (payload && payload.conversationId === id) {
-      userId = payload.userId;
-    }
-  }
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await getConversationTokenContext(request, params);
+  if (!auth.success) return auth.errorResponse;
+  const { id } = auth.params;
+  const { userId } = auth;
 
   const limitParam = request.nextUrl.searchParams.get("limit");
   const cursorParam = request.nextUrl.searchParams.get("cursor") || undefined;
@@ -62,22 +50,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Save a user message (non-streaming). Used for persisting user messages.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const token = request.headers.get("x-conversation-token") || request.nextUrl.searchParams.get("token") || undefined;
-
-  let userId: string | null = null;
-
-  // 1. Fast-path: Extract verified userId directly from JWT capability token (<0.05ms)
-  if (token) {
-    const payload = await verifyConversationToken(token);
-    if (payload && payload.conversationId === id) {
-      userId = payload.userId;
-    }
-  }
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await getConversationTokenContext(request, params);
+  if (!auth.success) return auth.errorResponse;
+  const { id } = auth.params;
+  const { userId } = auth;
 
   try {
     const body = await request.json();

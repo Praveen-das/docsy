@@ -15,4 +15,4 @@ export function getConversationPath(conversationId?: string | null, documentId?:
   return "/conversation";
 }
 
-export const getConversationUrl = getConversationPath;
+const getConversationUrl = getConversationPath;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleStorageObjectCreated } from "@/services/document.service";
 import { logger } from "@/lib/logger";
+import { verifySupabaseWebhookSecret } from "@/lib/api-auth";
 
 interface StorageObjectWebhookPayload {
   type: "INSERT" | "UPDATE" | "DELETE" | string;
@@ -28,21 +29,8 @@ interface StorageObjectWebhookPayload {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Optional webhook secret verification
-    const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const headerSecret =
-        request.headers.get("x-supabase-webhook-secret") ||
-        request.headers.get("x-webhook-secret") ||
-        request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-
-      if (headerSecret !== webhookSecret) {
-        logger.warn("supabase.storage_webhook.unauthorized", {
-          ip: request.headers.get("x-forwarded-for") || "unknown",
-        });
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-    }
+    const authError = verifySupabaseWebhookSecret(request, "supabase.storage_webhook.unauthorized");
+    if (authError) return authError;
 
     const payload = (await request.json()) as StorageObjectWebhookPayload;
 

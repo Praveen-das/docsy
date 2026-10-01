@@ -15,10 +15,10 @@ import {
   X,
   Search,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatFileSize } from "@/lib/utils";
 import { GlowContainer } from "@/components/ui/glow-container";
 import { GlowRow } from "@/components/ui/glow-row";
-import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { ModalBackdrop, useModalDismiss } from "@/components/ui/modal-backdrop";
 
 interface DocumentConversationsDialogProps {
   isOpen: boolean;
@@ -44,27 +44,7 @@ export function DocumentConversationsDialog({
   const [searchQuery, setSearchQuery] = useState("");
 
   // Handle ESC key and scroll locking
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      if (typeof window !== "undefined") {
-        window.document.body.style.overflow = "hidden";
-      }
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      if (typeof window !== "undefined") {
-        window.document.body.style.overflow = "unset";
-        window.removeEventListener("keydown", handleKeyDown);
-      }
-    };
-  }, [isOpen, onClose]);
+  useModalDismiss(isOpen, onClose);
 
   // Reset search when dialog opens/closes
   useEffect(() => {
@@ -110,14 +90,6 @@ export function DocumentConversationsDialog({
     } catch (err) {
       console.error("Failed to create conversation:", err);
     }
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (!bytes || bytes === 0) return "0 KB";
-    const mb = bytes / (1024 * 1024);
-    if (mb >= 1) return `${mb.toFixed(1)} MB`;
-    const kb = Math.round(bytes / 1024);
-    return `${kb} KB`;
   };
 
   return (

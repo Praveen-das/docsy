@@ -71,3 +71,39 @@ export function FilterTabs<T extends string = string>({
     </div>
   );
 }
+
+export function FilterPills<T extends string = string>({
+  options,
+  activeTab,
+  onTabChange,
+  className,
+}: FilterTabsProps<T>) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-0.5",
+        className,
+      )}
+    >
+      {options.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onTabChange(tab.id)}
+            className={cn(
+              "rounded-full text-xs font-medium px-3.5 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95",
+              isActive
+                ? "border border-indigo-500/50 bg-indigo-500/15 text-white shadow-[0_0_12px_rgba(99,102,241,0.25)]"
+                : "border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
+            )}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+

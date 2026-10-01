@@ -104,6 +104,8 @@ export default function ConversationsPage() {
     }
   };
 
+  const ConversationItem = viewMode === "list" ? ConversationListRow : ConversationGridCard;
+
   return (
     <>
       <div className="relative min-h-full w-full overflow-x-hidden pt-14 sm:pt-6 pb-28 sm:pb-12 select-none isolate">
@@ -132,35 +134,10 @@ export default function ConversationsPage() {
           {/* Conversations Content: List View or Grid View */}
           {filteredItems.length === 0 ? (
             <ConversationsEmptyState searchQuery={searchQuery} />
-          ) : viewMode === "list" ? (
-            /* List View */
-            <div className="space-y-2 sm:space-y-2.5">
-              {filteredItems.map((item) => (
-                <ConversationListRow
-                  key={item.id}
-                  item={item}
-                  isSelected={activeItemId === item.id}
-                  isMenuOpen={activeMenuId === item.id}
-                  onSelect={() => handleOpenConversation(item)}
-                  onOpenMenu={() => setActiveMenuId(item.id)}
-                  onCloseMenu={() => setActiveMenuId(null)}
-                  onTogglePin={() => togglePinConversation(item.id)}
-                  onShare={() => handleShare(item.id)}
-                  onRename={() => handleRename(item.id, item.title)}
-                  onRequestDelete={() =>
-                    setConvToDelete({
-                      id: item.id,
-                      title: item.title,
-                    })
-                  }
-                />
-              ))}
-            </div>
           ) : (
-            /* Grid View Mode */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+            <div className={viewMode === "list" ? "space-y-2 sm:space-y-2.5" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5"}>
               {filteredItems.map((item) => (
-                <ConversationGridCard
+                <ConversationItem
                   key={item.id}
                   item={item}
                   isSelected={activeItemId === item.id}

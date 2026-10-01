@@ -30,7 +30,7 @@ function getBucket(): string {
  * Upload a PDF file to Supabase Storage.
  * Files are organized under `{userId}/{uuid}.pdf` for per-user isolation.
  */
-export async function uploadPdf(
+async function uploadPdf(
   userId: string,
   fileBuffer: Buffer,
   originalName: string
@@ -136,7 +136,7 @@ export function getPublicUrl(filePath: string): string {
 /**
  * Get a signed URL for secure, time-limited access to a stored PDF.
  */
-export async function getSignedPdfUrl(
+async function getSignedPdfUrl(
   filePath: string,
   expiresInSeconds = 3600
 ): Promise<string> {
@@ -251,7 +251,7 @@ export async function uploadFeedbackAttachment(
 /**
  * Delete a feedback attachment from storage.
  */
-export async function deleteFeedbackAttachment(storagePath: string): Promise<void> {
+async function deleteFeedbackAttachment(storagePath: string): Promise<void> {
   const client = getStorageClient();
 
   const { error } = await client.storage

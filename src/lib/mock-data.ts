@@ -9,7 +9,7 @@ export const currentUser: User = {
   dailyQueriesLimit: 25,
 };
 
-export const mockDocuments: Document[] = [
+const mockDocuments: Document[] = [
   {
     id: "doc-1",
     userId: "usr_alex_chen",
@@ -81,7 +81,7 @@ const yesterday = new Date(nowMs - 26 * 60 * 60 * 1000).toISOString();
 const threeDaysAgo = new Date(nowMs - 72 * 60 * 60 * 1000).toISOString();
 const fourDaysAgo = new Date(nowMs - 96 * 60 * 60 * 1000).toISOString();
 
-export const mockConversations: Conversation[] = [
+const mockConversations: Conversation[] = [
   {
     id: "conv-1",
     userId: "usr_alex_chen",
@@ -515,7 +515,7 @@ export const mockPdfDocumentPages: Record<string, MockPdfPage[]> = {
   ],
 };
 
-export const suggestedQuestions: string[] = [
+const suggestedQuestions: string[] = [
   "What were the primary drivers for automotive gross margins in Q4?",
   "What is the CapEx projection and breakdown for 2026?",
   "Summarize key revenue recognitions from software and FSD.",

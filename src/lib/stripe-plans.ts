@@ -58,7 +58,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   },
 };
 
-export function getPlan(planId: PlanId): PlanDefinition {
+function getPlan(planId: PlanId): PlanDefinition {
   return PLANS[planId];
 }
 

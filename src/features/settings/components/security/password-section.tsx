@@ -33,6 +33,3 @@ export function PasswordSection({ hasPassword, onSuccess }: PasswordSectionProps
   );
 }
 
-export { PasswordStatusCard } from "./password-status-card";
-export { PasswordDialog } from "./password-dialog";
-export { PasswordInputField } from "./password-input-field";

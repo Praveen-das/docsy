@@ -1,49 +1,22 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
-import { Logo } from "@/components/ui/logo";
+import { AuthLayout, CLERK_AUTH_APPEARANCE } from "@/components/layout/auth-layout";
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-zinc-50 py-12 sm:px-6 lg:px-8 text-zinc-900 dark:bg-[#09090b] dark:text-[#f4f4f5] transition-colors">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link
-          href="/"
-          className="inline-flex items-center mb-5 group focus-visible:outline-none"
-          title="Docsy AI Home"
-        >
-          <Logo size="lg" />
-        </Link>
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Create your account
-        </h2>
-        <p className="mt-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-          Start ingesting documents and asking grounded questions with AI
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md flex justify-center">
-        <SignUp
-          appearance={{
-            elements: {
-              rootBox: "w-full",
-              card: "rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#121216] dark:shadow-2xl w-full",
-              headerTitle: "hidden",
-              headerSubtitle: "hidden",
-              formButtonPrimary:
-                "bg-zinc-900 hover:bg-zinc-800 dark:bg-white/10 dark:hover:bg-white/15 dark:text-white dark:border dark:border-white/10 text-sm font-semibold",
-              footerActionLink:
-                "text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white",
-            },
-          }}
-          routing="path"
-          path="/register"
-          signInUrl="/login"
-          forceRedirectUrl="/"
-        />
-      </div>
-    </div>
+    <AuthLayout
+      title="Create your account"
+      subtitle="Start ingesting documents and asking grounded questions with AI"
+    >
+      <SignUp
+        appearance={CLERK_AUTH_APPEARANCE}
+        routing="path"
+        path="/register"
+        signInUrl="/login"
+        forceRedirectUrl="/"
+      />
+    </AuthLayout>
   );
 }

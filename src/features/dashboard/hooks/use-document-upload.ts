@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { addOptimisticDocument } from "@/features/documents/hooks/use-documents";
+import { documentApiService } from "@/features/documents/services/document-api.service";
 
 export type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -46,52 +47,11 @@ export function useDocumentUpload() {
       setErrorMessage(null);
 
       try {
-        const urlRes = await fetch("/api/documents/upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name,
-            fileSize: file.size,
-          }),
-        });
-
-        if (!urlRes.ok) {
-          let errDetail = "Failed to prepare upload";
-          try {
-            const errData = await urlRes.json();
-            if (errData.error) errDetail = errData.error;
-          } catch {
-            // ignore
+        const { documentId: docId } = await documentApiService.uploadFile(file, (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            setProgress(Math.min(percent, 98));
           }
-          throw new Error(errDetail);
-        }
-
-        const { documentId: docId, signedUrl } = await urlRes.json();
-
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const percent = Math.round((e.loaded / e.total) * 100);
-              setProgress(Math.min(percent, 98));
-            }
-          };
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve();
-            } else {
-              reject(new Error(`Storage error (${xhr.status})`));
-            }
-          };
-
-          xhr.onerror = () => reject(new Error("Network error during upload"));
-          xhr.ontimeout = () => reject(new Error("Upload timed out"));
-
-          xhr.open("PUT", signedUrl);
-          xhr.setRequestHeader("Content-Type", "application/pdf");
-          xhr.send(file);
         });
 
         setProgress(100);

@@ -4,6 +4,7 @@ import { useRef, useEffect, useMemo } from "react";
 import { Search, X, Check, Grid, List, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CompactMenu, CompactMenuItem } from "@/components/ui/compact-menu";
+import { FilterPills } from "@/components/ui/filter-tabs";
 import { DocumentFilterTabs, DocumentFilterTab } from "@/features/documents/components/document-filter-tabs";
 import { DocumentSortOption } from "@/features/documents/hooks/use-document-filters";
 
@@ -123,26 +124,12 @@ export function DocumentToolbar({
 
         {/* Filter Pills + Sliders Sort Button Row */}
         <div className="flex items-center justify-between gap-2.5 w-full">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-0.5">
-            {MOBILE_FILTER_TABS.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => onTabChange(tab.id)}
-                  className={cn(
-                    "rounded-full text-xs font-medium px-3.5 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95",
-                    isActive
-                      ? "border border-indigo-500/50 bg-indigo-500/15 text-white shadow-[0_0_12px_rgba(99,102,241,0.25)]"
-                      : "border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          <FilterPills<DocumentFilterTab>
+            options={MOBILE_FILTER_TABS}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+            className="gap-2"
+          />
 
           {/* Filter/Sort Sliders Button */}
           <div className="relative shrink-0">

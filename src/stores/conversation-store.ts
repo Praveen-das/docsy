@@ -3,18 +3,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { registerTokenHandlers } from "@/lib/api-client";
-import { Message, Document } from "@/types";
+import { Message } from "@/types";
 import { conversationService } from "@/features/chat/services/conversation.service";
 import { conversationPollingService } from "@/features/chat/services/conversation-polling.service";
 import { streamChatResponse, resumeChatStream } from "@/features/chat/services/chat-stream.client";
 import { createMessage } from "@/features/chat/utils/message-factory";
 import { STORAGE_KEY_CUSTOM_PROMPT } from "@/features/settings/constants/prompt-presets";
-import { updateConversationInCache } from "@/features/conversations/hooks/use-conversations";
+import { updateConversationInCache } from "@/features/conversations/services/conversation-cache.service";
 import { getQueryClient } from "@/lib/query-client";
-import {
-  appendMessageToCache,
-  updateMessageInCache,
-} from "@/features/chat/hooks/use-conversation-messages";
+import { appendMessageToCache, updateMessageInCache } from "@/features/chat/services/message-cache.service";
 
 export interface ActiveStreamInfo {
   convId: string;
@@ -92,11 +89,7 @@ function createStreamCallbacks({
   convId: string;
   assistantMessageId: string;
   replaceAssistantMessageId?: string;
-  set: (
-    next:
-      | Partial<ConversationUIState>
-      | ((state: ConversationUIState) => Partial<ConversationUIState>),
-  ) => void;
+  set: (next: Partial<ConversationUIState> | ((state: ConversationUIState) => Partial<ConversationUIState>)) => void;
   get: () => ConversationUIState;
 }) {
   return {
@@ -199,11 +192,7 @@ async function executeChatStream({
   skipUserPersistence?: boolean;
   replaceAssistantMessageId?: string;
   userMessage?: Message;
-  set: (
-    next:
-      | Partial<ConversationUIState>
-      | ((state: ConversationUIState) => Partial<ConversationUIState>),
-  ) => void;
+  set: (next: Partial<ConversationUIState> | ((state: ConversationUIState) => Partial<ConversationUIState>)) => void;
   get: () => ConversationUIState;
 }): Promise<void> {
   const conversationToken = get().getStreamToken(convId);

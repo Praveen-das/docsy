@@ -17,9 +17,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addOptimisticDocument } from "./hooks/use-documents";
+import { documentApiService } from "./services/document-api.service";
 import { useUIStore } from "@/stores/ui-store";
 import { GlowCard } from "@/components/ui/glow-card";
-import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { ModalBackdrop, useModalDismiss } from "@/components/ui/modal-backdrop";
 import { useNetworkStatus } from "@/features/offline/hooks/use-network-status";
 
 export interface UploadModalProps {
@@ -58,23 +59,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
     effectiveOnClose();
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && effectiveIsOpen) {
-        handleClose();
-      }
-    };
-
-    if (effectiveIsOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.body.style.overflow = "unset";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [effectiveIsOpen]);
+  useModalDismiss(effectiveIsOpen, handleClose);
 
   const validateAndSetFile = (file: File) => {
     setErrorMessage(null);
@@ -117,52 +102,11 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
     setErrorMessage(null);
 
     try {
-      const urlRes = await fetch("/api/documents/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: selectedFile.name,
-          fileSize: selectedFile.size,
-        }),
-      });
-
-      if (!urlRes.ok) {
-        let errDetail = "Failed to prepare upload";
-        try {
-          const errData = await urlRes.json();
-          if (errData.error) errDetail = errData.error;
-        } catch {}
-        setErrorMessage(errDetail);
-        setStep("failed");
-        return;
-      }
-
-      const { documentId: docId, signedUrl } = await urlRes.json();
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const uploadPercent = Math.round((e.loaded / e.total) * 30);
-            setProgress(uploadPercent);
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Storage upload failed (${xhr.status})`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.ontimeout = () => reject(new Error("Upload timed out"));
-
-        xhr.open("PUT", signedUrl);
-        xhr.setRequestHeader("Content-Type", "application/pdf");
-        xhr.send(selectedFile);
+      const { documentId: docId } = await documentApiService.uploadFile(selectedFile, (e) => {
+        if (e.lengthComputable) {
+          const uploadPercent = Math.round((e.loaded / e.total) * 30);
+          setProgress(uploadPercent);
+        }
       });
 
       setProgress(100);

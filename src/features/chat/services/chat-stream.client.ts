@@ -29,7 +29,7 @@ export interface ResumeChatStreamParams {
 /**
  * Extracts a human-friendly error message from server or network errors.
  */
-export function extractStreamErrorMessage(err: unknown): string {
+function extractStreamErrorMessage(err: unknown): string {
   let errorDetail = "Failed to generate response";
   if (axios.isAxiosError(err)) {
     errorDetail =

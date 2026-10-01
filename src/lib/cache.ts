@@ -22,7 +22,7 @@ export const CACHE_TTL = {
   USER_PROFILE: 3600, // 1 hours: quota & settings; invalidated on query increment & user sync; auto-heals midnight quota reset
 } as const;
 
-export const DOCUMENT_STATUS_TTL_SECONDS = CACHE_TTL.DOCUMENT_STATUS;
+const DOCUMENT_STATUS_TTL_SECONDS = CACHE_TTL.DOCUMENT_STATUS;
 
 
 /**
@@ -96,7 +96,7 @@ export async function invalidateCache(...keys: (string | null | undefined)[]): P
 /**
  * Generate Redis key for document status cache.
  */
-export function getDocumentStatusKey(documentId: string): string {
+function getDocumentStatusKey(documentId: string): string {
   return CACHE_KEYS.documentStatus(documentId);
 }
 
@@ -113,7 +113,7 @@ export async function setDocumentStatus(
 /**
  * Batch-write multiple document statuses to Redis using an ioredis pipeline in a single roundtrip.
  */
-export async function setDocumentStatusesPipeline(
+async function setDocumentStatusesPipeline(
   statuses: DocumentStatusDto[],
   ttlSeconds: number = DOCUMENT_STATUS_TTL_SECONDS,
 ): Promise<void> {
@@ -194,6 +194,6 @@ export async function getDocumentStatusesPipeline(
 /**
  * Invalidate cached document status on deletion or terminal updates.
  */
-export async function invalidateDocumentStatus(documentId: string): Promise<void> {
+async function invalidateDocumentStatus(documentId: string): Promise<void> {
   return invalidateCache(getDocumentStatusKey(documentId));
 }

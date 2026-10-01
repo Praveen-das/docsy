@@ -59,6 +59,3 @@ export function Header({ className }: HeaderProps = {}) {
   );
 }
 
-export { HeaderSearchBar } from "./header-search-bar";
-export { HeaderUserMenu } from "./header-user-menu";
-export { HeaderMobileNavToggle } from "./header-mobile-nav-toggle";

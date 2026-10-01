@@ -8,12 +8,11 @@ import { invalidateCache } from "@/lib/cache";
 import { CACHE_KEYS } from "@/lib/cache-keys";
 import { isDefaultTitle, generateFallbackTitle } from "@/lib/title-utils";
 
-export { isDefaultTitle, generateFallbackTitle };
 
 /**
  * Cleans and sanitizes raw model output into a clean, concise title suitable for UI sidebars.
  */
-export function sanitizeTitle(rawText: string, fallback: string): string {
+function sanitizeTitle(rawText: string, fallback: string): string {
   if (!rawText || !rawText.trim()) {
     return fallback;
   }
@@ -59,7 +58,7 @@ Instructions:
 /**
  * Generates an intelligent conversation title using a fast language model.
  */
-export async function generateConversationTitle(userMessage: string, assistantMessage?: string): Promise<string> {
+async function generateConversationTitle(userMessage: string, assistantMessage?: string): Promise<string> {
   const fallback = generateFallbackTitle(userMessage);
 
   try {
