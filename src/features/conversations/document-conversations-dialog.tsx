@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Document, Conversation } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations, useCreateConversation } from "./hooks/use-conversations";
+import { useDocumentConversations, useCreateConversation } from "./hooks/use-conversations";
 import { formatRelativeTime } from "@/lib/format-time";
 import {
   MessageSquare,
@@ -32,7 +32,7 @@ export function DocumentConversationsDialog({
   document,
 }: DocumentConversationsDialogProps) {
   const router = useRouter();
-  const { conversations } = useConversations();
+  const { conversations: docConversations } = useDocumentConversations(isOpen ? document?.id : null);
   const { mutateAsync: createConversation } = useCreateConversation();
   const activeConversationId = useConversationStore(
     (state) => state.activeConversationId
@@ -53,16 +53,6 @@ export function DocumentConversationsDialog({
     }
   }, [isOpen]);
 
-  // Filter conversations for this document, sorted by most recently updated
-  const docConversations = useMemo(() => {
-    if (!document) return [];
-    return conversations
-      .filter((c) => c.documentIds.includes(document.id))
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      );
-  }, [conversations, document]);
 
   const filteredConversations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

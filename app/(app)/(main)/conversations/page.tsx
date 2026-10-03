@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
-  useConversations,
   useDeleteConversation,
   useRenameConversation,
   useTogglePinConversation,
@@ -30,7 +29,6 @@ export default function ConversationsPage() {
   const router = useRouter();
 
   // React Query bindings
-  const { conversations, pinnedIds } = useConversations();
   const { mutateAsync: deleteConversation } = useDeleteConversation();
   const { mutateAsync: renameConversation } = useRenameConversation();
   const { mutate: togglePinConversation } = useTogglePinConversation();
@@ -67,11 +65,9 @@ export default function ConversationsPage() {
     return () => window.removeEventListener("click", handleGlobalClick);
   }, []);
 
-  // Compute items, unique docs, filtered list
-  const { uniqueDocNames, filteredItems } = useConversationsData({
-    conversations,
+  // Items come pre-filtered/sorted/paged from the server
+  const { uniqueDocNames, items: filteredItems, hasNextPage, isFetchingNextPage, fetchNextPage } = useConversationsData({
     documents,
-    pinnedIds,
     searchQuery,
     activeTab,
     selectedDocFilter,
@@ -156,6 +152,14 @@ export default function ConversationsPage() {
                   }
                 />
               ))}
+            </div>
+          )}
+
+          {hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <Button variant="outline" size="sm" disabled={isFetchingNextPage} onClick={() => fetchNextPage()}>
+                {isFetchingNextPage ? "Loading…" : "Load more"}
+              </Button>
             </div>
           )}
         </div>

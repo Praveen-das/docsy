@@ -12,7 +12,7 @@ import {
   useToggleFavoriteDocument,
 } from "@/features/documents/hooks/use-documents";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations } from "@/features/conversations/hooks/use-conversations";
+import { useConversationCounts } from "@/features/conversations/hooks/use-conversations";
 import { useUIStore } from "@/stores/ui-store";
 import { DocumentConversationsDialog } from "@/features/conversations/document-conversations-dialog";
 import { useDocumentFilters } from "@/features/documents/hooks/use-document-filters";
@@ -32,7 +32,7 @@ export default function DocumentsPage() {
   const openedDocumentIds = useDocumentStore((state) => state.openedDocumentIds);
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
-  const { conversations } = useConversations();
+  const { byDocument: conversationCounts } = useConversationCounts();
 
   const openUpload = useUIStore((state) => state.openUpload);
 
@@ -86,7 +86,7 @@ export default function DocumentsPage() {
   };
 
   const getDocConversationsCount = (docId: string) => {
-    return conversations.filter((c) => c.documentIds.includes(docId)).length;
+    return conversationCounts[docId] ?? 0;
   };
 
   const hasRealDocs = documents.length > 0;

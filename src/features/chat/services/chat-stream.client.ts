@@ -1,13 +1,12 @@
 import axios from "axios";
-import { api } from "@/lib/api-client";
+import { api, getOrFetchToken } from "@/lib/api-client";
 
 export interface StreamChatParams {
   convId: string;
   assistantMessageId: string;
-  streamChannelId?: string;
+  streamChannelId: string;
   content: string;
   conversationHistory: { role: "user" | "assistant"; content: string }[];
-  conversationToken?: string;
   skipUserPersistence?: boolean;
   replaceAssistantMessageId?: string;
   customPrompt?: string;
@@ -100,10 +99,9 @@ async function consumeStreamReader(
 export async function streamChatResponse({
   convId,
   assistantMessageId,
-  streamChannelId: customChannelId,
+  streamChannelId,
   content,
   conversationHistory,
-  conversationToken,
   skipUserPersistence,
   replaceAssistantMessageId,
   customPrompt,
@@ -113,12 +111,10 @@ export async function streamChatResponse({
   onError,
 }: StreamChatParams): Promise<void> {
   try {
-    // Unique ephemeral channel ID prevents replaying chunks from prior generations
-    const streamChannelId =
-      customChannelId ||
-      (replaceAssistantMessageId
-        ? `regen-${assistantMessageId}-${Date.now()}`
-        : assistantMessageId);
+    const token = await getOrFetchToken(convId);
+    if (!token) {
+      throw new Error("Unable to acquire conversation authorization token");
+    }
 
     const [res] = await Promise.all([
       api.get<ReadableStream<Uint8Array>>(
@@ -134,7 +130,6 @@ export async function streamChatResponse({
         conversationId: convId,
         content,
         conversationHistory,
-        conversationToken,
         skipUserPersistence,
         replaceAssistantMessageId,
         customPrompt,

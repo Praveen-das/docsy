@@ -9,11 +9,37 @@ export interface ActiveDocumentBannerProps {
   document?: Document;
   documentName: string;
   isCollapsed: boolean;
+  isLoading?: boolean;
 }
 
-export function ActiveDocumentBanner({ document, documentName, isCollapsed }: ActiveDocumentBannerProps) {
+export function ActiveDocumentBanner({ document, documentName, isCollapsed, isLoading }: ActiveDocumentBannerProps) {
   const pageCount = document?.pageCount || 24;
   const fileSizeMb = document?.fileSize ? (document.fileSize / (1024 * 1024)).toFixed(1) : "3.2";
+
+  if (isLoading) {
+    if (isCollapsed) {
+      return (
+        <div className="flex justify-center py-2">
+          <div className="h-9 w-9 rounded-lg bg-white/[0.05] animate-pulse" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2 select-none">
+        <div className="px-4 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">CURRENT DOCUMENT</div>
+        <div className="gap-2 rounded-2xl py-2 px-4 space-y-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 shrink-0 rounded-lg bg-white/[0.06] animate-pulse" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="h-3 w-4/5 rounded-full bg-white/[0.06] animate-pulse" />
+              <div className="h-2.5 w-1/3 rounded-full bg-white/[0.04] animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isCollapsed) {
     return (

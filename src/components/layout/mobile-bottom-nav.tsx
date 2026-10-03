@@ -11,8 +11,7 @@ export function MobileBottomNav() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Hide mobile bottom navigation bar in active chat/conversation view to maximize typing space
-  const isChatView = pathname.startsWith("/conversation");
+  const isChatView = pathname === "/conversation" || pathname.startsWith("/conversation/");
 
   const isSettingsOpen = Boolean(searchParams.get("settings"));
 

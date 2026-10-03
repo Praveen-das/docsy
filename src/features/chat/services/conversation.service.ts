@@ -1,15 +1,46 @@
 import { api } from "@/lib/api-client";
 import { Conversation } from "@/types";
 
+export interface ConversationListParams {
+  documentId?: string;
+  search?: string;
+  pinned?: true;
+  sort?: "newest" | "oldest" | "title";
+  limit?: number;
+  offset?: number;
+}
+
 /**
  * Service providing typed HTTP endpoints for conversation and message persistence.
  */
 export const conversationService = {
   /**
-   * Fetches all conversations and pinned IDs for the authenticated user.
+   * Fetches one conversation (with fresh stream token).
    */
-  async fetchConversations(): Promise<{ conversations: Conversation[]; pinnedIds: string[] }> {
-    const res = await api.get<{ conversations: Conversation[]; pinnedIds: string[] }>("/api/conversations", {});
+  async fetchConversation(convId: string): Promise<Pick<Conversation, "id" | "title" | "documentIds" | "streamToken" | "updatedAt">> {
+    const res = await api.get(`/api/conversations/${encodeURIComponent(convId)}`);
+    return res.data;
+  },
+
+  /**
+   * Fetches total and per-document conversation counts.
+   */
+  async fetchCounts(): Promise<{ total: number; byDocument: Record<string, number> }> {
+    const res = await api.get<{ total: number; byDocument: Record<string, number> }>("/api/conversations/counts");
+    return res.data;
+  },
+
+  /**
+   * Fetches conversations and pinned IDs. Without `limit` returns all; with `limit` returns a page
+   * plus `nextOffset`. `documentId` filters server-side.
+   */
+  async fetchConversations(
+    params: ConversationListParams = {},
+  ): Promise<{ conversations: Conversation[]; pinnedIds: string[]; nextOffset: number | null }> {
+    const res = await api.get<{ conversations: Conversation[]; pinnedIds: string[]; nextOffset: number | null }>(
+      "/api/conversations",
+      { params },
+    );
     return res.data;
   },
 

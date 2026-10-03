@@ -97,7 +97,7 @@ export const POST = async (request: Request, { params }: RouteParams) => {
   }
 
   // 4. Strict Preflight Verification (HMAC capability token + Redis daily quota check)
-  const incomingToken = conversationToken || request.headers.get("x-conversation-token");
+  const incomingToken = request.headers.get("x-conversation-token") || conversationToken;
 
   const preflight = await verifyChatPreflight({ userId, conversationId, incomingToken });
 

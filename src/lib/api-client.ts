@@ -54,7 +54,7 @@ function isConversationSubResource(url?: string): boolean {
  * 1. Synchronous store lookup (<0.01ms)
  * 2. On-demand JIT fetch only when conversation is accessed, deduplicating concurrent calls
  */
-async function getOrFetchToken(convId: string): Promise<string | null> {
+export async function getOrFetchToken(convId: string): Promise<string | null> {
   const cached = getTokenFn ? getTokenFn(convId) : undefined;
   if (cached) return cached;
 
@@ -138,26 +138,7 @@ api.interceptors.response.use(
           // 2. Attach fresh token to original request headers
           originalRequest.headers["x-conversation-token"] = freshToken;
 
-          // 3. Update body payload if conversationToken was part of JSON payload
-          if (typeof originalRequest.data === "string") {
-            try {
-              const body = JSON.parse(originalRequest.data);
-              if ("conversationToken" in body) {
-                body.conversationToken = freshToken;
-                originalRequest.data = JSON.stringify(body);
-              }
-            } catch {
-              // Ignore non-JSON string
-            }
-          } else if (
-            typeof originalRequest.data === "object" &&
-            originalRequest.data !== null &&
-            "conversationToken" in originalRequest.data
-          ) {
-            (originalRequest.data as Record<string, unknown>).conversationToken = freshToken;
-          }
-
-          // 4. Transparently retry original request
+          // 3. Transparently retry original request
           return api(originalRequest);
         }
       } catch (refreshErr) {

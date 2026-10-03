@@ -11,6 +11,7 @@ export interface DashboardConversationItem {
   preview: string;
   timeText: string;
   isActive: boolean;
+  isPinned?: boolean;
   isReal: boolean;
 }
 
@@ -43,6 +44,7 @@ export function RecentConversationsSection({ conversations, onOpenConv }: Recent
             docId={conv.docId}
             preview={conv.preview}
             timeText={conv.timeText}
+            isPinned={conv.isPinned}
             onClick={() => onOpenConv(conv.id, conv.docId, conv.isReal)}
           />
         ))}

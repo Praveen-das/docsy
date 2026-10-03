@@ -55,6 +55,31 @@ describe("Route: /api/conversations", () => {
       const json = await res.json();
       expect(json.conversations).toHaveLength(1);
       expect(json.pinnedIds).toEqual(["conv-1"]);
+      expect(json.nextOffset).toBeNull();
+    });
+
+    it("handles pagination with limit and offset", async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ userId } as unknown as Awaited<ReturnType<typeof auth>>);
+      vi.mocked(listConversations).mockResolvedValueOnce([
+        { id: "conv-1", title: "1" },
+        { id: "conv-2", title: "2" },
+        { id: "conv-3", title: "3" },
+      ] as unknown as Awaited<ReturnType<typeof listConversations>>);
+      vi.mocked(listPinnedConversationIds).mockResolvedValueOnce([]);
+
+      const req = new NextRequest("http://localhost:3000/api/conversations?limit=2&offset=0&search=doc&pinned=true&sort=newest");
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.conversations).toHaveLength(2);
+      expect(json.nextOffset).toBe(2);
+      expect(listConversations).toHaveBeenCalledWith(userId, {
+        search: "doc",
+        pinned: true,
+        sort: "newest",
+        limit: 3,
+        offset: 0,
+      });
     });
   });
 

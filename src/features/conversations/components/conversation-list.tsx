@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Conversation } from "@/types";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations, useDeleteConversation } from "../hooks/use-conversations";
+import { useDocumentConversations, useDeleteConversation } from "../hooks/use-conversations";
 import { DeleteConversationDialog } from "./delete-conversation-dialog";
-import { RecentsRow } from "@/components/layout/sidebar-recents";
+import { RecentsRow, RecentsRowSkeleton } from "@/components/layout/sidebar-recents";
 import { getConversationPath } from "@/features/conversations/utils/conversation-url";
 
 export interface ConversationListProps {
@@ -27,20 +27,14 @@ export function ConversationList({
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlConvId = searchParams?.get("conv");
-  const { conversations: storeConversations } = useConversations();
+  const { conversations: documentConversations, isLoading } = useDocumentConversations(documentId);
   const storeActiveId = useConversationStore((state) => state.activeConversationId);
   const switchConversation = useConversationStore((state) => state.switchConversation);
   const { mutate: deleteConversation } = useDeleteConversation();
 
   const [convToDelete, setConvToDelete] = useState<Conversation | null>(null);
 
-  const conversations =
-    propConversations ??
-    (documentId
-      ? storeConversations
-          .filter((c) => c.documentIds.includes(documentId))
-          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      : storeConversations);
+  const conversations = propConversations ?? documentConversations;
 
   const activeId = propActiveConversationId !== undefined ? propActiveConversationId : (urlConvId ?? storeActiveId);
 
@@ -55,6 +49,33 @@ export function ConversationList({
     router.push(getConversationPath(null, documentId));
     onClose?.();
   };
+
+  if (isLoading && !propConversations) {
+    if (isCollapsed) {
+      return (
+        <div className="space-y-1.5 pt-2 flex flex-col items-center">
+          <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
+          <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
+          <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1.5 mx-2 pt-4 select-none">
+        <div className="flex items-center justify-between px-2.5 text-[9.5px] font-bold tracking-widest text-zinc-500 uppercase">
+          <span>CONVERSATIONS</span>
+          <div className="h-2.5 w-4 rounded-full bg-white/[0.05] animate-pulse" />
+        </div>
+        <div className="space-y-1 pt-1">
+          <RecentsRowSkeleton width="70%" />
+          <RecentsRowSkeleton width="50%" />
+          <RecentsRowSkeleton width="80%" />
+          <RecentsRowSkeleton width="60%" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

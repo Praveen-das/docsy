@@ -7,7 +7,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
 import { useDocuments, useDeleteDocument } from "@/features/documents/hooks/use-documents";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations } from "@/features/conversations/hooks/use-conversations";
+import { useRecentConversations } from "@/features/conversations/hooks/use-conversations";
 import { formatRelativeTime } from "@/lib/format-time";
 import { DashboardHero } from "@/features/dashboard/components/dashboard-hero";
 import { DeleteDocumentDialog } from "@/features/documents/components/delete-document-dialog";
@@ -27,7 +27,7 @@ export default function HomePage() {
   const { mutateAsync: deleteDocument } = useDeleteDocument();
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
 
-  const { conversations } = useConversations();
+  const { conversations, pinnedIds } = useRecentConversations();
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
   const openUpload = useUIStore((state) => state.openUpload);
@@ -62,6 +62,7 @@ export default function HomePage() {
         preview: c.lastMessageSnippet || "Click to view conversation insights and citations...",
         timeText: formatRelativeTime(c.updatedAt),
         isActive: idx === 0,
+        isPinned: pinnedIds.has(c.id),
         isReal: true,
       };
     });

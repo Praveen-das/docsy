@@ -2,10 +2,11 @@ import { db } from "@/db";
 import {
   conversations,
   conversationDocuments,
+  documents,
   messages,
   pinnedConversations,
 } from "@/db/schema";
-import { eq, and, or, lt, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, lt, desc, asc, sql, inArray } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import {
   getCached,
@@ -72,68 +73,129 @@ export async function createConversation(
   return conv;
 }
 
+export type ConversationSort = "newest" | "oldest" | "title";
+
+export interface ListConversationsOptions {
+  /** Only conversations linked to this document. */
+  documentId?: string;
+  /** Case-insensitive match on title or linked document name. */
+  search?: string;
+  /** Only pinned conversations. */
+  pinned?: boolean;
+  sort?: ConversationSort;
+  /** Page size. Omit for all. */
+  limit?: number;
+  offset?: number;
+}
+
+const SORT_ORDER = {
+  newest: [desc(conversations.updatedAt), desc(conversations.id)],
+  oldest: [asc(conversations.updatedAt), asc(conversations.id)],
+  title: [asc(conversations.title), asc(conversations.id)],
+} as const;
+
 /**
- * Internal helper to query and enrich conversations from PostgreSQL.
+ * List conversations with document links, last message snippet and message count.
+ * Filtering/sorting/pagination happen in SQL; enrichment is 3 batched queries for the page, not per row.
  */
-async function fetchEnrichedConversations(userId: string) {
-  const convs = await db
+export async function listConversations(
+  userId: string,
+  { documentId, search, pinned, sort = "newest", limit, offset = 0 }: ListConversationsOptions = {}
+) {
+  const term = search?.trim();
+  const pattern = term ? `%${term.replace(/[\\%_]/g, "\\$&")}%` : null;
+
+  const query = db
     .select()
     .from(conversations)
-    .where(eq(conversations.userId, userId))
-    .orderBy(desc(conversations.updatedAt));
-
-  return Promise.all(
-    convs.map(async (conv) => {
-      const docLinks = await db
-        .select({ documentId: conversationDocuments.documentId })
-        .from(conversationDocuments)
-        .where(eq(conversationDocuments.conversationId, conv.id));
-
-      const lastMessage = await db
-        .select({ content: messages.content, role: messages.role })
-        .from(messages)
-        .where(eq(messages.conversationId, conv.id))
-        .orderBy(desc(messages.createdAt))
-        .limit(1);
-
-      const msgCount = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(messages)
-        .where(eq(messages.conversationId, conv.id));
-
-      return {
-        id: conv.id,
-        userId: conv.userId,
-        title: conv.title,
-        documentIds: docLinks.map((d) => d.documentId),
-        lastMessageSnippet: lastMessage[0]
-          ? lastMessage[0].content.slice(0, 100)
+    .where(
+      and(
+        eq(conversations.userId, userId),
+        documentId
+          ? sql`exists (select 1 from ${conversationDocuments} where ${conversationDocuments.conversationId} = ${conversations.id} and ${conversationDocuments.documentId} = ${documentId})`
           : undefined,
-        messageCount: msgCount[0]?.count || 0,
-        createdAt: conv.createdAt.toISOString(),
-        updatedAt: conv.updatedAt.toISOString(),
-      };
-    })
-  );
+        pinned
+          ? sql`exists (select 1 from ${pinnedConversations} where ${pinnedConversations.conversationId} = ${conversations.id} and ${pinnedConversations.userId} = ${userId})`
+          : undefined,
+        pattern
+          ? or(
+              sql`${conversations.title} ilike ${pattern}`,
+              sql`exists (select 1 from ${conversationDocuments} cd join ${documents} d on d.id = cd.document_id where cd.conversation_id = ${conversations.id} and d.original_name ilike ${pattern})`
+            )
+          : undefined
+      )
+    )
+    .orderBy(...SORT_ORDER[sort])
+    .$dynamic();
+  const convs = await (limit ? query.limit(limit).offset(offset) : query);
+  if (convs.length === 0) return [];
+
+  const ids = convs.map((c) => c.id);
+  const [docLinks, lastMessages, counts] = await Promise.all([
+    db
+      .select({
+        conversationId: conversationDocuments.conversationId,
+        documentId: conversationDocuments.documentId,
+      })
+      .from(conversationDocuments)
+      .where(inArray(conversationDocuments.conversationId, ids)),
+    db
+      .selectDistinctOn([messages.conversationId], {
+        conversationId: messages.conversationId,
+        content: messages.content,
+      })
+      .from(messages)
+      .where(inArray(messages.conversationId, ids))
+      .orderBy(messages.conversationId, desc(messages.createdAt)),
+    db
+      .select({
+        conversationId: messages.conversationId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(messages)
+      .where(inArray(messages.conversationId, ids))
+      .groupBy(messages.conversationId),
+  ]);
+
+  const lastById = new Map(lastMessages.map((m) => [m.conversationId, m.content]));
+  const countById = new Map(counts.map((c) => [c.conversationId, c.count]));
+
+  return convs.map((conv) => ({
+    id: conv.id,
+    userId: conv.userId,
+    title: conv.title,
+    documentIds: docLinks.filter((d) => d.conversationId === conv.id).map((d) => d.documentId),
+    lastMessageSnippet: lastById.get(conv.id)?.slice(0, 100),
+    messageCount: countById.get(conv.id) ?? 0,
+    createdAt: conv.createdAt.toISOString(),
+    updatedAt: conv.updatedAt.toISOString(),
+  }));
 }
 
 /**
- * List conversations for a user with metadata:
- * - Document associations
- * - Last message snippet
- * - Message count
- * Backed by Redis cache (120s TTL). Eliminates heavy N+1 multi-table subqueries.
+ * Total conversations and per-document counts for a user, via aggregates.
  */
-export async function listConversations(userId: string) {
-  const cacheKey = CACHE_KEYS.conversationList(userId);
-  const cached = await getCached<Awaited<ReturnType<typeof fetchEnrichedConversations>>>(cacheKey);
-  if (cached) {
-    return cached;
-  }
+export async function getConversationCounts(userId: string) {
+  const [[totalRow], perDocument] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(conversations)
+      .where(eq(conversations.userId, userId)),
+    db
+      .select({
+        documentId: conversationDocuments.documentId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(conversationDocuments)
+      .innerJoin(conversations, eq(conversations.id, conversationDocuments.conversationId))
+      .where(eq(conversations.userId, userId))
+      .groupBy(conversationDocuments.documentId),
+  ]);
 
-  const enriched = await fetchEnrichedConversations(userId);
-  await setCached(cacheKey, enriched, CACHE_TTL.CONVERSATIONS_LIST);
-  return enriched;
+  return {
+    total: totalRow?.count ?? 0,
+    byDocument: Object.fromEntries(perDocument.map((r) => [r.documentId, r.count])),
+  };
 }
 
 /**

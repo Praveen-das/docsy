@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations } from "@/features/conversations/hooks/use-conversations";
+import { useActiveConversation } from "@/features/conversations/hooks/use-conversations";
 import { useDocuments } from "@/features/documents/hooks/use-documents";
 import { useConversationMessages } from "./use-conversation-messages";
 import { useChatSessionSync } from "./use-chat-session-sync";
@@ -42,11 +42,10 @@ export function useChatConversation({ documentId: propDocumentId }: UseChatConve
     })),
   );
 
-  const { conversations } = useConversations();
+  const { data: activeConv } = useActiveConversation(activeConvId);
   const { data: documents = [] } = useDocuments();
 
   const activeStream = activeConvId ? activeStreams[activeConvId] : undefined;
-  const activeConv = conversations.find((c) => c.id === activeConvId);
 
   // Sync stream recovery and token pre-seeding
   useChatSessionSync(activeConvId, activeStream?.streamChannelId, activeConv?.streamToken);

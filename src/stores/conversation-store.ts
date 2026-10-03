@@ -39,6 +39,8 @@ export interface ConversationUIState {
   setStreamToken: (convId: string, token: string) => void;
   setStreamTokens: (tokens: Record<string, string>) => void;
   getStreamToken: (convId: string) => string | undefined;
+  removeStreamToken: (convId: string) => void;
+  removeConversation: (convId: string) => void;
   setActiveStream: (convId: string, streamInfo: ActiveStreamInfo) => void;
   clearActiveStream: (convId: string) => void;
   pollConversationTitle: (convId: string, initialTitle: string) => void;
@@ -175,7 +177,7 @@ function createStreamCallbacks({
 async function executeChatStream({
   convId,
   assistantMessageId,
-  streamChannelId: customChannelId,
+  streamChannelId,
   content,
   conversationHistory,
   skipUserPersistence,
@@ -186,7 +188,7 @@ async function executeChatStream({
 }: {
   convId: string;
   assistantMessageId: string;
-  streamChannelId?: string;
+  streamChannelId: string;
   content: string;
   conversationHistory: { role: "user" | "assistant"; content: string }[];
   skipUserPersistence?: boolean;
@@ -195,13 +197,8 @@ async function executeChatStream({
   set: (next: Partial<ConversationUIState> | ((state: ConversationUIState) => Partial<ConversationUIState>)) => void;
   get: () => ConversationUIState;
 }): Promise<void> {
-  const conversationToken = get().getStreamToken(convId);
-  const targetId = replaceAssistantMessageId || assistantMessageId;
   const customPrompt =
     typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY_CUSTOM_PROMPT) || undefined : undefined;
-
-  const streamChannelId =
-    customChannelId || (replaceAssistantMessageId ? `regen-${assistantMessageId}-${Date.now()}` : assistantMessageId);
 
   // Track active stream in persistent state for reload resumption
   set((state) => ({
@@ -235,7 +232,6 @@ async function executeChatStream({
       streamChannelId,
       content,
       conversationHistory,
-      conversationToken,
       skipUserPersistence,
       replaceAssistantMessageId,
       customPrompt,
@@ -298,6 +294,36 @@ export const useConversationStore = create<ConversationUIState>()(
 
       getStreamToken: (convId: string) => {
         return get().streamTokens[convId];
+      },
+
+      removeStreamToken: (convId: string) => {
+        set((s) => {
+          const updated = { ...s.streamTokens };
+          delete updated[convId];
+          return { streamTokens: updated };
+        });
+      },
+
+      removeConversation: (convId: string) => {
+        inFlightStreams.delete(convId);
+        streamingChunks.delete(convId);
+        set((state) => {
+          const drafts = { ...state.drafts };
+          delete drafts[convId];
+
+          const streamTokens = { ...state.streamTokens };
+          delete streamTokens[convId];
+
+          const activeStreams = { ...state.activeStreams };
+          delete activeStreams[convId];
+
+          return {
+            drafts,
+            streamTokens,
+            activeStreams,
+            activeConversationId: state.activeConversationId === convId ? null : state.activeConversationId,
+          };
+        });
       },
 
       setActiveStream: (convId: string, streamInfo: ActiveStreamInfo) => {
@@ -490,6 +516,7 @@ export const useConversationStore = create<ConversationUIState>()(
         set({
           drafts: {},
           activeConversationId: null,
+          streamTokens: {},
           activeStreams: {},
           isLoadingAi: false,
           isAiTyping: false,

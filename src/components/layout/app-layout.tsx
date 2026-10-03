@@ -7,14 +7,15 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 
 export interface AppLayoutProps {
   children: React.ReactNode;
+  isPro?: boolean;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children, isPro }: AppLayoutProps) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#08090d] text-[#f4f4f5] transition-colors duration-150">
       {/* Desktop & Mobile Sidebar */}
       <Suspense fallback={<SidebarFallback />}>
-        <Sidebar />
+        <Sidebar isPro={isPro} />
       </Suspense>
 
       {/* Main Content Viewport */}

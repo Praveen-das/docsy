@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Trash2, RefreshCw } from "lucide-react";
-import { useConversations, useDeleteAllConversations } from "@/features/conversations/hooks/use-conversations";
+import { useConversationCounts, useDeleteAllConversations } from "@/features/conversations/hooks/use-conversations";
 import { useDocuments, useDeleteAllDocuments } from "@/features/documents/hooks/use-documents";
 import { useSubscription } from "@/features/billing/use-subscription";
 import { PLANS } from "@/lib/stripe-plans";
@@ -17,7 +17,7 @@ const STORAGE_LIMIT_PRO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 type DataControlsDialog = "conversations" | "documents" | "cache" | null;
 
 export function TabDataControls() {
-  const { conversations } = useConversations();
+  const { total: conversationCount } = useConversationCounts();
   const { mutateAsync: deleteAllConversations } = useDeleteAllConversations();
 
   const { data: documents = [] } = useDocuments();
@@ -139,14 +139,14 @@ export function TabDataControls() {
             <div>
               <span className="text-[13.5px] font-medium text-zinc-200 block">Delete All Conversations</span>
               <span className="text-[12px] text-zinc-500">
-                Permanently purge {conversations.length} conversation{conversations.length === 1 ? "" : "s"} and their chat histories
+                Permanently purge {conversationCount} conversation{conversationCount === 1 ? "" : "s"} and their chat histories
               </span>
             </div>
           </div>
 
           <button
             type="button"
-            disabled={conversations.length === 0}
+            disabled={conversationCount === 0}
             onClick={() => setActiveDialog("conversations")}
             className="rounded-full bg-rose-500/[0.08] hover:bg-rose-500/[0.16] disabled:opacity-40 disabled:pointer-events-none text-rose-400 border border-rose-500/20 px-3.5 py-1.5 text-xs font-medium transition-colors active:scale-[0.98] cursor-pointer shrink-0"
           >
@@ -209,7 +209,7 @@ export function TabDataControls() {
         onConfirm={handleDeleteAllConversations}
         title="Delete All Conversations?"
         description="This will permanently delete every conversation and chat history from your account. Documents will NOT be deleted."
-        warningText={`This action cannot be undone. All ${conversations.length} conversation(s) will be permanently lost.`}
+        warningText={`This action cannot be undone. All ${conversationCount} conversation(s) will be permanently lost.`}
         confirmButtonText="Delete All Conversations"
       />
 

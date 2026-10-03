@@ -10,7 +10,8 @@ import { useConversations } from "@/features/conversations/hooks/use-conversatio
 export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const { data: documents = [] } = useDocuments();
-  const { conversations = [] } = useConversations();
+  // Full list only needed once background sync is re-enabled.
+  const { conversations = [] } = useConversations({ enabled: false });
 
   // 1. Register Service Worker on client mount
   useEffect(() => {

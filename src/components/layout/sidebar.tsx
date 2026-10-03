@@ -19,9 +19,10 @@ export interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   title?: string;
+  isPro?: boolean;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
+export function Sidebar({ isOpen, onClose, isPro }: SidebarProps = {}) {
   const pathname = usePathname();
   const {
     isSidebarCollapsed,
@@ -32,7 +33,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
     enableTransitions,
   } = useSidebarState(isOpen, onClose);
 
-  const isConversationMode = pathname.startsWith("/conversation");
+  const isConversationMode = pathname === "/conversation" || pathname.startsWith("/conversation/");
 
   if (isConversationMode) {
     return (
@@ -70,7 +71,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         />
 
         {/* Navigation Menu & Upgrade to Pro Card */}
-        <SidebarNavigation isCollapsed={isCollapsed} onClose={effectiveOnClose} />
+        <SidebarNavigation isCollapsed={isCollapsed} onClose={effectiveOnClose} isPro={isPro} />
       </aside>
     </>
   );

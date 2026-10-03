@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { conversationService } from "@/features/chat/services/conversation.service";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { conversationService, type ConversationListParams } from "@/features/chat/services/conversation.service";
 import { useConversationStore } from "@/stores/conversation-store";
 import { createClientConversation } from "@/features/chat/utils/message-factory";
 
@@ -9,6 +9,9 @@ import {
   CONVERSATION_QUERY_KEYS,
   ConversationsData,
   updateConversationInCache,
+  addConversationToCache,
+  removeConversationFromCache,
+  togglePinInCache,
   snapshotConversationsCache,
   rollbackConversationsCache,
   invalidateConversationsCache,
@@ -18,11 +21,80 @@ export { type ConversationsData };
 
 import { saveOfflineConversations, getOfflineConversations } from "@/lib/offline-db";
 
+const RECENTS_PAGE_SIZE = 20;
+
 /**
- * Hook to retrieve all user conversations and pinned IDs.
+ * Paginated conversations. Filters/sort/search run on the server; loads one page at a time.
+ * With no filters this is the "recent" list used by the sidebar and dashboard.
  */
-export function useConversations() {
+export function useRecentConversations(
+  filters: Omit<ConversationListParams, "limit" | "offset"> = {},
+  pageSize = RECENTS_PAGE_SIZE,
+) {
+  const query = useInfiniteQuery({
+    queryKey: [...CONVERSATION_QUERY_KEYS.recent, filters, pageSize],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      conversationService.fetchConversations({ ...filters, limit: pageSize, offset: pageParam }),
+    getNextPageParam: (last) => last.nextOffset ?? undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 30,
+  });
+
+  return {
+    ...query,
+    conversations: query.data?.pages.flatMap((p) => p.conversations) ?? [],
+    pinnedIds: new Set(query.data?.pages[0]?.pinnedIds ?? []),
+  };
+}
+
+/**
+ * Conversations of a single document, filtered server-side.
+ */
+export function useDocumentConversations(documentId?: string | null) {
+  const query = useQuery({
+    queryKey: CONVERSATION_QUERY_KEYS.byDocument(documentId ?? ""),
+    queryFn: () => conversationService.fetchConversations({ documentId: documentId! }),
+    enabled: !!documentId,
+    staleTime: 1000 * 30,
+  });
+
+  return { ...query, conversations: query.data?.conversations ?? [] };
+}
+
+/**
+ * Total and per-document conversation counts (no list payload).
+ */
+export function useConversationCounts() {
+  const query = useQuery({
+    queryKey: CONVERSATION_QUERY_KEYS.counts,
+    queryFn: conversationService.fetchCounts,
+    staleTime: 1000 * 30,
+  });
+
+  return { ...query, total: query.data?.total ?? 0, byDocument: query.data?.byDocument ?? {} };
+}
+
+/**
+ * Single conversation by id (title, documentIds, stream token). Avoids loading the whole list.
+ */
+export function useActiveConversation(convId?: string | null) {
+  return useQuery({
+    queryKey: CONVERSATION_QUERY_KEYS.detail(convId ?? ""),
+    queryFn: () => conversationService.fetchConversation(convId!),
+    enabled: !!convId,
+    staleTime: 1000 * 30,
+    retry: false,
+  });
+}
+
+/**
+ * Hook to retrieve ALL user conversations and pinned IDs. Prefer the scoped hooks above;
+ * use `enabled` to defer this heavy fetch until it is actually needed.
+ */
+export function useConversations({ enabled = true }: { enabled?: boolean } = {}) {
   const query = useQuery<ConversationsData>({
+    enabled,
     queryKey: CONVERSATION_QUERY_KEYS.all,
     queryFn: async () => {
       try {
@@ -78,11 +150,8 @@ export function useCreateConversation() {
       const clientConv = createClientConversation(documentId, title);
       const newConvId = clientConv.id;
 
-      // Optimistic update
-      queryClient.setQueryData<ConversationsData>(CONVERSATION_QUERY_KEYS.all, (old) => ({
-        conversations: [clientConv, ...(old?.conversations || [])],
-        pinnedIds: old?.pinnedIds || [],
-      }));
+      // Optimistic update across all query caches (all, detail, recent pages, document list, counts)
+      addConversationToCache(clientConv);
 
       useConversationStore.getState().setActiveConversation(newConvId);
 
@@ -120,15 +189,7 @@ export function useRenameConversation() {
       if (!trimmed) return;
 
       const previousData = await snapshotConversationsCache(queryClient);
-
-      if (previousData) {
-        queryClient.setQueryData<ConversationsData>(CONVERSATION_QUERY_KEYS.all, {
-          ...previousData,
-          conversations: previousData.conversations.map((c) =>
-            c.id === convId ? { ...c, title: trimmed, updatedAt: new Date().toISOString() } : c,
-          ),
-        });
-      }
+      updateConversationInCache(convId, { title: trimmed, updatedAt: new Date().toISOString() });
 
       return { previousData };
     },
@@ -148,18 +209,8 @@ export function useDeleteConversation() {
     onMutate: async (convId: string) => {
       const previousData = await snapshotConversationsCache(queryClient);
 
-      if (previousData) {
-        queryClient.setQueryData<ConversationsData>(CONVERSATION_QUERY_KEYS.all, {
-          ...previousData,
-          conversations: previousData.conversations.filter((c) => c.id !== convId),
-          pinnedIds: previousData.pinnedIds.filter((id) => id !== convId),
-        });
-      }
-
-      const activeId = useConversationStore.getState().activeConversationId;
-      if (activeId === convId) {
-        useConversationStore.getState().setActiveConversation(null);
-      }
+      removeConversationFromCache(convId);
+      useConversationStore.getState().removeConversation(convId);
 
       return { previousData };
     },
@@ -204,17 +255,7 @@ export function useTogglePinConversation() {
     onMutate: async (convId: string) => {
       const previousData = await snapshotConversationsCache(queryClient);
 
-      if (previousData) {
-        const isPinned = previousData.pinnedIds.includes(convId);
-        const updatedPinned = isPinned
-          ? previousData.pinnedIds.filter((id) => id !== convId)
-          : [...previousData.pinnedIds, convId];
-
-        queryClient.setQueryData<ConversationsData>(CONVERSATION_QUERY_KEYS.all, {
-          ...previousData,
-          pinnedIds: updatedPinned,
-        });
-      }
+      togglePinInCache(convId);
 
       return { previousData };
     },

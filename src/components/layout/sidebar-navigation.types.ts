@@ -17,4 +17,5 @@ export interface PillRect {
 export interface SidebarNavigationProps {
   isCollapsed: boolean;
   onClose?: () => void;
+  isPro?: boolean;
 }

@@ -7,7 +7,7 @@ import { MessageSquare, Clock, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/format-time";
 import { useConversationStore } from "@/stores/conversation-store";
-import { useConversations, useDeleteConversation } from "@/features/conversations/hooks/use-conversations";
+import { useRecentConversations, useDeleteConversation } from "@/features/conversations/hooks/use-conversations";
 import { DeleteConversationDialog } from "@/features/conversations/components/delete-conversation-dialog";
 import { getConversationPath } from "@/features/conversations/utils/conversation-url";
 import { Conversation } from "@/types";
@@ -83,10 +83,24 @@ export const RecentsRow = React.memo(function RecentsRow({
   );
 });
 
+export function RecentsRowSkeleton({ width = "65%" }: { width?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-xl px-2.5 h-8 select-none">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div
+          className="h-2.5 rounded-full bg-white/[0.06] animate-pulse"
+          style={{ width }}
+        />
+      </div>
+      <div className="h-2 w-8 rounded-full bg-white/[0.04] animate-pulse shrink-0" />
+    </div>
+  );
+}
+
 export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { conversations, isLoading } = useConversations();
+  const { conversations, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useRecentConversations();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -128,8 +142,10 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
             </div>
           </div>
           <div className="flex-1 flex flex-col items-center gap-1.5 py-1">
-            <div className="h-9 w-9 rounded-xl bg-white/[0.03] animate-pulse" />
-            <div className="h-9 w-9 rounded-xl bg-white/[0.03] animate-pulse" />
+            <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
+            <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
+            <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
+            <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse" />
           </div>
         </div>
       );
@@ -140,10 +156,12 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
         <div className="flex items-center justify-between px-2.5 pb-3 text-[10px] font-bold tracking-widest text-zinc-500 uppercase shrink-0">
           <span className="flex items-center gap-1.5 text-zinc-400">RECENT CONVERSATIONS</span>
         </div>
-        <div className="space-y-1.5 px-1 py-1">
-          <div className="h-9 rounded-xl bg-white/[0.03] animate-pulse" />
-          <div className="h-9 rounded-xl bg-white/[0.03] animate-pulse" />
-          <div className="h-9 rounded-xl bg-white/[0.03] animate-pulse" />
+        <div className="space-y-1 px-0.5 py-1">
+          <RecentsRowSkeleton width="75%" />
+          <RecentsRowSkeleton width="50%" />
+          <RecentsRowSkeleton width="85%" />
+          <RecentsRowSkeleton width="60%" />
+          <RecentsRowSkeleton width="40%" />
         </div>
       </div>
     );
@@ -162,7 +180,15 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
             <Clock className="h-4 w-4" />
           </Link>
         </div>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center gap-1 scrollbar-none py-1">
+        <div
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            if (hasNextPage && !isFetchingNextPage && el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+              fetchNextPage();
+            }
+          }}
+          className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center gap-1 scrollbar-none py-1"
+        >
           {sortedConversations.map((conv) => {
             const isActive = activeConversationId === conv.id;
             return (
@@ -186,6 +212,9 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
               </button>
             );
           })}
+          {isFetchingNextPage && (
+            <div className="h-8 w-8 rounded-xl bg-white/[0.05] animate-pulse shrink-0" />
+          )}
         </div>
       </div>
     );
@@ -199,7 +228,15 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
       </div>
 
       {/* Recents Scrollable List */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-0.5 space-y-1 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.08)_transparent] hover:[scrollbar-color:rgba(255,255,255,0.18)_transparent]">
+      <div
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (hasNextPage && !isFetchingNextPage && el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+            fetchNextPage();
+          }
+        }}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-0.5 space-y-1 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.08)_transparent] hover:[scrollbar-color:rgba(255,255,255,0.18)_transparent]"
+      >
         {sortedConversations.length === 0 ? (
           <div className="px-3 py-4 rounded-2xl bg-[#0c1017]/50 border border-white/[0.05] text-center my-1">
             <MessageSquare className="h-4 w-4 text-zinc-600 mx-auto mb-1.5" />
@@ -213,14 +250,22 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
             </Link>
           </div>
         ) : (
-          sortedConversations.map((conv) => (
-            <RecentsRow
-              key={conv.id}
-              conversation={conv}
-              onSelect={() => handleSelectConversation(conv)}
-              onDelete={() => setConvToDelete(conv)}
-            />
-          ))
+          <>
+            {sortedConversations.map((conv) => (
+              <RecentsRow
+                key={conv.id}
+                conversation={conv}
+                onSelect={() => handleSelectConversation(conv)}
+                onDelete={() => setConvToDelete(conv)}
+              />
+            ))}
+            {isFetchingNextPage && (
+              <div className="space-y-1 pt-1">
+                <RecentsRowSkeleton width="65%" />
+                <RecentsRowSkeleton width="45%" />
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -33,13 +33,13 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export function SidebarNavigation({ isCollapsed, onClose }: SidebarNavigationProps) {
-  const { data: subscription, isLoading } = useSubscription();
+export function SidebarNavigation({ isCollapsed, onClose, isPro: initialIsPro }: SidebarNavigationProps) {
+  const { data: subscription } = useSubscription();
 
   const pathname = usePathname();
   const openSearch = useUIStore((state) => state.openSearch);
 
-  const isProUser = subscription?.plan === "pro";
+  const isProUser = subscription ? subscription.plan === "pro" : Boolean(initialIsPro);
 
   // Determine active item from current route
   const activeHref = useMemo(() => {
@@ -99,10 +99,14 @@ export function SidebarNavigation({ isCollapsed, onClose }: SidebarNavigationPro
         ))}
       </nav>
 
-      {/* Recents Section (scrollable) */}
-      <Suspense fallback={null}>
-        <SidebarRecents isCollapsed={isCollapsed} onClose={onClose} />
-      </Suspense>
+      {/* Recents Section (scrollable) - hidden on /conversations overview page */}
+      {!pathname?.startsWith("/conversations") ? (
+        <Suspense fallback={null}>
+          <SidebarRecents isCollapsed={isCollapsed} onClose={onClose} />
+        </Suspense>
+      ) : (
+        <div className="flex-1" />
+      )}
 
       {/* Upgrade to Pro Card */}
       {!isProUser && (

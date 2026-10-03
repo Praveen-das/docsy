@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("@/lib/api-client", () => ({
   registerTokenHandlers: vi.fn(),
   api: { get: vi.fn(), post: vi.fn() },
+  getOrFetchToken: vi.fn(),
 }));
 
 vi.mock("@/features/chat/services/conversation-polling.service", () => ({
@@ -98,6 +99,39 @@ describe("useConversationStore", () => {
     const resetState = useConversationStore.getState();
     expect(resetState.activeConversationId).toBeNull();
     expect(resetState.drafts).toEqual({});
+    expect(resetState.streamTokens).toEqual({});
     expect(resetState.activeStreams).toEqual({});
+  });
+
+  it("removes stream token for a specific conversation", () => {
+    const store = useConversationStore.getState();
+    store.setStreamToken("conv-1", "token-1");
+    store.setStreamToken("conv-2", "token-2");
+
+    store.removeStreamToken("conv-1");
+
+    expect(store.getStreamToken("conv-1")).toBeUndefined();
+    expect(store.getStreamToken("conv-2")).toBe("token-2");
+  });
+
+  it("removes all conversation state on removeConversation()", () => {
+    const store = useConversationStore.getState();
+    store.setActiveConversation("conv-1");
+    store.saveDraft("conv-1", "my draft");
+    store.setStreamToken("conv-1", "token-123");
+    store.setActiveStream("conv-1", {
+      convId: "conv-1",
+      assistantMessageId: "msg-1",
+      streamChannelId: "chan-1",
+      startedAt: Date.now(),
+    });
+
+    store.removeConversation("conv-1");
+
+    const state = useConversationStore.getState();
+    expect(state.activeConversationId).toBeNull();
+    expect(state.drafts["conv-1"]).toBeUndefined();
+    expect(state.streamTokens["conv-1"]).toBeUndefined();
+    expect(state.activeStreams["conv-1"]).toBeUndefined();
   });
 });

@@ -16,19 +16,42 @@ const createConversationSchema = z.object({
 
 import { signConversationToken } from "@/lib/conversation-token";
 
+const listQuerySchema = z.object({
+  documentId: z.string().optional(),
+  search: z.string().max(200).optional(),
+  pinned: z.enum(["true"]).optional(),
+  sort: z.enum(["newest", "oldest", "title"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 /**
- * GET /api/conversations
- * List all conversations for the authenticated user with stream capability tokens.
+ * GET /api/conversations?documentId=&search=&pinned=true&sort=&limit=&offset=
+ * List conversations for the authenticated user. Without `limit`, returns all.
+ * With `limit`, returns one page plus `nextOffset` (null when exhausted).
  */
-export async function GET() {
+export async function GET(request?: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [conversations, pinnedIds] = await Promise.all([listConversations(userId), listPinnedConversationIds(userId)]);
+  const searchParams = request?.nextUrl?.searchParams;
+  const parsed = listQuerySchema.safeParse(searchParams ? Object.fromEntries(searchParams) : {});
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid query" }, { status: 400 });
+  }
+  const { limit, offset = 0, pinned, ...filters } = parsed.data;
 
-  return NextResponse.json({ conversations, pinnedIds });
+  // Fetch one extra row to know whether another page exists.
+  const [rows, pinnedIds] = await Promise.all([
+    listConversations(userId, { ...filters, pinned: pinned === "true", limit: limit && limit + 1, offset }),
+    listPinnedConversationIds(userId),
+  ]);
+  const hasMore = limit !== undefined && rows.length > limit;
+  const conversations = hasMore ? rows.slice(0, limit) : rows;
+
+  return NextResponse.json({ conversations, pinnedIds, nextOffset: hasMore ? offset + limit! : null });
 }
 
 /**

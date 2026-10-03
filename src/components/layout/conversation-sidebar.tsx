@@ -36,7 +36,7 @@ export function ConversationSidebar({
   const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
   // Current document info
-  const { data: documents = [] } = useDocuments();
+  const { data: documents = [], isLoading: isLoadingDocs } = useDocuments();
   const activeDocument = documentId ? documents.find((d) => d.id === documentId) : undefined;
   const documentName = activeDocument?.originalName || "System Design Notes.pdf";
 
@@ -72,7 +72,12 @@ export function ConversationSidebar({
 
         {/* Scrollable Center Section: CURRENT DOCUMENT & CONVERSATIONS */}
         <div className="flex-1 overflow-y-auto space-y-4 mt-2 pb-4">
-          <ActiveDocumentBanner document={activeDocument} documentName={documentName} isCollapsed={isCollapsed} />
+          <ActiveDocumentBanner
+            document={activeDocument}
+            documentName={documentName}
+            isCollapsed={isCollapsed}
+            isLoading={Boolean(documentId && isLoadingDocs && !activeDocument)}
+          />
           <ConversationList documentId={documentId} isCollapsed={isCollapsed} onClose={onClose} />
         </div>
       </aside>

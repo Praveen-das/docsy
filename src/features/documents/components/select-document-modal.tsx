@@ -45,7 +45,7 @@ export function SelectDocumentModal({
     });
 
   const { data: documents = [], isLoading: isLoadingDocs } = useDocuments();
-  const { conversations } = useConversations();
+  const { conversations } = useConversations({ enabled: effectiveIsOpen });
 
   const [searchQuery, setSearchQuery] = useState("");
 
