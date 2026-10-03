@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createCheckoutSession } from "@/services/subscription.service";
-import { PLANS } from "@/lib/stripe-plans";
 import { logger } from "@/lib/logger";
 
 /**
@@ -17,7 +16,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const priceId = PLANS.pro.stripePriceId;
+  const priceId = process.env.STRIPE_PRO_PRICE_ID;
 
   if (!priceId) {
     logger.error("stripe.checkout.missing_price_id", { userId });

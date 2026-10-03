@@ -11,10 +11,7 @@ import { useConversations } from "@/features/conversations/hooks/use-conversatio
 import { formatRelativeTime } from "@/lib/format-time";
 import { DashboardHero } from "@/features/dashboard/components/dashboard-hero";
 import { DeleteDocumentDialog } from "@/features/documents/components/delete-document-dialog";
-import {
-  RecentDocumentsSection,
-  DashboardDocumentItem,
-} from "@/features/dashboard/components/recent-documents-section";
+import { RecentDocumentsSection } from "@/features/dashboard/components/recent-documents-section";
 import {
   RecentConversationsSection,
   DashboardConversationItem,
@@ -23,84 +20,6 @@ import { Document } from "@/types";
 import BottomGlow from "@/components/ui/BottomGlow";
 
 
-// Exact sample items from the reference mockup
-const REFERENCE_DOCS: DashboardDocumentItem[] = [
-  {
-    id: "sample-1",
-    originalName: "System Design Notes.pdf",
-    pageCount: 24,
-    fileSize: 3.2 * 1024 * 1024,
-    timeText: "2 hours ago",
-    isReal: false,
-  },
-  {
-    id: "sample-2",
-    originalName: "React Best Practices.pdf",
-    pageCount: 18,
-    fileSize: 1.8 * 1024 * 1024,
-    timeText: "1 day ago",
-    isReal: false,
-  },
-  {
-    id: "sample-3",
-    originalName: "Machine Learning Guide.pdf",
-    pageCount: 42,
-    fileSize: 5.6 * 1024 * 1024,
-    timeText: "3 days ago",
-    isReal: false,
-  },
-  {
-    id: "sample-4",
-    originalName: "Product Requirements.pdf",
-    pageCount: 28,
-    fileSize: 2.4 * 1024 * 1024,
-    timeText: "5 days ago",
-    isReal: false,
-  },
-];
-
-const REFERENCE_CONVERSATIONS: DashboardConversationItem[] = [
-  {
-    id: "conv-ref-1",
-    title: "Explain the system architecture",
-    docName: "System Design Notes.pdf",
-    docId: "sample-1",
-    preview: "Here's a high-level overview of the system architecture described in your document...",
-    timeText: "2 hours ago",
-    isActive: true,
-    isReal: false,
-  },
-  {
-    id: "conv-ref-2",
-    title: "Summarize key takeaways",
-    docName: "React Best Practices.pdf",
-    docId: "sample-2",
-    preview: "The document outlines several important best practices for building maintainable...",
-    timeText: "1 day ago",
-    isActive: false,
-    isReal: false,
-  },
-  {
-    id: "conv-ref-3",
-    title: "What are the main requirements?",
-    docName: "Product Requirements.pdf",
-    docId: "sample-4",
-    preview: "Based on the document, the main requirements are: 1. User authentication...",
-    timeText: "3 days ago",
-    isActive: false,
-    isReal: false,
-  },
-  {
-    id: "conv-ref-4",
-    title: "Compare approaches",
-    docName: "Machine Learning Guide.pdf",
-    docId: "sample-3",
-    preview: "Here's a comparison of the approaches mentioned in your document...",
-    timeText: "5 days ago",
-    isActive: false,
-    isReal: false,
-  },
-];
 
 export default function HomePage() {
   const router = useRouter();
@@ -129,25 +48,23 @@ export default function HomePage() {
     }
   };
 
-  const displayDocuments: (Document | DashboardDocumentItem)[] =
-    documents.length > 0 ? documents.slice(0, 4) : REFERENCE_DOCS;
+  const displayDocuments = documents.slice(0, 4);
 
-  const displayConversations: DashboardConversationItem[] =
-    conversations.length > 0
-      ? conversations.slice(0, 4).map((c, idx) => {
-          const doc = documents.find((d) => c.documentIds.includes(d.id));
-          return {
-            id: c.id,
-            title: c.title,
-            docName: doc?.originalName || "Document",
-            docId: doc?.id || "",
-            preview: c.lastMessageSnippet || "Click to view conversation insights and citations...",
-            timeText: formatRelativeTime(c.updatedAt),
-            isActive: idx === 0,
-            isReal: true,
-          };
-        })
-      : REFERENCE_CONVERSATIONS;
+  const displayConversations: DashboardConversationItem[] = conversations
+    .slice(0, 4)
+    .map((c, idx) => {
+      const doc = documents.find((d) => c.documentIds.includes(d.id));
+      return {
+        id: c.id,
+        title: c.title,
+        docName: doc?.originalName || "Document",
+        docId: doc?.id || "",
+        preview: c.lastMessageSnippet || "Click to view conversation insights and citations...",
+        timeText: formatRelativeTime(c.updatedAt),
+        isActive: idx === 0,
+        isReal: true,
+      };
+    });
 
   const handleOpenDoc = (docId: string, isReal: boolean) => {
     if (isReal) {

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CreditCard, ExternalLink, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isSafeStripeRedirectUrl } from "@/lib/utils";
 import type { PaymentMethodInfo } from "./use-invoices";
 
 interface PaymentMethodCardProps {
@@ -22,7 +23,8 @@ export function PaymentMethodCard({ paymentMethod, isLoading, isPro }: PaymentMe
       const res = await fetch("/api/stripe/portal", { method: "POST" });
       const data = (await res.json()) as { url?: string; error?: string };
 
-      if (data.url) {
+      if (data.url && isSafeStripeRedirectUrl(data.url)) {
+        // fallow-ignore-next-line security-sink
         window.location.href = data.url;
       } else {
         setPortalError(

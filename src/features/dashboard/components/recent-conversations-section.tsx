@@ -20,6 +20,10 @@ export interface RecentConversationsSectionProps {
 }
 
 export function RecentConversationsSection({ conversations, onOpenConv }: RecentConversationsSectionProps) {
+  if (conversations.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-4 pt-2">
       <DashboardSectionHeader

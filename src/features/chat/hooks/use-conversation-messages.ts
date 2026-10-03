@@ -24,9 +24,7 @@ export function useConversationMessages(conversationId: string | null | undefine
       if (!conversationId) {
         return { messages: [], nextCursor: null, hasMore: false };
       }
-      if (conversationId.startsWith("conv-ref-") || mockMessages[conversationId]) {
-        return { messages: mockMessages[conversationId] || [], nextCursor: null, hasMore: false };
-      }
+
       try {
         const params: Record<string, string | number> = {
           limit: MESSAGES_PAGE_SIZE,

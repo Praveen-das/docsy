@@ -62,7 +62,8 @@ async function getOrFetchToken(convId: string): Promise<string | null> {
   if (!fetchPromise) {
     fetchPromise = (async () => {
       try {
-        const res = await axios.get<{ streamToken?: string }>(`/api/conversations/${convId}`, {
+        // fallow-ignore-next-line security-sink
+        const res = await axios.get<{ streamToken?: string }>(`/api/conversations/${encodeURIComponent(convId)}`, {
           adapter: "fetch",
         });
         const freshToken = res.data?.streamToken || null;
@@ -122,7 +123,8 @@ api.interceptors.response.use(
 
       try {
         // Direct unintercepted fetch to retrieve fresh conversation capability token
-        const refreshRes = await axios.get<{ streamToken?: string }>(`/api/conversations/${convId}`, {
+        // fallow-ignore-next-line security-sink
+        const refreshRes = await axios.get<{ streamToken?: string }>(`/api/conversations/${encodeURIComponent(convId)}`, {
           adapter: "fetch",
         });
 

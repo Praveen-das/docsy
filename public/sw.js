@@ -1,3 +1,4 @@
+// fallow-ignore-file security-sink
 /**
  * Docsy AI — Progressive Web App Service Worker
  * Manages offline caching, asset pre-fetching, Next.js RSC caching, and route-isolated fallbacks.

@@ -49,7 +49,8 @@ export function ConversationOptionsMenu({
 
   const handleOpenInNewWindow = useCallback(() => {
     const url = getConversationPath(conversationId, documentId);
-    window.open(url, "_blank");
+    // fallow-ignore-next-line security-sink
+    window.open(url, "_blank", "noopener,noreferrer");
   }, [conversationId, documentId]);
 
   const handleShare = useCallback(() => {

@@ -13,7 +13,6 @@ export interface PlanDefinition {
   name: string;
   description: string;
   monthlyPrice: number | null; // null = free
-  stripePriceId: string | null;
   dailyQueryLimit: number;
   maxDocuments: number | null; // null = unlimited
   features: string[];
@@ -26,7 +25,6 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: "Free",
     description: "For individuals exploring document AI",
     monthlyPrice: null,
-    stripePriceId: null,
     dailyQueryLimit: 25,
     maxDocuments: 5,
     features: [
@@ -43,7 +41,6 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: "Pro",
     description: "For professionals and teams doing serious document work",
     monthlyPrice: 19,
-    stripePriceId: process.env.STRIPE_PRO_PRICE_ID ?? null,
     dailyQueryLimit: 200,
     maxDocuments: 200,
     features: [

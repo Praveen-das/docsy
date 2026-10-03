@@ -11,7 +11,8 @@ export const documentApiService = {
   },
 
   async deleteDocument(id: string): Promise<boolean> {
-    const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    // fallow-ignore-next-line security-sink
+    const res = await fetch(`/api/documents/${encodeURIComponent(id)}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Delete failed");
     return true;
   },
@@ -23,7 +24,8 @@ export const documentApiService = {
   },
 
   async reprocessDocument(id: string): Promise<boolean> {
-    const res = await fetch(`/api/documents/${id}/reprocess`, { method: "POST" });
+    // fallow-ignore-next-line security-sink
+    const res = await fetch(`/api/documents/${encodeURIComponent(id)}/reprocess`, { method: "POST" });
     if (!res.ok) throw new Error("Reprocess failed");
     return true;
   },
@@ -42,7 +44,8 @@ export const documentApiService = {
   },
 
   async toggleFavorite(id: string): Promise<{ success: boolean; isFavorite: boolean }> {
-    const res = await fetch(`/api/documents/${id}/favorite`, { method: "POST" });
+    // fallow-ignore-next-line security-sink
+    const res = await fetch(`/api/documents/${encodeURIComponent(id)}/favorite`, { method: "POST" });
     if (!res.ok) throw new Error(`Failed to toggle favorite (${res.status})`);
     return res.json();
   },

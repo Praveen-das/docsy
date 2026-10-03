@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Check, Zap, Shield, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/features/billing/use-subscription";
 import BottomGlow from "@/components/ui/BottomGlow";
 import { Logo } from "@/components/ui/logo";
-import { cn } from "@/lib/utils";
+import { isSafeStripeRedirectUrl } from "@/lib/utils";
 
 /**
  * /pricing — Standalone, focused plans display with zero headers and zero sidebars.
@@ -24,7 +24,8 @@ export default function PricingPage() {
     try {
       const res = await fetch("/api/stripe/checkout", { method: "POST" });
       const data = await res.json();
-      if (data.url) {
+      if (data.url && isSafeStripeRedirectUrl(data.url)) {
+        // fallow-ignore-next-line security-sink
         window.location.href = data.url;
       } else {
         setIsUpgrading(false);
@@ -39,7 +40,8 @@ export default function PricingPage() {
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST" });
       const data = await res.json();
-      if (data.url) {
+      if (data.url && isSafeStripeRedirectUrl(data.url)) {
+        // fallow-ignore-next-line security-sink
         window.location.href = data.url;
       } else {
         setIsOpeningPortal(false);
