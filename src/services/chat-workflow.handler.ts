@@ -61,7 +61,9 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
     const channel = realtime.channel(channelId);
 
     try {
-      await channel.emit("ai.chunk", { type: "typing" });
+      // Emit "typing" in parallel with RAG; awaited before first LLM chunk to keep ordering.
+      const typingEmit = channel.emit("ai.chunk", { type: "typing" });
+      typingEmit.catch(() => {}); // surfaced via await below
 
       const { ragResult, persistUserPromise } = await dispatchChatPipeline({
         userId,
@@ -72,6 +74,7 @@ const { POST: workflowHandler } = serve<ChatWorkflowPayload>(async (context) => 
         skipUserPersistence,
         customPrompt,
       });
+      await typingEmit;
 
       const result = streamText({
         model: getChatModel(),

@@ -5,7 +5,7 @@
  * Copy the Cookie header from DevTools > Network (authed request) into COOKIE.
  * Run 1 is typically a cold start; stats are shown with and without it.
  */
-const url = process.argv[2] ?? "http://localhost:3000/api/conversations?limit=20&offset=0";
+const url = process.argv[2] ?? "https://docsy-one.vercel.app/api/conversations?limit=20&offset=0";
 const runs = Number(process.argv[3] ?? 10);
 const cookie = process.env.COOKIE;
 

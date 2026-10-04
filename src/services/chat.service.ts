@@ -114,11 +114,10 @@ export async function dispatchChatPipeline({
       );
 
   // Resolve active custom prompt from params or fallback to user profile in DB/cache
-  let activeCustomPrompt = customPrompt;
-  if (!activeCustomPrompt) {
-    const profile = await getUserProfile(userId);
-    activeCustomPrompt = profile?.customPrompt || undefined;
-  }
+  // Profile lookup runs concurrently with embedding + retrieval (awaited only when building the prompt)
+  const activeCustomPrompt =
+    customPrompt ??
+    getUserProfile(userId).then((profile) => profile?.customPrompt || undefined);
 
   // Execute RAG pipeline using verified document IDs from token
   const ragResult = await timeOperation("rag", () =>
