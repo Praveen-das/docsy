@@ -31,7 +31,9 @@ const listQuerySchema = z.object({
  * With `limit`, returns one page plus `nextOffset` (null when exhausted).
  */
 export async function GET(request?: NextRequest) {
+  const t0 = performance.now();
   const { userId } = await auth();
+  const tAuth = performance.now() - t0;
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -44,14 +46,27 @@ export async function GET(request?: NextRequest) {
   const { limit, offset = 0, pinned, ...filters } = parsed.data;
 
   // Fetch one extra row to know whether another page exists.
-  const [rows, pinnedIds] = await Promise.all([
-    listConversations(userId, { ...filters, pinned: pinned === "true", limit: limit && limit + 1, offset }),
-    listPinnedConversationIds(userId),
+  const timed = async <T>(p: Promise<T>) => {
+    const s = performance.now();
+    const value = await p;
+    return { value, ms: performance.now() - s };
+  };
+  const [list, pins] = await Promise.all([
+    timed(listConversations(userId, { ...filters, pinned: pinned === "true", limit: limit && limit + 1, offset })),
+    timed(listPinnedConversationIds(userId)),
   ]);
+  const rows = list.value;
   const hasMore = limit !== undefined && rows.length > limit;
   const conversations = hasMore ? rows.slice(0, limit) : rows;
 
-  return NextResponse.json({ conversations, pinnedIds, nextOffset: hasMore ? offset + limit! : null });
+  return NextResponse.json(
+    { conversations, pinnedIds: pins.value, nextOffset: hasMore ? offset + limit! : null },
+    {
+      headers: {
+        "Server-Timing": `auth;dur=${tAuth.toFixed(0)}, list;dur=${list.ms.toFixed(0)}, pins;dur=${pins.ms.toFixed(0)}, handler;dur=${(performance.now() - t0).toFixed(0)}`,
+      },
+    },
+  );
 }
 
 /**

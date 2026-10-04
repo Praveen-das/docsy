@@ -6,7 +6,7 @@ import {
   messages,
   pinnedConversations,
 } from "@/db/schema";
-import { eq, and, or, lt, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, lt, desc, asc, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import {
   getCached,
@@ -106,7 +106,16 @@ export async function listConversations(
   const pattern = term ? `%${term.replace(/[\\%_]/g, "\\$&")}%` : null;
 
   const query = db
-    .select()
+    .select({
+      id: conversations.id,
+      userId: conversations.userId,
+      title: conversations.title,
+      createdAt: conversations.createdAt,
+      updatedAt: conversations.updatedAt,
+      documentIds: sql<string[]>`coalesce((select json_agg(cd.document_id) from ${conversationDocuments} cd where cd.conversation_id = ${conversations.id}), '[]'::json)`,
+      lastMessageSnippet: sql<string | null>`(select left(m.content, 100) from ${messages} m where m.conversation_id = ${conversations.id} order by m.created_at desc limit 1)`,
+      messageCount: sql<number>`(select count(*)::int from ${messages} m where m.conversation_id = ${conversations.id})`,
+    })
     .from(conversations)
     .where(
       and(
@@ -128,45 +137,10 @@ export async function listConversations(
     .orderBy(...SORT_ORDER[sort])
     .$dynamic();
   const convs = await (limit ? query.limit(limit).offset(offset) : query);
-  if (convs.length === 0) return [];
 
-  const ids = convs.map((c) => c.id);
-  const [docLinks, lastMessages, counts] = await Promise.all([
-    db
-      .select({
-        conversationId: conversationDocuments.conversationId,
-        documentId: conversationDocuments.documentId,
-      })
-      .from(conversationDocuments)
-      .where(inArray(conversationDocuments.conversationId, ids)),
-    db
-      .selectDistinctOn([messages.conversationId], {
-        conversationId: messages.conversationId,
-        content: messages.content,
-      })
-      .from(messages)
-      .where(inArray(messages.conversationId, ids))
-      .orderBy(messages.conversationId, desc(messages.createdAt)),
-    db
-      .select({
-        conversationId: messages.conversationId,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(messages)
-      .where(inArray(messages.conversationId, ids))
-      .groupBy(messages.conversationId),
-  ]);
-
-  const lastById = new Map(lastMessages.map((m) => [m.conversationId, m.content]));
-  const countById = new Map(counts.map((c) => [c.conversationId, c.count]));
-
-  return convs.map((conv) => ({
-    id: conv.id,
-    userId: conv.userId,
-    title: conv.title,
-    documentIds: docLinks.filter((d) => d.conversationId === conv.id).map((d) => d.documentId),
-    lastMessageSnippet: lastById.get(conv.id)?.slice(0, 100),
-    messageCount: countById.get(conv.id) ?? 0,
+  return convs.map(({ lastMessageSnippet, ...conv }) => ({
+    ...conv,
+    lastMessageSnippet: lastMessageSnippet ?? undefined,
     createdAt: conv.createdAt.toISOString(),
     updatedAt: conv.updatedAt.toISOString(),
   }));
