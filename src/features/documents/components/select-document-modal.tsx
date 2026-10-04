@@ -7,6 +7,7 @@ import { useDocuments } from "../hooks/use-documents";
 import { useConversations } from "@/features/conversations/hooks/use-conversations";
 import { useDocumentSearch } from "../hooks/use-document-search";
 import { useUIStore } from "@/stores/ui-store";
+import { useConversationStore } from "@/stores/conversation-store";
 import { Search, Plus, X } from "lucide-react";
 import { GlowContainer } from "@/components/ui/glow-container";
 import { ModalBackdrop, useModalDismiss } from "@/components/ui/modal-backdrop";
@@ -69,6 +70,7 @@ export function SelectDocumentModal({
   } = useDocumentSearch(documents, conversations, searchQuery);
 
   const handleSelectDocument = (doc: Document) => {
+    useConversationStore.getState().setActiveConversation(null);
     if (onSelectDocument) {
       onSelectDocument(doc);
     } else {
@@ -78,6 +80,7 @@ export function SelectDocumentModal({
   };
 
   const handleSelectConversation = (conv: Conversation) => {
+    useConversationStore.getState().setActiveConversation(conv.id);
     const docId = conv.documentIds?.[0] || "";
     router.push(`/conversation?doc=${docId}&conv=${conv.id}`);
     effectiveOnClose();

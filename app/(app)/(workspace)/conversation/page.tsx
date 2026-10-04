@@ -8,6 +8,7 @@ import { ConversationLayout } from "@/features/conversations/components/conversa
 import { SelectDocumentModal } from "@/features/documents/components/select-document-modal";
 import { useUIStore } from "@/stores/ui-store";
 import { useDocumentStore } from "@/stores/document-store";
+import { useConversationStore } from "@/stores/conversation-store";
 import { FileText, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,8 +16,10 @@ function ConversationWorkspace() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const docId = searchParams.get("doc");
+  const convId = searchParams.get("conv");
 
   const markDocumentAsOpened = useDocumentStore((state) => state.markDocumentAsOpened);
+  const setActiveConversation = useConversationStore((state) => state.setActiveConversation);
 
   const [isViewerOpen, setIsViewerOpen] = useState(true);
   const [selectDocOpen, setSelectDocOpen] = useState(false);
@@ -26,7 +29,12 @@ function ConversationWorkspace() {
     if (docId) markDocumentAsOpened(docId);
   }, [docId, markDocumentAsOpened]);
 
+  useEffect(() => {
+    setActiveConversation(convId || null);
+  }, [convId, setActiveConversation]);
+
   const handleDocumentSelected = (doc: Document) => {
+    setActiveConversation(null);
     setSelectDocOpen(false);
     router.push(`/conversation?doc=${doc.id}`);
   };

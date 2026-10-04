@@ -529,7 +529,6 @@ export const useConversationStore = create<ConversationUIState>()(
       name: "docsy-conversations-v3",
       partialize: (state) => ({
         drafts: state.drafts,
-        activeConversationId: state.activeConversationId,
         streamTokens: state.streamTokens,
         activeStreams: state.activeStreams,
       }),

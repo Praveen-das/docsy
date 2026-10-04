@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, RefreshCw, Loader2 } from "lucide-react";
 import { Document } from "@/types";
+import { useConversationStore } from "@/stores/conversation-store";
 import { cn } from "@/lib/utils";
 
 export interface DocumentActionButtonProps {
@@ -27,7 +28,13 @@ export function DocumentActionButton({
 
   if (doc.status === "READY") {
     return (
-      <Link href={`/conversation?doc=${doc.id}`} onClick={() => onOpen?.(doc.id)}>
+      <Link
+        href={`/conversation?doc=${doc.id}`}
+        onClick={() => {
+          useConversationStore.getState().setActiveConversation(null);
+          onOpen?.(doc.id);
+        }}
+      >
         <button
           type="button"
           className={cn(

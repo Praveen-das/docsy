@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { addOptimisticDocument } from "@/features/documents/hooks/use-documents";
 import { documentApiService } from "@/features/documents/services/document-api.service";
+import { useConversationStore } from "@/stores/conversation-store";
 
 export type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -75,6 +76,7 @@ export function useDocumentUpload() {
         });
 
         setTimeout(() => {
+          useConversationStore.getState().setActiveConversation(null);
           router.push(`/conversation?doc=${docId}`);
         }, 1200);
       } catch (err) {

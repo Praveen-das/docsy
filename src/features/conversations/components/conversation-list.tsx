@@ -36,7 +36,7 @@ export function ConversationList({
 
   const conversations = propConversations ?? documentConversations;
 
-  const activeId = propActiveConversationId !== undefined ? propActiveConversationId : (urlConvId ?? storeActiveId);
+  const activeId = propActiveConversationId !== undefined ? propActiveConversationId : (urlConvId ?? null);
 
   const handleSelect = (convId: string) => {
     switchConversation(convId);

@@ -70,6 +70,7 @@ export default function HomePage() {
   const handleOpenDoc = (docId: string, isReal: boolean) => {
     if (isReal) {
       markDocumentAsOpened(docId);
+      setActiveConversation(null);
       router.push(`/conversation?doc=${docId}`);
     } else {
       openUpload();

@@ -110,8 +110,7 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   }, []);
 
   const urlConvId = searchParams?.get("conv");
-  const storeActiveId = useConversationStore((state) => state.activeConversationId);
-  const activeConversationId = urlConvId ?? storeActiveId;
+  const activeConversationId = urlConvId ?? null;
 
   const switchConversation = useConversationStore((state) => state.switchConversation);
   const { mutate: deleteConversation } = useDeleteConversation();

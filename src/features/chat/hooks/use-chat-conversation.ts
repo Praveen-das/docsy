@@ -23,8 +23,7 @@ export function useChatConversation({ documentId: propDocumentId }: UseChatConve
   const searchParams = useSearchParams();
 
   const urlConvId = searchParams?.get("conv") || "";
-  const storeActiveId = useConversationStore((state) => state.activeConversationId) || "";
-  const activeConvId = urlConvId || storeActiveId;
+  const activeConvId = urlConvId;
 
   const {
     regeneratingMessageId,
