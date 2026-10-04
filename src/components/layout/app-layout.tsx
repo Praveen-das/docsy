@@ -12,7 +12,7 @@ export interface AppLayoutProps {
 
 export function AppLayout({ children, isPro }: AppLayoutProps) {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#08090d] text-[#f4f4f5] transition-colors duration-150">
+    <div className="flex h-screen w-full overflow-hidden bg-(--background) text-(--foreground) transition-colors duration-150">
       {/* Desktop & Mobile Sidebar */}
       <Suspense fallback={<SidebarFallback />}>
         <Sidebar isPro={isPro} />

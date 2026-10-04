@@ -41,24 +41,24 @@ const variantItemStyles: Record<
   }
 > = {
   default: {
-    button: "text-[#8f9bb3] hover:bg-white/[0.05] hover:text-[#f8fafc]",
-    icon: "text-[#828ea7] group-hover:text-[#c7d2fe]",
-    chevron: "text-[#4a5268] group-hover:text-[#94a3b8]",
+    button: "text-zinc-700 dark:text-[#8f9bb3] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] hover:text-zinc-950 dark:hover:text-[#f8fafc]",
+    icon: "text-zinc-500 dark:text-[#828ea7] group-hover:text-indigo-600 dark:group-hover:text-[#c7d2fe]",
+    chevron: "text-zinc-400 dark:text-[#4a5268] group-hover:text-zinc-600 dark:group-hover:text-[#94a3b8]",
   },
   warning: {
-    button: "text-amber-300 hover:bg-amber-500/[0.08]",
-    icon: "text-amber-300",
-    chevron: "text-amber-400/40 group-hover:text-amber-300",
+    button: "text-amber-600 dark:text-amber-300 hover:bg-amber-500/[0.08]",
+    icon: "text-amber-600 dark:text-amber-300",
+    chevron: "text-amber-500/40 group-hover:text-amber-600 dark:group-hover:text-amber-300",
   },
   accent: {
-    button: "text-indigo-300 hover:bg-indigo-500/[0.08]",
-    icon: "text-indigo-300",
-    chevron: "text-indigo-400/40 group-hover:text-indigo-300",
+    button: "text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500/[0.08]",
+    icon: "text-indigo-600 dark:text-indigo-300",
+    chevron: "text-indigo-500/40 group-hover:text-indigo-600 dark:group-hover:text-indigo-300",
   },
   danger: {
-    button: "text-rose-400 hover:bg-rose-500/[0.08]",
-    icon: "text-rose-400",
-    chevron: "text-rose-400/40 group-hover:text-rose-300",
+    button: "text-rose-600 dark:text-rose-400 hover:bg-rose-500/[0.08]",
+    icon: "text-rose-600 dark:text-rose-400",
+    chevron: "text-rose-500/40 group-hover:text-rose-600 dark:group-hover:text-rose-300",
   },
 };
 

@@ -68,7 +68,9 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
     "border-0 border-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none ring-0 active:scale-[0.98]",
     "transition-colors duration-150",
     isCollapsed ? "h-8 w-8 justify-center rounded-xl mx-auto" : "h-8 w-full px-2.5 gap-2 rounded-xl",
-    isActive ? "text-[#f1f3f9]" : cn(NAV_MUTED_COLOR, "hover:text-[#d1d5e5] hover:bg-(--card-spotlight-mid)"),
+    isActive
+      ? "text-zinc-900 dark:text-[#f1f3f9] font-medium"
+      : "text-zinc-600 dark:text-(--sidebar-nav-muted) hover:text-zinc-900 dark:hover:text-[#d1d5e5] hover:bg-black/[0.04] dark:hover:bg-(--card-spotlight-mid)",
   );
 
   if (item.isSearch) {
@@ -118,8 +120,8 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
         className={cn(
           "w-4 h-4 shrink-0 transition-all duration-150 stroke-[1.8] relative z-10",
           isActive
-            ? "text-[#a3b8fc] drop-shadow-[0_0_6px_rgba(163,184,252,0.6)]"
-            : cn(NAV_MUTED_COLOR, "group-hover:text-[#c4cbdd]"),
+            ? "text-indigo-600 dark:text-[#a3b8fc] drop-shadow-[0_0_6px_rgba(99,102,241,0.3)] dark:drop-shadow-[0_0_6px_rgba(163,184,252,0.6)]"
+            : "text-zinc-500 dark:text-(--sidebar-nav-muted) group-hover:text-zinc-900 dark:group-hover:text-[#c4cbdd]",
         )}
       />
 
@@ -127,7 +129,9 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({
         <span
           className={cn(
             "truncate text-[12.5px] tracking-normal font-medium leading-none transition-colors duration-150 relative z-10",
-            isActive ? "text-[#f1f3f9]" : cn(NAV_MUTED_COLOR, "group-hover:text-[#d1d5e5]"),
+            isActive
+              ? "text-zinc-900 dark:text-[#f1f3f9]"
+              : "text-zinc-600 dark:text-(--sidebar-nav-muted) group-hover:text-zinc-900 dark:group-hover:text-[#d1d5e5]",
           )}
         >
           {item.label}

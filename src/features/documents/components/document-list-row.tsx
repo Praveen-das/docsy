@@ -48,13 +48,13 @@ export function DocumentListRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <span className="font-semibold text-white text-[13.5px] sm:text-sm truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
+            <span className="font-semibold text-zinc-900 dark:text-white text-[13.5px] sm:text-sm truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
               {doc.originalName}
             </span>
 
             {isProcessing && (
-              <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-amber-400 font-medium select-none">
-                <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin text-amber-400 shrink-0" />
+              <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium select-none">
+                <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Analyzing...</span>
               </span>
             )}
@@ -64,28 +64,28 @@ export function DocumentListRow({
             {doc.status === "FAILED" && <StatusBadge status="FAILED" error={doc.error} />}
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11.5px] sm:text-xs text-[#818ea8]">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11.5px] sm:text-xs text-zinc-500 dark:text-[#818ea8]">
             <span>{doc.pageCount || 1} pages</span>
-            <span className="text-[#525f7a]">•</span>
+            <span className="text-zinc-400 dark:text-[#525f7a]">•</span>
             <span>{fileSizeMb} MB</span>
-            <span className="text-[#525f7a]">•</span>
+            <span className="text-zinc-400 dark:text-[#525f7a]">•</span>
             <span>{formatDate(doc.createdAt)}</span>
           </div>
         </div>
       </div>
 
       {/* Bottom / Right: Favorite, Conversations Counter, Action Button, Delete Button */}
-      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto shrink-0 relative z-10 pt-2 sm:pt-0 border-t border-white/[0.04] sm:border-t-0">
+      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto shrink-0 relative z-10 pt-2 sm:pt-0 border-t border-black/[0.04] dark:border-white/[0.04] sm:border-t-0">
         <div className="flex items-center gap-1.5 sm:gap-2">
           {onToggleFavorite && (
             <button
               type="button"
               onClick={() => onToggleFavorite(doc.id)}
               className={cn(
-                "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-white/[0.08] transition-all cursor-pointer active:scale-90",
+                "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-black/[0.08] dark:border-white/[0.08] transition-all cursor-pointer active:scale-90",
                 isFavorite
-                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400 hover:text-amber-300 hover:bg-amber-500/25"
-                  : "bg-[#141824] text-[#818ea8] hover:text-white hover:border-white/15"
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-500 dark:text-amber-400 hover:bg-amber-500/25"
+                  : "bg-zinc-100 dark:bg-[#141824] text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white"
               )}
               title={isFavorite ? "Remove from favorites" : "Add to favorites"}
               aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -102,7 +102,7 @@ export function DocumentListRow({
           <button
             type="button"
             onClick={() => onOpenConversations(doc)}
-            className="flex items-center gap-1.5 h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl border border-white/[0.08] bg-[#141824] text-[11px] sm:text-xs text-[#818ea8] hover:text-white hover:border-white/15 transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-zinc-100 dark:bg-[#141824] text-[11px] sm:text-xs text-zinc-600 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer active:scale-95"
           >
             <MessageSquare className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span>

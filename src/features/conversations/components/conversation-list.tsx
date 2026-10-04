@@ -65,7 +65,7 @@ export function ConversationList({
       <div className="space-y-1.5 mx-2 pt-4 select-none">
         <div className="flex items-center justify-between px-2.5 text-[9.5px] font-bold tracking-widest text-zinc-500 uppercase">
           <span>CONVERSATIONS</span>
-          <div className="h-2.5 w-4 rounded-full bg-white/[0.05] animate-pulse" />
+          <div className="h-2.5 w-4 rounded-full bg-black/[0.05] dark:bg-white/[0.05] animate-pulse" />
         </div>
         <div className="space-y-1 pt-1">
           <RecentsRowSkeleton width="70%" />

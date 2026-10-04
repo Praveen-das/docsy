@@ -47,12 +47,12 @@ function ConversationWorkspace() {
         />
       ) : (
         /* Bare /conversation Empty Selection State */
-        <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center bg-[#08090d]">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-indigo-400 border border-white/10 mb-4 shadow-inner">
+        <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center bg-(--background) text-(--foreground)">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20 mb-4 shadow-sm">
             <FileText className="h-6 w-6" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Select a Document to Start</h2>
-          <p className="mt-2 max-w-md text-xs sm:text-sm text-zinc-400 leading-relaxed">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Select a Document to Start</h2>
+          <p className="mt-2 max-w-md text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
             Choose a document from your library to view its PDF pages and start an AI-grounded conversation.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

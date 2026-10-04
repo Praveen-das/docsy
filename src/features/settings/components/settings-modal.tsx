@@ -136,7 +136,7 @@ export function SettingsModal() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-modal-title"
-          className="relative z-10 w-full max-w-[860px] rounded-[24px] text-white shadow-2xl transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95 will-change-transform h-[580px] flex flex-row overflow-hidden"
+          className="relative z-10 w-full max-w-[860px] rounded-[24px] text-zinc-900 dark:text-white bg-white/95 dark:bg-(--tile-bg) shadow-2xl transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95 will-change-transform h-[580px] flex flex-row overflow-hidden border border-black/[0.08] dark:border-white/[0.08]"
         >
           {/* Left Navigation Sidebar */}
           <SettingsSidebar activeTab={activeTab} onTabChange={handleTabChange} />
@@ -144,8 +144,8 @@ export function SettingsModal() {
           {/* Right Main Content Area */}
           <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
             {/* Header Bar */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-white/[0.05] shrink-0">
-              <h2 id="settings-modal-title" className="text-base font-semibold text-white tracking-tight">
+            <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-black/[0.05] dark:border-white/[0.05] shrink-0">
+              <h2 id="settings-modal-title" className="text-base font-semibold text-zinc-900 dark:text-white tracking-tight">
                 {TAB_TITLES[activeTab]}
               </h2>
 
@@ -153,7 +153,7 @@ export function SettingsModal() {
                 type="button"
                 onClick={handleClose}
                 aria-label="Close dialog"
-                className="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/[0.06] hover:border-white/10 transition-colors cursor-pointer active:scale-95 will-change-transform"
+                className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white p-2 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors cursor-pointer active:scale-95 will-change-transform"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -170,35 +170,35 @@ export function SettingsModal() {
       {/* ------------------------------------------------------------- */}
       {/* MOBILE SCREEN (< sm): NOT A MODAL, FULL BLEED NATIVE VIEW     */}
       {/* ------------------------------------------------------------- */}
-      <div className="sm:hidden fixed inset-0 z-35 flex flex-col bg-[#08090d] text-white select-none">
+      <div className="sm:hidden fixed inset-0 z-35 flex flex-col bg-(--background) text-(--foreground) select-none">
         {/* Mobile Header Bar */}
-        <header className="flex items-center justify-between px-4 h-14 border-b border-white/[0.08] bg-[#08090d]/90 backdrop-blur-xl shrink-0 sticky top-0 z-20">
+        <header className="flex items-center justify-between px-4 h-14 border-b border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#08090d]/90 backdrop-blur-xl shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleClose}
               aria-label="Back"
-              className="flex items-center justify-center h-8.5 w-8.5 rounded-xl text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] active:scale-95 transition-all cursor-pointer"
+              className="flex items-center justify-center h-8.5 w-8.5 rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.04] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.06] active:scale-95 transition-all cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div>
-              <h1 className="text-sm font-semibold text-white tracking-tight leading-tight">Settings</h1>
-              <p className="text-[11px] text-zinc-400 font-medium leading-none mt-0.5">{TAB_TITLES[activeTab]}</p>
+              <h1 className="text-sm font-semibold text-zinc-900 dark:text-white tracking-tight leading-tight">Settings</h1>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium leading-none mt-0.5">{TAB_TITLES[activeTab]}</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={handleClose}
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-zinc-200 hover:text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] active:scale-95 transition-all cursor-pointer"
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white bg-black/[0.05] dark:bg-white/[0.06] hover:bg-black/[0.1] dark:hover:bg-white/[0.1] border border-black/[0.08] dark:border-white/[0.08] active:scale-95 transition-all cursor-pointer"
           >
             Done
           </button>
         </header>
 
         {/* Mobile Horizontal Category Tabs */}
-        <div className="w-full border-b border-white/[0.06] flex flex-row shrink-0 overflow-x-auto no-scrollbar py-2.5 px-3 gap-1.5 bg-[#08090d]/95 backdrop-blur-md sticky top-14 z-10">
+        <div className="w-full border-b border-black/[0.06] dark:border-white/[0.06] flex flex-row shrink-0 overflow-x-auto no-scrollbar py-2.5 px-3 gap-1.5 bg-white/95 dark:bg-[#08090d]/95 backdrop-blur-md sticky top-14 z-10">
           {TAB_GROUPS.map((group) => (
             <div key={group.category} className="flex gap-1.5 shrink-0">
               {group.items.map((item) => {
@@ -212,11 +212,11 @@ export function SettingsModal() {
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-[0.98]",
                       isActive
-                        ? "bg-indigo-500/20 text-white font-semibold border border-indigo-500/30"
-                        : "text-zinc-400 hover:text-zinc-200 hover:bg-(--card-spotlight-low) border border-white/[0.06]",
+                        ? "bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-700 dark:text-white font-semibold border border-indigo-500/30"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-black/[0.04] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.06]",
                     )}
                   >
-                    <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-indigo-400" : "text-zinc-400")} />
+                    <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-500 dark:text-zinc-400")} />
                     <span>{item.label}</span>
                   </button>
                 );

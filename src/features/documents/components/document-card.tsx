@@ -51,17 +51,17 @@ export function DocumentCard({
             <RedPdfBadge className="shrink-0" />
 
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-white text-[14px] truncate leading-snug group-hover:text-[#f8fafc] transition-colors">
+              <h3 className="font-semibold text-zinc-900 dark:text-white text-[14px] truncate leading-snug group-hover:text-black dark:group-hover:text-[#f8fafc] transition-colors">
                 {doc.originalName}
               </h3>
 
-              <div className="mt-1 text-[12px] text-[#818ea8] font-normal leading-tight">
+              <div className="mt-1 text-[12px] text-zinc-500 dark:text-[#818ea8] font-normal leading-tight">
                 <span>{doc.pageCount || 1} pages</span>
-                <span className="mx-1 text-[#525f7a]">•</span>
+                <span className="mx-1 text-zinc-400 dark:text-[#525f7a]">•</span>
                 <span>{fileSizeMb} MB</span>
               </div>
 
-              <div className="mt-0.5 text-[11.5px] text-[#6b7794] font-normal">
+              <div className="mt-0.5 text-[11.5px] text-zinc-400 dark:text-[#6b7794] font-normal">
                 Uploaded {formatRelativeTime(doc.createdAt)}
               </div>
             </div>
@@ -81,14 +81,14 @@ export function DocumentCard({
       </div>
 
       {/* Snippet / Status Description */}
-      <div className="mt-3 text-[12px] text-[#818ea8] line-clamp-2 leading-relaxed min-h-[36px]">
+      <div className="mt-3 text-[12px] text-zinc-500 dark:text-[#818ea8] line-clamp-2 leading-relaxed min-h-[36px]">
         {isProcessing ? (
-          <span className="inline-flex items-center gap-1.5 text-amber-400 font-medium">
+          <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
             <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
             <span>Analyzing document contents...</span>
           </span>
         ) : doc.status === "FAILED" ? (
-          <span className="text-rose-400 font-normal leading-snug">
+          <span className="text-rose-600 dark:text-rose-400 font-normal leading-snug">
             {doc.error || (
               <>
                 Upload failed: file not found in storage.
@@ -98,18 +98,18 @@ export function DocumentCard({
             )}
           </span>
         ) : (
-          <span className="text-[#818ea8]">
+          <span className="text-zinc-500 dark:text-[#818ea8]">
             Architecture overview, reference sections, and conversation insights...
           </span>
         )}
       </div>
 
       {/* Card Bottom: Conversation Counter & Action Button */}
-      <div className="mt-4 sm:mt-5 pt-3 sm:pt-3.5 border-t border-white/[0.06] flex items-center justify-between gap-2 relative z-10">
+      <div className="mt-4 sm:mt-5 pt-3 sm:pt-3.5 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between gap-2 relative z-10">
         <button
           type="button"
           onClick={() => onOpenConversations(doc)}
-          className="flex items-center gap-2 text-[12px] text-[#818ea8] hover:text-white transition-colors cursor-pointer select-none"
+          className="flex items-center gap-2 text-[12px] text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer select-none"
           title="View conversations"
         >
           <MessageSquare className="h-3.5 w-3.5 stroke-[1.8]" />

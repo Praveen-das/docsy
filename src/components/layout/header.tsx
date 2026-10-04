@@ -7,6 +7,7 @@ import { HeaderMobileNavToggle } from "./header-mobile-nav-toggle";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { cn } from "@/lib/utils";
 import { HeaderUserMenu } from "./header-user-menu";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export interface HeaderProps {
   title?: string;
@@ -50,8 +51,8 @@ export function Header({ className }: HeaderProps = {}) {
       </div>
 
       {/* Right Controls: Theme Switcher & User Profile Pill */}
-      <div className="flex items-center gap-2 sm:gap-6 shrink-0">
-        {/* <ThemeToggle variant="minimal" className="text-[#94a3b8] hover:text-white" /> */}
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {/* <ThemeToggle variant="minimal" className="text-zinc-500 hover:text-zinc-900 dark:text-[#94a3b8] dark:hover:text-white" /> */}
         <HeaderUserMenu />
       </div>
     </header>

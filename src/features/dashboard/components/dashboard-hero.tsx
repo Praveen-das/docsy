@@ -53,7 +53,7 @@ export function DashboardHero() {
           <div className="space-y-3">
             <Eyebrow>YOUR KNOWLEDGE. AMPLIFIED.</Eyebrow>
 
-            <h1 className="text-[46px] xl:text-[50px] font-extrabold tracking-tight text-white leading-[1.08]">
+            <h1 className="text-[46px] xl:text-[50px] font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.08]">
               Chat with <br />
               your{" "}
               <span className="bg-[linear-gradient(90deg,#e879f9_0%,#c084fc_35%,#818cf8_70%,#60a5fa_100%)] bg-clip-text text-transparent">
@@ -63,7 +63,7 @@ export function DashboardHero() {
           </div>
 
           {/* Subtitle */}
-          <p className="mt-4 text-[15px] text-slate-400 max-w-md leading-relaxed">
+          <p className="mt-4 text-[15px] text-zinc-600 dark:text-slate-400 max-w-md leading-relaxed">
             Upload a PDF, ask questions, get instant answers with citations. Turn your documents into insights.
           </p>
 
@@ -73,12 +73,12 @@ export function DashboardHero() {
               const Icon = feat.icon;
               return (
                 <div key={idx} className="flex items-center gap-3.5 text-left">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-(--tile-border) bg-(--tile-bg) text-slate-300 shadow-sm shadow-black/40">
-                    <Icon className="h-5 w-5 text-slate-300" strokeWidth={1.75} />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-(--tile-border) bg-(--tile-bg) text-zinc-700 dark:text-slate-300 shadow-sm shadow-black/5 dark:shadow-black/40">
+                    <Icon className="h-5 w-5 text-zinc-700 dark:text-slate-300" strokeWidth={1.75} />
                   </div>
                   <div>
-                    <div className="text-[13px] font-semibold text-slate-200 leading-tight">{feat.title}</div>
-                    <div className="text-[12px] text-slate-400 mt-0.5 leading-tight">{feat.subtitle}</div>
+                    <div className="text-[13px] font-semibold text-zinc-800 dark:text-slate-200 leading-tight">{feat.title}</div>
+                    <div className="text-[12px] text-zinc-500 dark:text-slate-400 mt-0.5 leading-tight">{feat.subtitle}</div>
                   </div>
                 </div>
               );
@@ -98,7 +98,7 @@ export function DashboardHero() {
         <div className="space-y-2">
           <Eyebrow>YOUR KNOWLEDGE. AMPLIFIED.</Eyebrow>
 
-          <h1 className="text-[32px] xs:text-[36px] sm:text-[40px] font-extrabold tracking-tight text-white leading-[1.12]">
+          <h1 className="text-[32px] xs:text-[36px] sm:text-[40px] font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.12]">
             Chat with <br />
             your{" "}
             <span className="bg-[linear-gradient(90deg,#e879f9_0%,#c084fc_35%,#818cf8_70%,#60a5fa_100%)] bg-clip-text text-transparent">
@@ -108,7 +108,7 @@ export function DashboardHero() {
         </div>
 
         {/* Subtitle */}
-        <p className="mt-3 sm:mt-4 text-[13px] xs:text-sm text-slate-400 max-w-lg leading-relaxed">
+        <p className="mt-3 sm:mt-4 text-[13px] xs:text-sm text-zinc-600 dark:text-slate-400 max-w-lg leading-relaxed">
           Upload a PDF, ask questions, get instant answers with citations. Turn your documents into insights.
         </p>
 

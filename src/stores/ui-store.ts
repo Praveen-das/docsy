@@ -7,10 +7,8 @@ export type ThemeMode = "dark" | "light" | "system";
 
 export function applyTheme(theme: ThemeMode) {
   if (typeof window === "undefined") return;
-  const isDark =
-    theme === "dark" ||
-    (theme === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  // Default to dark mode unless explicitly set to light
+  const isDark = theme !== "light";
 
   if (isDark) {
     document.documentElement.classList.add("dark");

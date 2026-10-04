@@ -76,19 +76,19 @@ export function ConversationsToolbar({
       <div className="flex sm:hidden flex-col gap-3 w-full">
         {/* Full-width Search Input */}
         <div className="relative flex items-center w-full">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#818ea8] stroke-[2] z-10" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 dark:text-[#818ea8] stroke-[2] z-10" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search conversations..."
-            className="h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c1017]/90 pl-10 pr-9 text-[13px] text-[#f1f5f9] placeholder:text-[#687593] shadow-inner backdrop-blur-md focus:border-indigo-500/50 focus:outline-none transition-all"
+            className="h-11 w-full rounded-2xl border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 pl-10 pr-9 text-[13px] text-zinc-900 dark:text-[#f1f5f9] placeholder:text-zinc-400 dark:placeholder:text-[#687593] shadow-inner backdrop-blur-md focus:border-indigo-500/50 focus:outline-none transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#818ea8] hover:text-white transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-500 hover:text-zinc-900 dark:text-[#818ea8] dark:hover:text-white transition-colors cursor-pointer"
               aria-label="Clear search"
             >
               <X className="h-3.5 w-3.5" />
@@ -145,14 +145,14 @@ export function ConversationsToolbar({
           <div className="relative flex items-center">
             {searchExpanded ? (
               <div className="relative flex items-center h-9 w-52 sm:w-60 lg:w-72 transition-all duration-200 animate-in fade-in zoom-in-95">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#818ea8] stroke-[2] z-10" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 dark:text-[#818ea8] stroke-[2] z-10" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search conversations..."
-                  className="h-9 w-full rounded-xl border border-white/[0.08] bg-[#0c1017]/90 pl-9 pr-8 text-xs text-[#f1f5f9] placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
+                  className="h-9 w-full rounded-xl border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 pl-9 pr-8 text-xs text-zinc-900 dark:text-[#f1f5f9] placeholder:text-zinc-400 dark:placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
                 />
                 <button
                   type="button"
@@ -160,7 +160,7 @@ export function ConversationsToolbar({
                     onSearchChange("");
                     handleToggleSearch(false);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#818ea8] hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-500 hover:text-zinc-900 dark:text-[#818ea8] dark:hover:text-white transition-colors cursor-pointer"
                   aria-label="Close search"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -171,8 +171,8 @@ export function ConversationsToolbar({
                 type="button"
                 onClick={() => handleToggleSearch(true)}
                 className={cn(
-                  "relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-[0.98] will-change-transform",
-                  searchQuery && "text-indigo-400 border-indigo-500/40 bg-indigo-500/10",
+                  "relative flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 text-zinc-600 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white hover:border-black/20 dark:hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-[0.98] will-change-transform",
+                  searchQuery && "text-indigo-600 dark:text-indigo-400 border-indigo-500/40 bg-indigo-500/10",
                 )}
                 title="Search conversations"
                 aria-label="Search conversations"

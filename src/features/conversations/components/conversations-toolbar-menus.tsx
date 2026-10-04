@@ -61,12 +61,12 @@ export function ConversationDocFilterMenu({
         }}
         className={cn(
           isMobile
-            ? "flex items-center gap-1.5 rounded-full text-xs font-medium px-3 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95 border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white"
-            : "flex items-center gap-1.5 h-9 px-3 rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-xs font-medium text-[#818ea8] hover:text-[#f1f3f9] hover:border-white/15 shadow-inner backdrop-blur-md transition-all cursor-pointer select-none active:scale-[0.98]",
+            ? "flex items-center gap-1.5 rounded-full text-xs font-medium px-3 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95 border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 text-zinc-700 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white"
+            : "flex items-center gap-1.5 h-9 px-3 rounded-xl border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 text-xs font-medium text-zinc-700 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-[#f1f3f9] hover:border-black/20 dark:hover:border-white/15 shadow-inner backdrop-blur-md transition-all cursor-pointer select-none active:scale-[0.98]",
           selectedDocFilter !== "all" &&
             (isMobile
-              ? "border-indigo-500/40 text-indigo-300 bg-indigo-500/10"
-              : "text-white border-white/20 bg-white/5"),
+              ? "border-indigo-500/40 text-indigo-600 dark:text-indigo-300 bg-indigo-500/10"
+              : "text-zinc-900 dark:text-white border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5"),
         )}
       >
         {isMobile && <FileText className="h-3 w-3 text-[#818ea8]" />}
@@ -141,10 +141,10 @@ export function ConversationSortMenu({
         }}
         className={cn(
           isMobile
-            ? "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95"
-            : "flex items-center gap-2 h-9 px-3 rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-xs font-medium text-[#f1f5f9] hover:text-white hover:border-white/15 shadow-inner backdrop-blur-md will-change-transform transition-all cursor-pointer select-none active:scale-[0.98]",
+            ? "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 text-zinc-700 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white hover:border-black/20 dark:hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95"
+            : "flex items-center gap-2 h-9 px-3 rounded-xl border border-black/10 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/90 text-xs font-medium text-zinc-800 dark:text-[#f1f5f9] hover:text-zinc-950 dark:hover:text-white hover:border-black/20 dark:hover:border-white/15 shadow-inner backdrop-blur-md will-change-transform transition-all cursor-pointer select-none active:scale-[0.98]",
           (isOpen || sortBy !== "newest") &&
-            (isMobile ? "border-indigo-500/40 text-indigo-400 bg-indigo-500/10" : ""),
+            (isMobile ? "border-indigo-500/40 text-indigo-600 dark:text-indigo-400 bg-indigo-500/10" : ""),
         )}
         title="Sort conversations"
         aria-label="Sort conversations"
@@ -158,9 +158,9 @@ export function ConversationSortMenu({
           </>
         ) : (
           <>
-            <span className="text-[12px] text-[#818ea8]">⇅</span>
+            <span className="text-[12px] text-zinc-400 dark:text-[#818ea8]">⇅</span>
             <span>{SORT_LABELS[sortBy]}</span>
-            <ChevronDown className="h-3 w-3 text-[#727f9d]" />
+            <ChevronDown className="h-3 w-3 text-zinc-400 dark:text-[#727f9d]" />
           </>
         )}
       </button>
@@ -184,7 +184,7 @@ export function ConversationViewSwitcher({
   onViewModeChange: (mode: "list" | "grid") => void;
 }) {
   return (
-    <div className="flex items-center h-9 rounded-xl bg-[#0c1017]/90 border border-white/[0.08] p-1 shadow-inner backdrop-blur-md will-change-transform">
+    <div className="flex items-center h-9 rounded-xl bg-white dark:bg-[#0c1017]/90 border border-black/10 dark:border-white/[0.08] p-1 shadow-inner backdrop-blur-md will-change-transform">
       <button
         type="button"
         onClick={() => onViewModeChange("list")}
@@ -192,7 +192,7 @@ export function ConversationViewSwitcher({
           "flex items-center justify-center h-7 w-7 rounded-lg transition-all cursor-pointer",
           viewMode === "list"
             ? "bg-indigo-600 text-white shadow-xs shadow-indigo-600/30"
-            : "text-[#818ea8] hover:text-white",
+            : "text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white",
         )}
         title="List view"
         aria-label="List view"
@@ -206,7 +206,7 @@ export function ConversationViewSwitcher({
           "flex items-center justify-center h-7 w-7 rounded-lg transition-all cursor-pointer",
           viewMode === "grid"
             ? "bg-indigo-600 text-white shadow-xs shadow-indigo-600/30"
-            : "text-[#818ea8] hover:text-white",
+            : "text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white",
         )}
         title="Grid view"
         aria-label="Grid view"

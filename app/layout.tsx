@@ -42,13 +42,14 @@ const themeScript = `
         theme = parsed.state.theme;
       }
     }
-    var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.style.colorScheme = 'dark';
-    } else {
+    // Default to dark mode unless user explicitly selected 'light'
+    var isDark = theme === 'dark' || (theme === 'system' ? true : false);
+    if (theme === 'light') {
       document.documentElement.classList.remove('dark');
       document.documentElement.style.colorScheme = 'light';
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
     }
   } catch (e) {
     document.documentElement.classList.add('dark');

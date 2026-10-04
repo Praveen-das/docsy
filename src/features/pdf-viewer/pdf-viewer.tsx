@@ -72,9 +72,9 @@ export function PdfViewer({ documents: propDocuments, activeDocumentId: propActi
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#0a0c14] border-l border-white/[0.06] select-none">
+    <div className="flex h-full w-full flex-col bg-zinc-100 dark:bg-[#0a0c14] border-l border-black/[0.06] dark:border-white/[0.06] select-none">
       {/* ─── TOP TAB BAR matching Image 2 ────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-[#08090d]">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#08090d]">
         <div className="flex items-center gap-1.5">
           {/* Tab: Document */}
           <button
@@ -83,8 +83,8 @@ export function PdfViewer({ documents: propDocuments, activeDocumentId: propActi
             className={cn(
               "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
               activeTab === "document"
-                ? "bg-[#141624] text-white border border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.15)]"
-                : "text-zinc-400 hover:text-white hover:bg-white/5",
+                ? "bg-zinc-200 dark:bg-[#141624] text-zinc-950 dark:text-white border border-black/10 dark:border-indigo-500/30 shadow-xs dark:shadow-[0_0_12px_rgba(99,102,241,0.15)]"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5",
             )}
           >
             Document
@@ -97,12 +97,12 @@ export function PdfViewer({ documents: propDocuments, activeDocumentId: propActi
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
               activeTab === "citations"
-                ? "bg-[#141624] text-white border border-indigo-500/30"
-                : "text-zinc-400 hover:text-white hover:bg-white/5",
+                ? "bg-zinc-200 dark:bg-[#141624] text-zinc-950 dark:text-white border border-black/10 dark:border-indigo-500/30"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5",
             )}
           >
             <span>Citations</span>
-            <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.2 text-[10px] font-mono text-indigo-300">3</span>
+            <span className="rounded-full bg-indigo-500/15 dark:bg-indigo-500/20 px-1.5 py-0.2 text-[10px] font-mono text-indigo-600 dark:text-indigo-300">3</span>
           </button>
 
           {/* Tab: Notes */}
@@ -112,8 +112,8 @@ export function PdfViewer({ documents: propDocuments, activeDocumentId: propActi
             className={cn(
               "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
               activeTab === "notes"
-                ? "bg-[#141624] text-white border border-indigo-500/30"
-                : "text-zinc-400 hover:text-white hover:bg-white/5",
+                ? "bg-zinc-200 dark:bg-[#141624] text-zinc-950 dark:text-white border border-black/10 dark:border-indigo-500/30"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5",
             )}
           >
             Notes
@@ -246,12 +246,12 @@ export function PdfViewer({ documents: propDocuments, activeDocumentId: propActi
         )}
 
         {/* ─── BOTTOM HORIZONTAL THUMBNAIL CAROUSEL matching Image 2 ── */}
-        <div className="shrink-0 border-t border-white/[0.06] bg-[#08090d] px-3 py-2.5 flex items-center justify-center gap-2 select-none">
+        <div className="shrink-0 border-t border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#08090d] px-3 py-2.5 flex items-center justify-center gap-2 select-none">
           <button
             type="button"
             onClick={handlePrevPage}
             disabled={currentPage <= 1}
-            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 disabled:opacity-30 cursor-pointer"
+            className="p-1 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-30 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>

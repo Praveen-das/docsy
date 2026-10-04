@@ -64,7 +64,7 @@ export function ChatView({ documentId, isViewerOpen = true, onToggleViewer }: Ch
 
   return (
     <ChatProvider value={chatContextValue}>
-      <div className="relative flex h-full flex-col bg-[#08090d] text-white">
+      <div className="relative flex h-full flex-col bg-(--background) text-(--foreground)">
         {/* Top Header matching Image 2 */}
         <ChatHeader
           conversationId={activeConvId || ""}
@@ -101,7 +101,7 @@ export function ChatView({ documentId, isViewerOpen = true, onToggleViewer }: Ch
           />
 
           {/* Floating Input Composer Bar matching Image 2 */}
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-[#08090d] via-[#08090d]/80 to-transparent pt-6">
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-[#08090d] dark:via-[#08090d]/80 pt-6">
             <div className="pointer-events-auto">
               <ChatComposer
                 inputText={inputText}

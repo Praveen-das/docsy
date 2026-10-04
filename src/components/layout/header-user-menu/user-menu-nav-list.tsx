@@ -30,13 +30,13 @@ export function UserMenuNavList({
             key={item.label}
             href={item.href}
             onClick={onSelect}
-            className="group flex min-h-[42px] sm:min-h-0 items-center justify-between rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-[#8f9bb3] transition-colors duration-150 hover:bg-(--card-spotlight-low) hover:text-[#f8fafc] active:scale-[0.98]"
+            className="group flex min-h-[42px] sm:min-h-0 items-center justify-between rounded-xl px-3 py-2.5 text-[13.5px] font-medium text-zinc-700 dark:text-[#8f9bb3] transition-colors duration-150 hover:bg-black/[0.04] dark:hover:bg-(--card-spotlight-low) hover:text-zinc-950 dark:hover:text-[#f8fafc] active:scale-[0.98]"
           >
             <div className="flex items-center gap-3.5">
-              <Icon className="h-[18px] w-[18px] text-[#828ea7] group-hover:text-[#c7d2fe] stroke-[1.85] transition-colors" />
+              <Icon className="h-[18px] w-[18px] text-zinc-500 dark:text-[#828ea7] group-hover:text-indigo-600 dark:group-hover:text-[#c7d2fe] stroke-[1.85] transition-colors" />
               <span className="tracking-normal">{item.label}</span>
             </div>
-            <ChevronRight className="h-4 w-4 text-[#4a5268] group-hover:text-[#94a3b8] transition-colors stroke-[2]" />
+            <ChevronRight className="h-4 w-4 text-zinc-400 dark:text-[#4a5268] group-hover:text-zinc-600 dark:group-hover:text-[#94a3b8] transition-colors stroke-[2]" />
           </Link>
         );
       })}

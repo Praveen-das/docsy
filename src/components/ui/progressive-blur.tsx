@@ -42,11 +42,9 @@ export function ProgressiveBlur({
     >
       {/* Underlying smooth optical gradient scrim - handles depth without expensive filters */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/80 via-white/40 to-transparent dark:from-[rgba(8,9,13,0.72)] dark:via-[rgba(8,9,13,0.45)] dark:to-transparent"
         style={{
           zIndex: 0,
-          background:
-            "linear-gradient(to bottom, rgba(8, 9, 13, 0.72) 0%, rgba(8, 9, 13, 0.45) 35%, rgba(8, 9, 13, 0.15) 68%, transparent 100%)",
         }}
       />
 

@@ -89,7 +89,7 @@ function OrbitPill({
           : "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
         willChange: isHovered ? "transform" : "auto",
       }}
-      className={`flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4.5 sm:py-2.5 rounded-full bg-[#0a0d17]/70 sm:bg-[#0a0d17]/40 border border-dashed border-white/[0.14] sm:border-white/[0.1] backdrop-blur-xl transition-all duration-200 cursor-pointer active:scale-95 group select-none shadow-sm shadow-black/40 ${className}`}
+      className={`flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4.5 sm:py-2.5 rounded-full bg-white/80 dark:bg-[#0a0d17]/40 border border-dashed border-black/10 dark:border-white/[0.1] backdrop-blur-xl transition-all duration-200 cursor-pointer active:scale-95 group select-none shadow-sm shadow-black/5 dark:shadow-black/40 ${className}`}
     >
       {/* Icon with soft ambient aura */}
       <div className="relative flex items-center justify-center shrink-0 w-4 h-4 sm:w-5 sm:h-5">
@@ -101,10 +101,10 @@ function OrbitPill({
 
       {/* Typography */}
       <div className="flex flex-col text-left pr-0.5">
-        <span className="text-[12px] sm:text-[13.5px] font-semibold text-white leading-tight tracking-[-0.01em]">
+        <span className="text-[12px] sm:text-[13.5px] font-semibold text-zinc-900 dark:text-white leading-tight tracking-[-0.01em]">
           {title}
         </span>
-        <span className="text-[10px] sm:text-[11.5px] text-slate-400 font-normal leading-tight mt-0.5 tracking-[-0.005em]">
+        <span className="text-[10px] sm:text-[11.5px] text-zinc-500 dark:text-slate-400 font-normal leading-tight mt-0.5 tracking-[-0.005em]">
           {subtitle}
         </span>
       </div>

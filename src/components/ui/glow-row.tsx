@@ -23,8 +23,8 @@ export const GlowRow = React.forwardRef<HTMLDivElement, GlowRowProps>(
         ref={ref}
         {...glowHandlers}
         className={cn(
-          "group relative flex items-center justify-between gap-4 rounded-2xl p-2.5 transition-[border-color,background-color] duration-200 cursor-pointer",
-          "border border-white/[0.06] hover:active-row-glow hover:border-indigo-400/35",
+          "group relative flex items-center justify-between gap-4 rounded-2xl p-2.5 transition-[border-color,background-color] duration-200 cursor-pointer bg-(--active-row-bg)",
+          "border border-black/[0.06] dark:border-white/[0.06] hover:active-row-glow hover:border-indigo-500/35 dark:hover:border-indigo-400/35",
           className,
         )}
         {...props}

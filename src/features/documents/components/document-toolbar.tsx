@@ -102,19 +102,19 @@ export function DocumentToolbar({
       <div className="flex sm:hidden flex-col gap-3 w-full">
         {/* Full-width Search Input */}
         <div className="relative flex items-center w-full">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#818ea8] stroke-[2] z-10" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 dark:text-[#818ea8] stroke-[2] z-10" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search documents..."
-            className="h-11 w-full rounded-2xl border border-white/[0.08] bg-[#0c1017]/90 pl-10 pr-9 text-[13px] text-[#f1f5f9] placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
+            className="h-11 w-full rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#0c1017]/90 pl-10 pr-9 text-[13px] text-zinc-900 dark:text-[#f1f5f9] placeholder:text-zinc-400 dark:placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#818ea8] hover:text-white transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-400 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
               aria-label="Clear search"
             >
               <X className="h-3.5 w-3.5" />
@@ -140,8 +140,8 @@ export function DocumentToolbar({
                 onToggleSort(!isSortOpen);
               }}
               className={cn(
-                "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95",
-                (isSortOpen || sortBy !== "newest") && "border-indigo-500/40 text-indigo-400 bg-indigo-500/10",
+                "relative flex h-8.5 w-8.5 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#0c1017]/90 text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white hover:border-black/15 dark:hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-95",
+                (isSortOpen || sortBy !== "newest") && "border-indigo-500/40 text-indigo-500 dark:text-indigo-400 bg-indigo-500/10",
               )}
               title="Sort options"
               aria-label="Sort options"
@@ -173,14 +173,14 @@ export function DocumentToolbar({
           <div className="relative flex items-center">
             {isSearchExpanded ? (
               <div className="relative flex items-center h-9 w-60 sm:w-72 transition-all duration-200 animate-in fade-in zoom-in-95">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#818ea8] stroke-[2] z-10" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 dark:text-[#818ea8] stroke-[2] z-10" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search documents..."
-                  className="h-9 w-full rounded-xl border border-white/[0.08] bg-[#0c1017]/90 pl-9 pr-8 text-xs text-[#f1f5f9] placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
+                  className="h-9 w-full rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#0c1017]/90 pl-9 pr-8 text-xs text-zinc-900 dark:text-[#f1f5f9] placeholder:text-zinc-400 dark:placeholder:text-[#687593] shadow-inner backdrop-blur-md will-change-transform focus:border-indigo-500/50 focus:outline-none transition-all"
                 />
                 <button
                   type="button"
@@ -188,7 +188,7 @@ export function DocumentToolbar({
                     onSearchChange("");
                     onToggleSearch(false);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#818ea8] hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-400 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                   aria-label="Close search"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -199,8 +199,8 @@ export function DocumentToolbar({
                 type="button"
                 onClick={() => onToggleSearch(true)}
                 className={cn(
-                  "relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-[0.98] will-change-transform",
-                  searchQuery && "text-indigo-400 border-indigo-500/40 bg-indigo-500/10",
+                  "relative flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#0c1017]/90 text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white hover:border-black/15 dark:hover:border-white/15 transition-all shadow-inner backdrop-blur-md cursor-pointer active:scale-[0.98] will-change-transform",
+                  searchQuery && "text-indigo-500 dark:text-indigo-400 border-indigo-500/40 bg-indigo-500/10",
                 )}
                 title="Search documents"
                 aria-label="Search documents"
@@ -221,10 +221,10 @@ export function DocumentToolbar({
                 e.stopPropagation();
                 onToggleSort(!isSortOpen);
               }}
-              className="flex items-center gap-2 h-9 px-3 rounded-xl border border-white/[0.08] bg-[#0c1017]/90 text-xs font-medium text-[#f1f5f9] hover:text-white hover:border-white/15 shadow-inner backdrop-blur-md will-change-transform transition-all cursor-pointer select-none active:scale-[0.98]"
+              className="flex items-center gap-2 h-9 px-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#0c1017]/90 text-xs font-medium text-zinc-800 dark:text-[#f1f5f9] hover:text-zinc-950 dark:hover:text-white hover:border-black/15 dark:hover:border-white/15 shadow-inner backdrop-blur-md will-change-transform transition-all cursor-pointer select-none active:scale-[0.98]"
             >
               <span>{SORT_LABELS[sortBy]}</span>
-              <span className="text-[9px] text-[#818ea8] transition-transform duration-150">▼</span>
+              <span className="text-[9px] text-zinc-400 dark:text-[#818ea8] transition-transform duration-150">▼</span>
             </button>
 
             <CompactMenu
@@ -237,15 +237,15 @@ export function DocumentToolbar({
           </div>
 
           {/* View Switcher Capsule (Grid vs List) */}
-          <div className="flex items-center h-9 rounded-xl bg-[#0c1017]/90 border border-white/[0.08] p-1 shadow-inner backdrop-blur-md will-change-transform">
+          <div className="flex items-center h-9 rounded-xl bg-white/90 dark:bg-[#0c1017]/90 border border-black/[0.08] dark:border-white/[0.08] p-1 shadow-inner backdrop-blur-md will-change-transform">
             <button
               type="button"
               onClick={() => onViewModeChange("grid")}
               className={cn(
                 "flex items-center justify-center h-7 w-7 rounded-lg transition-all cursor-pointer",
                 viewMode === "grid"
-                  ? "bg-white/10 text-white shadow-xs border border-white/10"
-                  : "text-[#818ea8] hover:text-white",
+                  ? "bg-zinc-200/80 dark:bg-white/10 text-zinc-900 dark:text-white shadow-xs border border-black/5 dark:border-white/10"
+                  : "text-zinc-400 dark:text-[#818ea8] hover:text-zinc-800 dark:hover:text-white",
               )}
               title="Grid view"
               aria-label="Grid view"
@@ -258,8 +258,8 @@ export function DocumentToolbar({
               className={cn(
                 "flex items-center justify-center h-7 w-7 rounded-lg transition-all cursor-pointer",
                 viewMode === "list"
-                  ? "bg-white/10 text-white shadow-xs border border-white/10"
-                  : "text-[#818ea8] hover:text-white",
+                  ? "bg-zinc-200/80 dark:bg-white/10 text-zinc-900 dark:text-white shadow-xs border border-black/5 dark:border-white/10"
+                  : "text-zinc-400 dark:text-[#818ea8] hover:text-zinc-800 dark:hover:text-white",
               )}
               title="List view"
               aria-label="List view"

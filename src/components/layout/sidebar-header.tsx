@@ -40,7 +40,7 @@ export function SidebarHeader({
             title="Docsy AI Home"
           >
             <DocsyIcon className="h-8 w-8 transition-transform duration-150 group-hover:scale-105" />
-            <span className="font-bold tracking-tight text-white text-[22px] font-sans">
+            <span className="font-bold tracking-tight text-zinc-900 dark:text-white text-[22px] font-sans">
               Docsy
             </span>
           </Link>
@@ -48,7 +48,7 @@ export function SidebarHeader({
           <div className="flex items-center gap-1">
             <button
               onClick={() => onToggleCollapse(true)}
-              className="hidden lg:flex rounded-lg p-1.5 text-zinc-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer active:scale-95 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+              className="hidden lg:flex rounded-lg p-1.5 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer active:scale-95 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >

@@ -69,10 +69,10 @@ export function ActiveDocumentBanner({ document, documentName, isCollapsed, isLo
 
           {/* Doc Title & Specs */}
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-white truncate" title={documentName}>
+            <p className="text-xs font-semibold text-zinc-900 dark:text-white truncate" title={documentName}>
               {documentName}
             </p>
-            <p className="text-[11px] text-zinc-400 truncate mt-0.5">{pageCount} pages</p>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{pageCount} pages</p>
           </div>
         </div>
       </div>

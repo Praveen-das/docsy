@@ -27,7 +27,7 @@ export const SidebarUpgradeCard = React.memo(function SidebarUpgradeCard({
   }
 
   return (
-    <div className="mt-auto rounded-[22px] border border-[#1e2336]/60 bg-(--surface-card) p-4.5 relative overflow-hidden shadow-lg shadow-black/30">
+    <div className="mt-auto rounded-[22px] border border-black/[0.08] dark:border-[#1e2336]/60 bg-zinc-50 dark:bg-(--surface-card) p-4.5 relative overflow-hidden shadow-sm dark:shadow-lg dark:shadow-black/30">
       {/* Subtle Ambient indigo/lavender glow consistent with the app theme */}
       <div
         aria-hidden="true"
@@ -40,15 +40,15 @@ export const SidebarUpgradeCard = React.memo(function SidebarUpgradeCard({
 
       {/* Glowing Lavender/Indigo Lightning Bolt Icon */}
       <div className="mb-3 relative z-10">
-        <Zap className="h-5 w-5 text-[#c7d2fe] fill-[#c7d2fe] drop-shadow-[0_0_10px_rgba(165,180,252,0.65)]" />
+        <Zap className="h-5 w-5 text-indigo-600 dark:text-[#c7d2fe] fill-indigo-600 dark:fill-[#c7d2fe] drop-shadow-[0_0_10px_rgba(99,102,241,0.4)] dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.65)]" />
       </div>
 
       <div className="relative z-10 space-y-1.5">
-        <h4 className="text-[14px] font-semibold text-[#f1f3f9] tracking-tight">Upgrade to Pro</h4>
+        <h4 className="text-[14px] font-semibold text-zinc-900 dark:text-[#f1f3f9] tracking-tight">Upgrade to Pro</h4>
 
         {/* Description & Circular Action Button side-by-side */}
         <div className="flex items-end justify-between gap-2 pt-0.5">
-          <div className="text-[11.5px] text-[#7d879d] font-normal leading-relaxed select-none space-y-0.5">
+          <div className="text-[11.5px] text-zinc-500 dark:text-[#7d879d] font-normal leading-relaxed select-none space-y-0.5">
             <p>More documents.</p>
             <p>Higher limits.</p>
             <p>Unlock more.</p>
@@ -57,7 +57,7 @@ export const SidebarUpgradeCard = React.memo(function SidebarUpgradeCard({
           <Link
             href="/settings"
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#141824] border border-white/[0.08] text-[#9aa4bc] hover:text-white hover:bg-[#1d2233] hover:border-white/15 transition-all cursor-pointer shadow-sm mb-0.5"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white dark:bg-[#141824] border border-black/10 dark:border-white/[0.08] text-zinc-700 dark:text-[#9aa4bc] hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#1d2233] hover:border-black/20 dark:hover:border-white/15 transition-all cursor-pointer shadow-sm mb-0.5"
             title="View Pro Plans"
           >
             <ArrowRight className="h-3.5 w-3.5" />

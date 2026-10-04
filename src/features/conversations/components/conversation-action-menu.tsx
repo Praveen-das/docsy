@@ -42,7 +42,7 @@ export function ConversationActionMenu({
             onOpenMenu();
           }
         }}
-        className="flex items-center justify-center h-8 w-8 rounded-lg text-[#525f7a] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+        className="flex items-center justify-center h-8 w-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-black/5 dark:text-[#525f7a] dark:hover:text-white dark:hover:bg-white/5 transition-colors cursor-pointer"
         aria-label="Options"
       >
         <MoreVertical className="h-4 w-4" />

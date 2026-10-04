@@ -45,17 +45,17 @@ export function HeaderSearchBar({ className }: HeaderSearchBarProps) {
           }
         }}
         aria-label="Search documents and conversations"
-        className="group relative flex h-9 sm:h-11 w-full items-center justify-between rounded-xl sm:rounded-2xl border border-(--tile-border) bg-(--tile-bg) px-3 sm:px-4 text-xs text-zinc-300 shadow-inner backdrop-blur-md will-change-transform transition-all hover:border-[#333d59] hover:bg-[#111424] cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-indigo-500/50"
+        className="group relative flex h-9 sm:h-11 w-full items-center justify-between rounded-xl sm:rounded-2xl border border-(--tile-border) bg-(--tile-bg) px-3 sm:px-4 text-xs text-zinc-700 dark:text-zinc-300 shadow-inner backdrop-blur-md will-change-transform transition-all hover:border-black/15 dark:hover:border-[#333d59] hover:bg-black/[0.03] dark:hover:bg-[#111424] cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-indigo-500/50"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#727f9d] group-hover:text-zinc-200 transition-colors shrink-0 stroke-[1.8]" />
-          <span className="truncate text-[#687593] group-hover:text-[#91a0c4] select-none text-[12px] sm:text-[13.5px] font-normal transition-colors">
+          <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-400 dark:text-[#727f9d] group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors shrink-0 stroke-[1.8]" />
+          <span className="truncate text-zinc-500 dark:text-[#687593] group-hover:text-zinc-800 dark:group-hover:text-[#91a0c4] select-none text-[12px] sm:text-[13.5px] font-normal transition-colors">
             <span className="hidden xs:inline">Search documents, conversations...</span>
             <span className="inline xs:hidden">Search...</span>
           </span>
         </div>
 
-        <kbd className="hidden sm:inline-flex items-center rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] font-sans tracking-wide text-[#727f9d] select-none shadow-2xs">
+        <kbd className="hidden sm:inline-flex items-center rounded-lg border border-black/[0.08] dark:border-white/[0.08] bg-black/[0.03] dark:bg-white/[0.03] px-2.5 py-1 text-[11px] font-sans tracking-wide text-zinc-500 dark:text-[#727f9d] select-none shadow-2xs">
           Ctrl K
         </kbd>
       </div>

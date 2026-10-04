@@ -24,10 +24,10 @@ export const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
         ref={ref}
         {...glowHandlers}
         className={cn(
-          "group relative isolate flex items-center justify-between rounded-[22px] border border-white/[0.07] bg-(--surface-card) px-5 py-4",
+          "group relative isolate flex items-center justify-between rounded-[22px] border border-black/[0.06] dark:border-white/[0.07] bg-(--surface-card) px-5 py-4",
           hasHoverEffect && "hover:active-card-glow",
           "interactive-tile",
-          "transition-[border-color,background-color,box-shadow] duration-200 cursor-pointer shadow-lg shadow-black/30",
+          "transition-[border-color,background-color,box-shadow] duration-200 cursor-pointer shadow-sm dark:shadow-lg dark:shadow-black/30",
           className,
         )}
         {...props}

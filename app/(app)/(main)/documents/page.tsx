@@ -155,12 +155,12 @@ export default function DocumentsPage() {
           )}
 
           {/* Bottom Empty / Pagination Status Box */}
-          <div className="rounded-[22px] border border-dashed border-white/[0.08] bg-[#0c1017]/40 p-6 sm:p-10 text-center select-none backdrop-blur-xs will-change-transform">
-            <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-[#727f9d] mb-2">
+          <div className="rounded-[22px] border border-dashed border-black/10 dark:border-white/[0.08] bg-black/[0.02] dark:bg-[#0c1017]/40 p-6 sm:p-10 text-center select-none backdrop-blur-xs will-change-transform">
+            <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 dark:text-[#727f9d] mb-2">
               <FileText className="h-5 w-5 stroke-[1.8]" />
             </div>
-            <h4 className="text-[13.5px] font-semibold text-[#f1f3f9]">No more documents</h4>
-            <p className="text-[12px] text-[#818ea8] mt-1 max-w-xs mx-auto">
+            <h4 className="text-[13.5px] font-semibold text-zinc-900 dark:text-[#f1f3f9]">No more documents</h4>
+            <p className="text-[12px] text-zinc-500 dark:text-[#818ea8] mt-1 max-w-xs mx-auto">
               Upload more PDFs to continue building your knowledge base.
             </p>
           </div>

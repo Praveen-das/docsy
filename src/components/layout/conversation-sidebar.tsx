@@ -56,7 +56,7 @@ export function ConversationSidebar({
       {/* Sidebar Container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#08090d] select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
+          "fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-white dark:bg-[#08090d] border-r border-black/[0.06] dark:border-transparent select-none lg:static lg:h-full lg:translate-x-0 shrink-0 overflow-hidden transition-colors duration-150",
           enableTransitions && "transition-[width] duration-200 ease-out",
           effectiveIsOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "w-16" : "w-64",

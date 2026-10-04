@@ -43,20 +43,20 @@ export function ChatComposer({ inputText, onInputChange, onSubmit, isLoading = f
               : "Ask anything about this document..."
           }
           rows={2}
-          className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm text-[#f1f5f9] placeholder:text-[#6b7794] focus:outline-none leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm text-zinc-900 dark:text-[#f1f5f9] placeholder:text-zinc-400 dark:placeholder:text-[#6b7794] focus:outline-none leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed"
         />
 
         {/* Bottom Control Bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/[0.07]">
+        <div className="flex items-center justify-between pt-2 border-t border-black/[0.06] dark:border-white/[0.07]">
           {isOffline ? (
-            <div className="flex items-center gap-1.5 text-[11px] text-amber-400/90 font-medium select-none">
+            <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400/90 font-medium select-none">
               <WifiOff className="h-3 w-3" />
               <span>Offline (Read-only transcripts)</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-[11px] text-[#6b7794] select-none">
+            <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-[#6b7794] select-none">
               <svg
-                className="h-3 w-3 text-indigo-400/60"
+                className="h-3 w-3 text-indigo-500/80 dark:text-indigo-400/60"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -73,8 +73,8 @@ export function ChatComposer({ inputText, onInputChange, onSubmit, isLoading = f
           {/* Right: Hint + Send Button */}
           <div className="flex items-center gap-3">
             {!isOffline && (
-              <span className="hidden sm:inline text-[11px] text-[#818ea8] font-sans select-none">
-                Press <kbd className="font-sans px-1 rounded bg-white/5 text-[#818ea8]">Enter</kbd> to send
+              <span className="hidden sm:inline text-[11px] text-zinc-400 dark:text-[#818ea8] font-sans select-none">
+                Press <kbd className="font-sans px-1 rounded bg-black/5 dark:bg-white/5 text-zinc-500 dark:text-[#818ea8]">Enter</kbd> to send
               </span>
             )}
 

@@ -37,7 +37,7 @@ export function ConversationGridCard({
               <MessageSquare className="h-3.5 w-3.5" />
             </div>
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <h4 className="font-semibold text-white text-[13.5px] truncate">{item.title}</h4>
+              <h4 className="font-semibold text-zinc-900 dark:text-white text-[13.5px] truncate">{item.title}</h4>
               {item.isPinned && <PinMarker />}
             </div>
           </div>
@@ -55,15 +55,15 @@ export function ConversationGridCard({
           />
         </div>
 
-        <p className="text-[12px] text-[#818ea8] line-clamp-2 leading-relaxed">{item.preview}</p>
+        <p className="text-[12px] text-zinc-600 dark:text-[#818ea8] line-clamp-2 leading-relaxed">{item.preview}</p>
       </div>
 
-      <div className="mt-3.5 sm:mt-4 pt-3 border-t border-white/[0.05] flex items-center justify-between text-xs text-[#6b7794]">
+      <div className="mt-3.5 sm:mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.05] flex items-center justify-between text-xs text-zinc-500 dark:text-[#6b7794]">
         <div className="flex items-center gap-1.5 truncate max-w-[180px]">
-          <span className="truncate text-[11.5px] text-[#818ea8]">{item.docName}</span>
+          <span className="truncate text-[11.5px] text-zinc-600 dark:text-[#818ea8]">{item.docName}</span>
         </div>
 
-        <span className="text-[11px] text-[#525f7a] shrink-0 whitespace-nowrap">{item.timeText}</span>
+        <span className="text-[11px] text-zinc-500 dark:text-[#525f7a] shrink-0 whitespace-nowrap">{item.timeText}</span>
       </div>
     </GlowCard>
   );

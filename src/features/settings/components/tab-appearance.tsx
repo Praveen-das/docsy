@@ -54,7 +54,7 @@ export function TabAppearance() {
                     "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
                     isSelected
                       ? "bg-indigo-500 text-white"
-                      : "bg-white/[0.05] text-zinc-400 border border-white/[0.06]",
+                      : "bg-black/[0.04] dark:bg-white/[0.05] text-zinc-600 dark:text-zinc-400 border border-black/[0.06] dark:border-white/[0.06]",
                   )}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -65,7 +65,7 @@ export function TabAppearance() {
                   </span>
                 )}
               </div>
-              <span className="text-[12.5px] font-semibold text-zinc-100">{opt.label}</span>
+              <span className="text-[12.5px] font-semibold text-zinc-900 dark:text-zinc-100">{opt.label}</span>
               <span className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{opt.description}</span>
             </button>
           );

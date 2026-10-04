@@ -96,15 +96,15 @@ export function SelectDocumentModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="search-modal-title"
-        className="w-full h-full max-w-xl rounded-[24px] sm:rounded-[28px] p-4 xs:p-5 sm:p-6 transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95"
+        className="w-full h-full max-w-xl rounded-[24px] sm:rounded-[28px] p-4 xs:p-5 sm:p-6 transition-all duration-150 ease-out transform animate-in fade-in zoom-in-95 bg-white/95 dark:bg-(--tile-bg) border border-black/[0.08] dark:border-white/[0.08] text-zinc-900 dark:text-white"
       >
         {/* Modal Header */}
-        <div className="flex items-start justify-between gap-3 pb-3.5 sm:pb-4 border-b border-white/[0.06] relative z-10">
+        <div className="flex items-start justify-between gap-3 pb-3.5 sm:pb-4 border-b border-black/[0.06] dark:border-white/[0.06] relative z-10">
           <div className="min-w-0 flex-1">
-            <h2 id="search-modal-title" className="text-base sm:text-lg font-semibold tracking-tight text-[#f1f3f9]">
+            <h2 id="search-modal-title" className="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-[#f1f3f9]">
               Search
             </h2>
-            <p className="text-xs sm:text-[13px] text-[#7d879d] mt-0.5 sm:mt-1 font-normal leading-relaxed">
+            <p className="text-xs sm:text-[13px] text-zinc-500 dark:text-[#7d879d] mt-0.5 sm:mt-1 font-normal leading-relaxed">
               Search across all your documents and conversation history.
             </p>
           </div>
@@ -113,7 +113,7 @@ export function SelectDocumentModal({
             type="button"
             onClick={effectiveOnClose}
             aria-label="Close dialog"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[#7d879d] hover:text-white hover:bg-white/5 transition-colors cursor-pointer active:scale-95"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer active:scale-95"
           >
             <X className="h-4 w-4" />
           </button>
@@ -123,20 +123,20 @@ export function SelectDocumentModal({
           {/* Search Input & Upload Action */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#727f9d] stroke-[1.8]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-400 dark:text-[#727f9d] stroke-[1.8]" />
               <input
                 ref={inputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search documents and conversations..."
-                className="w-full h-10 rounded-xl border border-(--tile-border) bg-(--tile-bg) pl-9 sm:pl-10 pr-8 text-xs sm:text-[13.5px] text-[#f1f3f9] placeholder-[#687593] transition-colors focus:border-indigo-400/40 focus:bg-[#141824]/90 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
+                className="w-full h-10 rounded-xl border border-black/[0.08] dark:border-(--tile-border) bg-black/[0.02] dark:bg-(--tile-bg) pl-9 sm:pl-10 pr-8 text-xs sm:text-[13.5px] text-zinc-900 dark:text-[#f1f3f9] placeholder:text-zinc-400 dark:placeholder-[#687593] transition-colors focus:border-indigo-400/40 focus:bg-white dark:focus:bg-[#141824]/90 focus:outline-none focus:ring-1 focus:ring-indigo-400/30"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#727f9d] hover:text-white transition-colors p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors p-1"
                   aria-label="Clear search"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -151,9 +151,9 @@ export function SelectDocumentModal({
                   effectiveOnClose();
                   effectiveOpenUpload();
                 }}
-                className="flex items-center gap-1.5 h-10 px-3 sm:px-3.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs sm:text-[13px] font-medium text-[#c5cbe0] hover:text-white hover:bg-white/[0.08] hover:border-white/15 transition-all active:scale-[0.98] shrink-0 cursor-pointer"
+                className="flex items-center gap-1.5 h-10 px-3 sm:px-3.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-black/[0.04] dark:bg-white/[0.04] text-xs sm:text-[13px] font-medium text-zinc-700 dark:text-[#c5cbe0] hover:text-zinc-950 dark:hover:text-white hover:bg-black/[0.08] dark:hover:bg-white/[0.08] transition-all active:scale-[0.98] shrink-0 cursor-pointer"
               >
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#8b95a8]" />
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 dark:text-[#8b95a8]" />
                 <span>Upload</span>
               </button>
             )}

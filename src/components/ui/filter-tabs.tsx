@@ -27,7 +27,7 @@ export function FilterTabs<T extends string = string>({
   return (
     <div
       className={cn(
-        "inline-flex items-center h-9 rounded-xl bg-[#0c1017]/90 border border-white/[0.08] p-1 shadow-inner backdrop-blur-md",
+        "inline-flex items-center h-9 rounded-xl bg-white/90 dark:bg-[#0c1017]/90 border border-black/[0.08] dark:border-white/[0.08] p-1 shadow-inner backdrop-blur-md",
         className,
       )}
       role="tablist"
@@ -38,17 +38,17 @@ export function FilterTabs<T extends string = string>({
         // Custom style mapping based on tab variant
         const activeStyles =
           option.variant === "warning"
-            ? "bg-amber-500/20 text-amber-300 shadow-xs border-amber-500/30"
+            ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 shadow-xs border-amber-500/30"
             : option.variant === "danger"
-              ? "bg-rose-500/20 text-rose-300 shadow-xs border-rose-500/30"
-              : "bg-[#6366f11a] text-white shadow-xs border-white/10";
+              ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 shadow-xs border-rose-500/30"
+              : "bg-indigo-500/15 text-indigo-700 dark:text-white shadow-xs border border-indigo-500/20 dark:border-white/10";
 
         const inactiveStyles =
           option.variant === "warning"
-            ? "text-amber-400/80 hover:text-amber-300 border-transparent hover:border-white/5"
+            ? "text-amber-600 dark:text-amber-400/80 hover:text-amber-700 dark:hover:text-amber-300 border-transparent"
             : option.variant === "danger"
-              ? "text-rose-400/80 hover:text-rose-300 border-transparent hover:border-white/5"
-              : "text-[#818ea8] hover:text-white border-transparent hover:border-white/5";
+              ? "text-rose-600 dark:text-rose-400/80 hover:text-rose-700 dark:hover:text-rose-300 border-transparent"
+              : "text-zinc-500 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white border-transparent";
 
         return (
           <button
@@ -95,8 +95,8 @@ export function FilterPills<T extends string = string>({
             className={cn(
               "rounded-full text-xs font-medium px-3.5 py-1.5 shrink-0 transition-all select-none cursor-pointer active:scale-95",
               isActive
-                ? "border border-indigo-500/50 bg-indigo-500/15 text-white shadow-[0_0_12px_rgba(99,102,241,0.25)]"
-                : "border border-white/[0.08] bg-[#0c1017]/90 text-[#818ea8] hover:text-white",
+                ? "border border-indigo-500/50 bg-indigo-500/15 text-indigo-700 dark:text-white shadow-[0_0_12px_rgba(99,102,241,0.18)]"
+                : "border border-black/[0.08] dark:border-white/[0.08] bg-white/90 dark:bg-[#0c1017]/90 text-zinc-600 dark:text-[#818ea8] hover:text-zinc-900 dark:hover:text-white",
             )}
           >
             {tab.label}

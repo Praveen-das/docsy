@@ -42,7 +42,7 @@ export function ChatHeader({
   };
 
   return (
-    <div className="border-b border-white/[0.06] bg-[#08090d]/90 backdrop-blur-md will-change-transform px-6 py-3.5 select-none shrink-0 space-y-2.5">
+    <div className="border-b border-black/[0.06] dark:border-white/[0.06] bg-white/90 dark:bg-[#08090d]/90 backdrop-blur-md will-change-transform px-6 py-3.5 select-none shrink-0 space-y-2.5">
       {/* Conversation Title & Subtitle matching Image 2 */}
       <div className="flex justify-between items-center pt-0.5">
         {isEditingTitle ? (
@@ -52,7 +52,7 @@ export function ChatHeader({
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               autoFocus
-              className="text-base sm:text-lg font-bold text-white bg-[#141624] border border-indigo-500/40 rounded-lg px-2 py-0.5 focus:outline-none"
+              className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-[#141624] border border-indigo-500/40 rounded-lg px-2 py-0.5 focus:outline-none"
             />
             <button type="submit" className="p-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">
               <Check className="h-3.5 w-3.5" />
@@ -60,7 +60,7 @@ export function ChatHeader({
           </form>
         ) : (
           <div className="flex items-center gap-2 group/title">
-            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white">
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
               {conversationTitle || "Summarize the key findings"}
             </h2>
             <button
@@ -69,7 +69,7 @@ export function ChatHeader({
                 setIsEditingTitle(true);
                 setEditedTitle(conversationTitle);
               }}
-              className="opacity-0 group-hover/title:opacity-100 text-zinc-400 hover:text-white transition-opacity p-0.5 cursor-pointer"
+              className="opacity-0 group-hover/title:opacity-100 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-opacity p-0.5 cursor-pointer"
               title="Edit title"
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -81,7 +81,7 @@ export function ChatHeader({
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/8 transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-black/5 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/8 transition-colors cursor-pointer"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>

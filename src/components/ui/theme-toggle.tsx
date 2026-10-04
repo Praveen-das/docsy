@@ -10,7 +10,7 @@ export interface ThemeToggleProps {
   variant?: "segmented" | "minimal";
 }
 
-function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
+export function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
   const [mounted, setMounted] = useState(false);
@@ -22,7 +22,7 @@ function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
   const currentTheme = mounted ? theme : "dark";
 
   if (variant === "minimal") {
-    const isDark = currentTheme === "dark" || (currentTheme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const isDark = currentTheme !== "light";
 
     return (
       <button
@@ -30,12 +30,16 @@ function ThemeToggle({ className, variant = "segmented" }: ThemeToggleProps) {
         onClick={() => setTheme(isDark ? "light" : "dark")}
         title={isDark ? "Switch to light mode" : "Switch to dark mode"}
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer select-none",
+          "flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer select-none",
           className
         )}
         aria-label="Toggle theme"
       >
-        <Sun className="h-[18px] w-[18px] transition-transform duration-200 hover:rotate-45" strokeWidth={1.75} />
+        {isDark ? (
+          <Sun className="h-[18px] w-[18px] transition-transform duration-200 hover:rotate-45" strokeWidth={1.75} />
+        ) : (
+          <Moon className="h-[18px] w-[18px] transition-transform duration-200 hover:-rotate-12" strokeWidth={1.75} />
+        )}
       </button>
     );
   }

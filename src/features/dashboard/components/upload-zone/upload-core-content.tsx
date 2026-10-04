@@ -41,12 +41,12 @@ export function UploadCoreContent({
           <UploadDocIcon isHovered={isHovered} isDragging={isDragging} />
 
           {/* 2. Primary Heading */}
-          <h2 className="mt-2.5 sm:mt-3.5 text-lg sm:text-[21px] font-bold tracking-tight text-white leading-tight">
+          <h2 className="mt-2.5 sm:mt-3.5 text-lg sm:text-[21px] font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
             {isDragging ? "Drop your PDF here" : "Add a document"}
           </h2>
 
           {/* 3. Supporting Text */}
-          <p className="mt-1 text-xs sm:text-[13px] text-zinc-400 font-normal leading-normal">
+          <p className="mt-1 text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-400 font-normal leading-normal">
             {isDragging ? "Release to start processing" : "Drop a PDF here, or click to upload"}
           </p>
 
@@ -67,7 +67,7 @@ export function UploadCoreContent({
           </div>
 
           {/* 5. Small Supporting Metadata */}
-          <p className="mt-2 sm:mt-3 text-[11px] sm:text-xs text-zinc-400/80 font-normal tracking-wide">
+          <p className="mt-2 sm:mt-3 text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400/80 font-normal tracking-wide">
             Supports PDF · Max 10MB
           </p>
         </>

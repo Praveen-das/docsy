@@ -26,7 +26,7 @@ export function MobileHeroUploadCard() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`group/card relative w-full rounded-[22px] border transition-all duration-300 overflow-hidden p-4 xs:p-5 select-none ${"border-white/[0.08] bg-(--tile-bg) hover:border-white/[0.14] shadow-lg shadow-black/40"}`}
+      className={`group/card relative w-full rounded-[22px] border transition-all duration-300 overflow-hidden p-4 xs:p-5 select-none ${"border-black/[0.08] dark:border-white/[0.08] bg-white/70 dark:bg-(--tile-bg) hover:border-black/[0.15] dark:hover:border-white/[0.14] shadow-sm dark:shadow-lg dark:shadow-black/40"}`}
     >
       {/* Specular hairline light reflection along top border */}
       <div
@@ -66,14 +66,14 @@ export function MobileHeroUploadCard() {
             className="flex items-center gap-3.5 mb-4 cursor-pointer group/row text-left select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 rounded-xl active:scale-[0.99] transition-transform duration-150"
           >
             {/* Document Icon Container with glowing aura */}
-            <div className="relative h-12 w-12 xs:h-13 xs:w-13 rounded-2xl bg-indigo-500/[0.07] border border-white/[0.09] flex items-center justify-center shrink-0 shadow-inner group-hover/row:border-indigo-400/40 group-hover/row:bg-indigo-500/[0.12] group-hover/row:shadow-[0_0_20px_rgba(99,102,241,0.25)] transition-all duration-200">
+            <div className="relative h-12 w-12 xs:h-13 xs:w-13 rounded-2xl bg-indigo-500/[0.07] border border-black/10 dark:border-white/[0.09] flex items-center justify-center shrink-0 shadow-inner group-hover/row:border-indigo-400/40 group-hover/row:bg-indigo-500/[0.12] group-hover/row:shadow-[0_0_20px_rgba(99,102,241,0.25)] transition-all duration-200">
               <svg
                 width="22"
                 height="26"
                 viewBox="0 0 24 28"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-indigo-400 drop-shadow-[0_0_10px_rgba(167,139,250,0.55)] transition-transform duration-200 group-hover/row:scale-105"
+                className="text-indigo-500 dark:text-indigo-400 drop-shadow-[0_0_10px_rgba(99,102,241,0.3)] dark:drop-shadow-[0_0_10px_rgba(167,139,250,0.55)] transition-transform duration-200 group-hover/row:scale-105"
               >
                 <path
                   d="M 4 2 L 15 2 L 21 8 L 21 24 C 21 25.1 20.1 26 19 26 L 4 26 C 2.9 26 2 25.1 2 24 L 2 4 C 2 2.9 2.9 2 4 2 Z"
@@ -95,16 +95,16 @@ export function MobileHeroUploadCard() {
 
             {/* Text labels */}
             <div className="flex flex-col min-w-0 flex-1">
-              <h2 className="text-[14.5px] xs:text-[15px] font-semibold text-white tracking-tight group-hover/row:text-indigo-200 transition-colors leading-snug">
+              <h2 className="text-[14.5px] xs:text-[15px] font-semibold text-zinc-900 dark:text-white tracking-tight group-hover/row:text-indigo-600 dark:group-hover/row:text-indigo-200 transition-colors leading-snug">
                 {isDragging ? "Drop your PDF here" : "Add a document"}
               </h2>
-              <p className="text-[12px] text-slate-400 mt-0.5 leading-snug truncate">
+              <p className="text-[12px] text-zinc-600 dark:text-slate-400 mt-0.5 leading-snug truncate">
                 {isDragging ? "Release to start uploading" : "Click to upload a PDF from your device."}
               </p>
             </div>
 
             {/* Chevron Right with subtle hover translation */}
-            <ChevronRight className="h-4 w-4 xs:h-4.5 xs:w-4.5 text-slate-500 group-hover/row:text-slate-300 group-hover/row:translate-x-0.5 transition-all ml-auto shrink-0" />
+            <ChevronRight className="h-4 w-4 xs:h-4.5 xs:w-4.5 text-zinc-400 dark:text-slate-500 group-hover/row:text-zinc-600 dark:group-hover/row:text-slate-300 group-hover/row:translate-x-0.5 transition-all ml-auto shrink-0" />
           </div>
 
           {/* Action Button: Full-width vibrant pill with specular edge and shadow */}

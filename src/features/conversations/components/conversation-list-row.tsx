@@ -55,8 +55,8 @@ export function ConversationListRow({
           className={cn(
             "flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl transition-colors",
             isSelected
-              ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25"
-              : "bg-white/[0.03] text-[#727f9d] border border-white/[0.05] group-hover:text-white",
+              ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25"
+              : "bg-black/[0.04] dark:bg-white/[0.03] text-zinc-500 dark:text-[#727f9d] border border-black/[0.06] dark:border-white/[0.05] group-hover:text-zinc-900 dark:group-hover:text-white",
           )}
         >
           <MessageSquare className="h-4 w-4 stroke-[1.8]" />
@@ -65,14 +65,14 @@ export function ConversationListRow({
         {/* Text Details */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="text-[13px] sm:text-[13.5px] font-semibold text-[#f1f3f9] truncate group-hover:text-white transition-colors">
+            <span className="text-[13px] sm:text-[13.5px] font-semibold text-zinc-900 dark:text-[#f1f3f9] truncate group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
               {item.title}
             </span>
 
             {item.isPinned && <PinMarker />}
           </div>
 
-          <p className="text-[11.5px] sm:text-[12px] text-[#727f9d] truncate mt-0.5 font-normal leading-normal">
+          <p className="text-[11.5px] sm:text-[12px] text-zinc-600 dark:text-[#727f9d] truncate mt-0.5 font-normal leading-normal">
             {item.preview}
           </p>
         </div>
@@ -81,12 +81,12 @@ export function ConversationListRow({
       {/* Right Section: Linked PDF Badge Pill (md+) + Relative Time + 3 Dots Options */}
       <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0 z-10">
         {/* Document Badge Pill - hidden on phones */}
-        <div className="hidden md:flex justify-center items-center gap-2 px-2.5 py-1 rounded-xl border border-white/[0.06] bg-white/[0.02] max-w-[160px] lg:max-w-[220px]">
-          <span className="text-[11.5px] text-[#818ea8] truncate font-normal">{item.docName}</span>
+        <div className="hidden md:flex justify-center items-center gap-2 px-2.5 py-1 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] max-w-[160px] lg:max-w-[220px]">
+          <span className="text-[11.5px] text-zinc-600 dark:text-[#818ea8] truncate font-normal">{item.docName}</span>
         </div>
 
         {/* Relative Timestamp */}
-        <span className="text-[11px] sm:text-[12px] text-[#525f7a] whitespace-nowrap text-right font-normal">
+        <span className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-[#525f7a] whitespace-nowrap text-right font-normal">
           {item.timeText}
         </span>
 

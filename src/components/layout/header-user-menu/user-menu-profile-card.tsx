@@ -36,12 +36,12 @@ export function UserMenuProfileCard({
 
       {/* User Meta Info */}
       <div className="min-w-0 flex-1">
-        <h4 className="text-[15px] font-semibold text-[#f1f3f9] truncate tracking-tight leading-tight drop-shadow-xs">
+        <h4 className="text-[15px] font-semibold text-zinc-900 dark:text-[#f1f3f9] truncate tracking-tight leading-tight">
           {displayName}
         </h4>
-        <p className="text-[12.5px] text-[#8e98b0] truncate mt-0.5 font-normal">{userEmail}</p>
+        <p className="text-[12.5px] text-zinc-500 dark:text-[#8e98b0] truncate mt-0.5 font-normal">{userEmail}</p>
         <div className="mt-2 flex items-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-medium text-[#b8c5e6]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-medium text-indigo-700 dark:text-[#b8c5e6]">
             {planName}
           </span>
         </div>

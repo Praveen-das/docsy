@@ -36,14 +36,7 @@ export function DocsyIcon({ className }: { className?: string }) {
     >
       <defs>
         {/* Main Ribbon Gradient */}
-        <linearGradient
-          id={`docsyGrad-${uid}`}
-          x1="4"
-          y1="4"
-          x2="32"
-          y2="32"
-          gradientUnits="userSpaceOnUse"
-        >
+        <linearGradient id={`docsyGrad-${uid}`} x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#818cf8" />
           <stop offset="40%" stopColor="#6366f1" />
           <stop offset="85%" stopColor="#4f46e5" />
@@ -51,65 +44,29 @@ export function DocsyIcon({ className }: { className?: string }) {
         </linearGradient>
 
         {/* Ambient Glow Gradient */}
-        <radialGradient
-          id={`docsyGlow-${uid}`}
-          cx="18"
-          cy="18"
-          r="16"
-          gradientUnits="userSpaceOnUse"
-        >
+        <radialGradient id={`docsyGlow-${uid}`} cx="18" cy="18" r="16" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
         </radialGradient>
 
         {/* Top Fold Glass Sheen */}
-        <linearGradient
-          id={`docsySheen-${uid}`}
-          x1="6"
-          y1="4"
-          x2="28"
-          y2="16"
-          gradientUnits="userSpaceOnUse"
-        >
+        <linearGradient id={`docsySheen-${uid}`} x1="6" y1="4" x2="28" y2="16" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
           <stop offset="50%" stopColor="#ffffff" stopOpacity="0.1" />
           <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
 
         {/* Inner Arc Overlay */}
-        <linearGradient
-          id={`docsyInnerArc-${uid}`}
-          x1="14"
-          y1="10"
-          x2="26"
-          y2="24"
-          gradientUnits="userSpaceOnUse"
-        >
+        <linearGradient id={`docsyInnerArc-${uid}`} x1="14" y1="10" x2="26" y2="24" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#38bdf8" />
           <stop offset="100%" stopColor="#a855f7" />
         </linearGradient>
 
         {/* Drop Shadow Filter */}
-        <filter
-          id={`docsyShadow-${uid}`}
-          x="-20%"
-          y="-20%"
-          width="140%"
-          height="140%"
-          filterUnits="userSpaceOnUse"
-        >
-          <feDropShadow
-            dx="0"
-            dy="2"
-            stdDeviation="3"
-            floodColor="#4f46e5"
-            floodOpacity="0.45"
-          />
+        <filter id={`docsyShadow-${uid}`} x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#4f46e5" floodOpacity="0.45" />
         </filter>
       </defs>
-
-      {/* Atmospheric Backglow */}
-      <circle cx="18" cy="18" r="16" fill={`url(#docsyGlow-${uid})`} />
 
       {/* Primary Dimensional D Mark */}
       <g filter={`url(#docsyShadow-${uid})`}>
@@ -139,13 +96,7 @@ export function DocsyIcon({ className }: { className?: string }) {
         />
 
         {/* Document Fold Micro-Prism (Representing Paper & Intelligence) */}
-        <path
-          d="M19 4L32 17"
-          stroke="#ffffff"
-          strokeOpacity="0.25"
-          strokeWidth="1"
-          strokeLinecap="round"
-        />
+        <path d="M19 4L32 17" stroke="#ffffff" strokeOpacity="0.25" strokeWidth="1" strokeLinecap="round" />
 
         {/* Core Intelligence Spark / Node */}
         <circle cx="18" cy="17" r="2.2" fill="#ffffff" />
@@ -156,30 +107,16 @@ export function DocsyIcon({ className }: { className?: string }) {
 }
 
 export const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
-  (
-    {
-      size = "md",
-      iconOnly = false,
-      className,
-      iconClassName,
-      textClassName,
-      ...props
-    },
-    ref
-  ) => {
+  ({ size = "md", iconOnly = false, className, iconClassName, textClassName, ...props }, ref) => {
     const config = sizeConfig[size];
 
     return (
-      <div
-        ref={ref}
-        className={cn("flex items-center select-none group", config.gap, className)}
-        {...props}
-      >
+      <div ref={ref} className={cn("flex items-center select-none group", config.gap, className)} {...props}>
         <DocsyIcon
           className={cn(
             config.icon,
             "transition-all duration-200 group-hover:scale-105 group-hover:drop-shadow-[0_0_12px_rgba(99,102,241,0.6)]",
-            iconClassName
+            iconClassName,
           )}
         />
 
@@ -188,7 +125,7 @@ export const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
             className={cn(
               "font-bold tracking-tight text-zinc-900 dark:text-white font-sans flex items-center",
               config.text,
-              textClassName
+              textClassName,
             )}
           >
             Docsy
@@ -196,7 +133,7 @@ export const Logo = React.forwardRef<HTMLDivElement, LogoProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Logo.displayName = "Logo";

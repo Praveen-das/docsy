@@ -40,8 +40,8 @@ export const RecentsRow = React.memo(function RecentsRow({
       className={cn(
         "group relative flex items-center justify-between gap-2 rounded-xl px-2.5 h-8 text-xs select-none cursor-pointer shrink-0 active:scale-[0.98] transition-colors duration-150",
         isActive || isHovered
-          ? "bg-(--card-spotlight-mid) text-white "
-          : "text-zinc-400 hover:text-zinc-200 hover:bg-(--card-spotlight-low)",
+          ? "bg-black/[0.05] dark:bg-(--card-spotlight-mid) text-zinc-900 dark:text-white"
+          : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-black/[0.03] dark:hover:bg-(--card-spotlight-low)",
       )}
     >
       {/* Conversation Title & Left Icon */}
@@ -49,7 +49,9 @@ export const RecentsRow = React.memo(function RecentsRow({
         <span
           className={cn(
             "truncate text-[12.5px] leading-none",
-            isActive || isHovered ? "text-white" : "font-normal text-zinc-300 group-hover:text-white",
+            isActive || isHovered
+              ? "text-zinc-900 dark:text-white font-medium"
+              : "font-normal text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white",
           )}
           title={conversation.title}
         >
@@ -152,9 +154,9 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
     }
 
     return (
-      <div className="flex-1 min-h-0 flex flex-col mx-2 pt-4 pb-4 border-t border-white/[0.06] select-none overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col mx-2 pt-4 pb-4 border-t border-black/[0.06] dark:border-white/[0.06] select-none overflow-hidden">
         <div className="flex items-center justify-between px-2.5 pb-3 text-[10px] font-bold tracking-widest text-zinc-500 uppercase shrink-0">
-          <span className="flex items-center gap-1.5 text-zinc-400">RECENT CONVERSATIONS</span>
+          <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">RECENT CONVERSATIONS</span>
         </div>
         <div className="space-y-1 px-0.5 py-1">
           <RecentsRowSkeleton width="75%" />
@@ -221,10 +223,10 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col mx-2 pt-4 pb-4 border-t border-white/[0.06] select-none overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col mx-2 pt-4 pb-4 border-t border-black/[0.06] dark:border-white/[0.06] select-none overflow-hidden">
       {/* Header with Title and "View all" link matching Docsy typography */}
       <div className="flex items-center justify-between px-2.5 pb-3 text-[10px] font-bold tracking-widest text-zinc-500 uppercase shrink-0">
-        <span className="flex items-center gap-1.5 text-zinc-400">RECENT CONVERSATIONS</span>
+        <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">RECENT CONVERSATIONS</span>
       </div>
 
       {/* Recents Scrollable List */}
@@ -235,16 +237,16 @@ export function SidebarRecents({ isCollapsed, onClose }: SidebarRecentsProps) {
             fetchNextPage();
           }
         }}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-0.5 space-y-1 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.08)_transparent] hover:[scrollbar-color:rgba(255,255,255,0.18)_transparent]"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-0.5 space-y-1 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.1)_transparent] dark:[scrollbar-color:rgba(255,255,255,0.08)_transparent] hover:[scrollbar-color:rgba(0,0,0,0.2)_transparent] dark:hover:[scrollbar-color:rgba(255,255,255,0.18)_transparent]"
       >
         {sortedConversations.length === 0 ? (
-          <div className="px-3 py-4 rounded-2xl bg-[#0c1017]/50 border border-white/[0.05] text-center my-1">
-            <MessageSquare className="h-4 w-4 text-zinc-600 mx-auto mb-1.5" />
-            <p className="text-[12px] font-medium text-zinc-400">No conversations yet</p>
+          <div className="px-3 py-4 rounded-2xl bg-black/[0.03] dark:bg-[#0c1017]/50 border border-black/[0.06] dark:border-white/[0.05] text-center my-1">
+            <MessageSquare className="h-4 w-4 text-zinc-500 dark:text-zinc-600 mx-auto mb-1.5" />
+            <p className="text-[12px] font-medium text-zinc-600 dark:text-zinc-400">No conversations yet</p>
             <Link
               href="/conversation"
               onClick={onClose}
-              className="inline-block mt-2 text-[11.5px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="inline-block mt-2 text-[11.5px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
             >
               + Start a conversation
             </Link>

@@ -47,10 +47,10 @@ export function UserMenuTrigger({ profile, isOpen, onToggle, className }: UserMe
 
       {/* Username & Plan Aligned Vertically (Visible on Desktop) */}
       <div className="hidden sm:flex flex-col items-start text-left leading-none gap-1">
-        <span className="text-[13px] font-medium text-[#e2e8f0] group-hover:text-white transition-colors truncate max-w-[130px]">
+        <span className="text-[13px] font-medium text-zinc-800 dark:text-[#e2e8f0] group-hover:text-zinc-950 dark:group-hover:text-white transition-colors truncate max-w-[130px]">
           {displayName}
         </span>
-        <span className="text-[11px] font-medium text-[#818ea8] group-hover:text-[#a5b4fc] transition-colors">
+        <span className="text-[11px] font-medium text-zinc-500 dark:text-[#818ea8] group-hover:text-indigo-600 dark:group-hover:text-[#a5b4fc] transition-colors">
           {planName}
         </span>
       </div>

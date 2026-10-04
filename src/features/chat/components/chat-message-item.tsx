@@ -164,23 +164,23 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
           </div>
 
           {/* Clean Markdown Rendering directly on canvas */}
-          <div className="text-[13.5px] leading-relaxed text-zinc-200">
+          <div className="text-[13.5px] leading-relaxed text-zinc-800 dark:text-zinc-200">
             <MarkdownRenderer content={displayContent} onCitationClick={onCitationClick} />
           </div>
 
           {/* Message Action Toolbar: Copy, Regenerate - display only after stream completion */}
           {!isStreamingActive && (
-            <div className="flex items-center gap-2 pt-1 text-xs text-zinc-400 select-none -ml-2">
+            <div className="flex items-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400 select-none -ml-2">
               {/* Copy button */}
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer text-zinc-500 dark:text-zinc-400"
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 text-xs">Copied</span>
+                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-emerald-600 dark:text-emerald-400 text-xs">Copied</span>
                   </>
                 ) : (
                   <>
@@ -195,7 +195,7 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
                 <button
                   type="button"
                   onClick={() => onShare(message)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer text-zinc-500 dark:text-zinc-400"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   <span className="text-xs">Share</span>
@@ -208,7 +208,7 @@ export const ChatMessageItem = React.memo(function ChatMessageItem({
                   type="button"
                   onClick={() => onRegenerate(message.id)}
                   disabled={isRegenerating}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 hover:text-white transition-colors cursor-pointer text-zinc-400 disabled:opacity-40"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer text-zinc-500 dark:text-zinc-400 disabled:opacity-40"
                 >
                   <RotateCcw className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin text-indigo-400")} />
                   <span className="text-xs">Regenerate</span>

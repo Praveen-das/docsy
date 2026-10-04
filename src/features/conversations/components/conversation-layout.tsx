@@ -16,7 +16,7 @@ export function ConversationLayout({
   isViewerOpen = true,
 }: ConversationLayoutProps) {
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#08090d]">
+    <div className="flex h-full w-full overflow-hidden bg-(--background) text-(--foreground)">
       {/* Center Chat Panel */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {chatPanel}

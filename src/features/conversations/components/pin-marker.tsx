@@ -9,7 +9,7 @@ export interface PinMarkerProps {
 export function PinMarker({ className }: PinMarkerProps) {
   return (
     <span
-      className={cn("inline-flex items-center text-[#525f7a] p-0.5", className)}
+      className={cn("inline-flex items-center text-zinc-500 dark:text-[#525f7a] p-0.5", className)}
       title="Pinned conversation"
       aria-label="Pinned conversation"
     >

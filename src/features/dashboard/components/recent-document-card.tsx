@@ -50,14 +50,14 @@ export function RecentDocumentCard({ document: doc, onOpenDoc, onDelete, classNa
         <RedPdfBadge className="shrink-0 h-[44px] w-[36px] sm:h-[48px] sm:w-[38px]" />
 
         <div className="min-w-0 flex-1">
-          <h4 className="text-[13.5px] sm:text-[14px] font-semibold text-[#f1f5f9] truncate transition-colors leading-tight group-hover:text-white">
+          <h4 className="text-[13.5px] sm:text-[14px] font-semibold text-zinc-900 dark:text-[#f1f5f9] truncate transition-colors leading-tight group-hover:text-black dark:group-hover:text-white">
             {doc.originalName}
           </h4>
-          <p className="text-[12px] sm:text-[12.5px] text-[#818ea8] mt-1 truncate font-normal tracking-tight">
-            {doc.pageCount || 1} pages <span className="inline-block mx-1 text-[#525f7a] text-[10px] align-middle">•</span>{" "}
+          <p className="text-[12px] sm:text-[12.5px] text-zinc-500 dark:text-[#818ea8] mt-1 truncate font-normal tracking-tight">
+            {doc.pageCount || 1} pages <span className="inline-block mx-1 text-zinc-400 dark:text-[#525f7a] text-[10px] align-middle">•</span>{" "}
             {fileSizeMb} MB
           </p>
-          <p className="text-[11px] sm:text-[11.5px] text-[#6b7794] mt-0.5 font-normal tracking-tight">
+          <p className="text-[11px] sm:text-[11.5px] text-zinc-400 dark:text-[#6b7794] mt-0.5 font-normal tracking-tight">
             {timeDisplay}
           </p>
         </div>
